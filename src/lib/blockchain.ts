@@ -1,15 +1,16 @@
 import { createPublicClient, http } from "viem";
 import { mainnet, polygon } from "viem/chains";
-import { keyBy, isEmpty, reduce, pick, zipObject, forEach } from 'lodash';
+import { keyBy, isEmpty, reduce, pick, zipObject, forEach } from "lodash";
 import {
   bearzContractAddress,
   bearzABI,
   bearzStakeChildContractAddress,
   bearzStakeChildABI,
-  bearzShopContractAddress, bearzShopABI
+  bearzShopContractAddress,
+  bearzShopABI,
 } from "./contracts";
 import { L2_ALCHEMY_KEY, ALCHEMY_KEY } from "./constants";
-import {getAttributeValue} from "./formatting";
+import { getAttributeValue } from "./formatting";
 
 const ethClient = createPublicClient({
   chain: mainnet,
@@ -26,14 +27,15 @@ const BASE_MAX_RATIO = 115;
 const BASE_MIN_RATIO = 50;
 const COEFFICIENT = 50;
 
-const BEARZ_SHOP_IMAGE_URI = 'https://allofthethings.s3.amazonaws.com/brawlerbearzshop/';
+const BEARZ_SHOP_IMAGE_URI =
+  "https://allofthethings.s3.amazonaws.com/brawlerbearzshop/";
 
 const itemKeyToStatKey = {
-  'atk': 'str',
-  'def': 'end',
-  'luck': 'lck',
-  'intel': 'int'
-}
+  atk: "str",
+  def: "end",
+  luck: "lck",
+  intel: "int",
+};
 
 const getMetadataByTokenId = async (tokenId) => {
   const [base64Encoding, ownerOf] = await Promise.all([
@@ -61,7 +63,7 @@ const getMetadataByTokenId = async (tokenId) => {
   };
 };
 
- const factionBonus = {
+const factionBonus = {
   "1": {
     atk: 10,
   },
@@ -78,44 +80,45 @@ const getMetadataByTokenId = async (tokenId) => {
 
 // B1 DMG = (((B1:Intelligence * (B1:Strength / B2:Endurance) / 100) + 2) * B1:Luck * Chance (65%-115%)
 // B1 Crit Chance = B1:Luck / 100
- const calculateDamage = (stats, oppEndurance, chance) => {
+const calculateDamage = (stats, oppEndurance, chance) => {
   return (
-      (stats.str / oppEndurance + 2 + (stats.int * 0.5) / 40) *
+    (stats.str / oppEndurance + 2 + (stats.int * 0.5) / 40) *
       chance *
       (stats.lck * 0.8) +
-      150
+    150
   ).toFixed(2);
 };
 
 // HP = Floor(0.01 * ((2 * Endurance) + Intelligence + Luck) * Level + 15
-export const calculateHitPoints = (stats, level) => {
+const calculateHitPoints = (stats, level) => {
   return (
-      Math.floor(0.01 * (2 * stats.end + (stats.int + stats.lck) * level) + 15) *
-      COEFFICIENT
+    Math.floor(0.01 * (2 * stats.end + (stats.int + stats.lck) * level) + 15) *
+    COEFFICIENT
   );
 };
 
- const extractValues = (base, item, keyChange = itemKeyToStatKey) => {
+const extractValues = (base, item, keyChange = itemKeyToStatKey) => {
   const typeOf = item?.boostTypeOf;
   const isPercent = typeOf === "percent";
   const normalizedItem = pick(item, Object.keys(keyChange));
   const extracted = reduce(
-      normalizedItem,
-      (acc, value, key) => {
-        const normalizedValue = Number(value);
-        if (!isNaN(normalizedValue)) {
-          const baseValue = Number(base[keyChange[key]]);
-          const change = isPercent ? normalizedValue / 100 : normalizedValue;
-          acc[keyChange[key]] = Number(isPercent ? baseValue * change : change);
-        }
-        return acc;
-      },
-      {}
+    normalizedItem,
+    (acc, value, key) => {
+      const normalizedValue = Number(value);
+      if (!isNaN(normalizedValue)) {
+        const baseValue = Number(base[keyChange[key]]);
+        const change = isPercent ? normalizedValue / 100 : normalizedValue;
+        acc[keyChange[key]] = Number(isPercent ? baseValue * change : change);
+      }
+      return acc;
+    },
+    {},
   );
   return isEmpty(extracted) ? null : extracted;
 };
 
-const aggregateBoosts = (boosts) => reduce(
+const aggregateBoosts = (boosts) =>
+  reduce(
     boosts,
     (acc, value, key) => {
       forEach(value, (currValue, currKey) => {
@@ -128,8 +131,8 @@ const aggregateBoosts = (boosts) => reduce(
       end: 0,
       lck: 0,
       int: 0,
-    }
-);
+    },
+  );
 
 const getEquippedItems = (baseURI, equipped, itemLookup) => {
   const items = [];
@@ -152,7 +155,7 @@ const getEquippedItems = (baseURI, equipped, itemLookup) => {
         tokenId: itemId,
         type: traitType,
         contract: {
-          address: bearzShopContractAddress
+          address: bearzShopContractAddress,
         },
         openseaUrl: `https://opensea.io/assets/ethereum/${bearzShopContractAddress}/${itemId}`,
         image: `${baseURI}${itemId}.png`,
@@ -164,28 +167,35 @@ const getEquippedItems = (baseURI, equipped, itemLookup) => {
   return items.filter(Boolean);
 };
 
-export const getStatsByTokenId = async (tokenId, overrideEquipped = {} as any) => {
+export const getStatsByTokenId = async (
+  tokenId,
+  overrideEquipped = {} as any,
+) => {
   try {
-    const [metadata, pendingXP] = await Promise.all([
+    const [metadata, stateBatch] = await Promise.all([
       getMetadataByTokenId(tokenId),
       polygonClient.readContract({
         address: bearzStakeChildContractAddress,
         abi: bearzStakeChildABI,
-        functionName: "getXP",
-        args: [tokenId],
-      })
+        functionName: "getStateBatch",
+        args: [[tokenId]],
+      }),
     ]);
+
+    const [state] = stateBatch as any;
+
+    const { syncXP: pendingXP, quest, isQuesting, isTraining, questMetadata, training } = state;
 
     const xp = Number(pendingXP || 0);
 
     const baseLevel = Number(getAttributeValue(metadata?.attributes, "Level"));
 
     const levelIndex = metadata.attributes.findIndex(
-        (attr) => attr.trait_type === "Level"
+      (attr) => attr.trait_type === "Level",
     );
 
     const xpIndex = metadata.attributes.findIndex(
-        (attr) => attr.trait_type === "XP"
+      (attr) => attr.trait_type === "XP",
     );
 
     let totalXP = Number(metadata.attributes[xpIndex]?.value);
@@ -211,49 +221,49 @@ export const getStatsByTokenId = async (tokenId, overrideEquipped = {} as any) =
 
     if (overrideEquipped?.dynamicWeaponId > 0) {
       const index = metadata.equipped.findIndex(
-          (attr) => attr.trait_type === "Weapon Id"
+        (attr) => attr.trait_type === "Weapon Id",
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicWeaponId;
     }
 
     if (overrideEquipped?.dynamicArmorId > 0) {
       const index = metadata.equipped.findIndex(
-          (attr) => attr.trait_type === "Armor Id"
+        (attr) => attr.trait_type === "Armor Id",
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicArmorId;
     }
 
     if (overrideEquipped?.dynamicFaceArmorId > 0) {
       const index = metadata.equipped.findIndex(
-          (attr) => attr.trait_type === "Face Armor Id"
+        (attr) => attr.trait_type === "Face Armor Id",
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicFaceArmorId;
     }
 
     if (overrideEquipped?.dynamicEyewearId > 0) {
       const index = metadata.equipped.findIndex(
-          (attr) => attr.trait_type === "Eyewear Id"
+        (attr) => attr.trait_type === "Eyewear Id",
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicEyewearId;
     }
 
     if (overrideEquipped?.dynamicMiscId > 0) {
       const index = metadata.equipped.findIndex(
-          (attr) => attr.trait_type === "Misc Id"
+        (attr) => attr.trait_type === "Misc Id",
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicMiscId;
     }
 
     if (overrideEquipped?.dynamicBackgroundId > 0) {
       const index = metadata.equipped.findIndex(
-          (attr) => attr.trait_type === "Background Id"
+        (attr) => attr.trait_type === "Background Id",
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicBackgroundId;
     }
 
     if (overrideEquipped?.dynamicHeadId > 0) {
       const index = metadata.equipped.findIndex(
-          (attr) => attr.trait_type === "Head Id"
+        (attr) => attr.trait_type === "Head Id",
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicHeadId;
     }
@@ -271,14 +281,16 @@ export const getStatsByTokenId = async (tokenId, overrideEquipped = {} as any) =
     const currentStrength = Number(attributeLookup?.["Strength"]?.value);
     const currentEndurance = Number(attributeLookup?.["Endurance"]?.value);
     const currentLuck = Number(attributeLookup?.["Luck"]?.value);
-    const currentIntelligence = Number(attributeLookup?.["Intelligence"]?.value);
+    const currentIntelligence = Number(
+      attributeLookup?.["Intelligence"]?.value,
+    );
 
     const baseline = {
-      str: (currentStrength / baseLevel),
-      end: (currentEndurance / baseLevel),
-      lck: (currentLuck),
-      int: (currentIntelligence),
-    }
+      str: currentStrength / baseLevel,
+      end: currentEndurance / baseLevel,
+      lck: currentLuck,
+      int: currentIntelligence,
+    };
 
     const baseAggregate = {
       str: baseline.str * aggregateLevel,
@@ -319,7 +331,7 @@ export const getStatsByTokenId = async (tokenId, overrideEquipped = {} as any) =
       miscId,
       dynamicBackgroundId,
       dynamicHeadId,
-    ].filter(item => item !== '0');
+    ].filter((item) => item !== "0");
 
     let itemLookup = {};
 
@@ -329,7 +341,7 @@ export const getStatsByTokenId = async (tokenId, overrideEquipped = {} as any) =
         abi: bearzShopABI,
         functionName: "getMetadataBatch",
         args: [itemLookupIds],
-      })
+      });
 
       itemLookup = zipObject(itemLookupIds, items);
 
@@ -366,10 +378,6 @@ export const getStatsByTokenId = async (tokenId, overrideEquipped = {} as any) =
           ...pick(itemLookup[eyewearId], itemPickProps),
           boostTypeOf: "percent",
         });
-        console.log({
-          eyewear: boosts.eyewear,
-          a: itemLookup[eyewearId]
-        })
         boostsByItemId[eyewearId] = boosts.eyewear;
       }
 
@@ -411,7 +419,9 @@ export const getStatsByTokenId = async (tokenId, overrideEquipped = {} as any) =
     };
 
     const hp = calculateHitPoints(final, aggregateLevel);
-    const factionName = getAttributeValue(metadata?.attributes, "Faction") || '';
+
+    const factionName =
+      getAttributeValue(metadata?.attributes, "Faction") || "";
 
     return {
       metadata,
@@ -424,19 +434,37 @@ export const getStatsByTokenId = async (tokenId, overrideEquipped = {} as any) =
         final,
         attributeLookup,
         equipLookup,
-        hp
+        hp,
+      },
+      activity: {
+        questing: {
+          isQuesting: state?.isQuesting,
+          currentQuest: state?.questMetadata,
+          quest: state?.quest
+        },
+        training: {
+          isTraining: state?.isTraining,
+          training: state?.training
+        }
       },
       stats: {
         level: aggregateLevel,
         xp: totalXP,
-        nextXpLevel: ((aggregateLevel) * (aggregateLevel)) * 2000,
+        nextXpLevel: aggregateLevel * aggregateLevel * XP_BASIS,
         ...final,
       },
-      items: getEquippedItems(BEARZ_SHOP_IMAGE_URI, metadata?.equipped, itemLookup),
-      faction: {
-        image: `${process.env.PUBLIC_URL}/factions/${factionName?.toLowerCase()}.png`,
+      items: getEquippedItems(
+        BEARZ_SHOP_IMAGE_URI,
+        metadata?.equipped,
+        itemLookup,
+      ),
+      faction: factionId !== '0' ? {
+        image: `${
+          process.env.PUBLIC_URL
+        }/factions/${factionName?.toLowerCase()}.png`,
         label: factionName,
-      },
+      } : null,
+      isSynced: baseLevel === aggregateLevel,
     };
   } catch (e) {
     console.log(e);

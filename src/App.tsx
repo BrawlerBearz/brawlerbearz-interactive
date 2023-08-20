@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 import classnames from "classnames";
 import { useParams } from "react-router-dom";
-import { MdOpenInNew as ExternalIcon } from "react-icons/md";
+import { MdOpenInNew as ExternalIcon, MdWarning as WarnIcon, MdDownload as DownloadIcon } from "react-icons/md";
+import { format, fromUnixTime, formatDistanceToNow} from 'date-fns';
 import {
   GiClothes as WardrobeIcon,
   GiStrongMan as TrainingIcon,
   GiJourney as QuestIcon,
   GiBattleAxe as BattleIcon,
 } from "react-icons/gi";
-import {
-  FaExchangeAlt as ToggleIcon,
-} from 'react-icons/fa';
+import { FaInfoCircle as InfoIcon, FaExchangeAlt as ToggleIcon } from "react-icons/fa";
 import { WagmiConfig, createConfig, useAccount } from "wagmi";
 import { getWalletClient, getPublicClient, signMessage } from "@wagmi/core";
 import {
@@ -35,7 +34,7 @@ import {
   custom,
 } from "viem";
 import { generateRenderingOrder } from "./lib/renderer";
-import {getStatsByTokenId} from "./lib/blockchain";
+import { getStatsByTokenId } from "./lib/blockchain";
 import {
   shortenAddress,
   getAttributeValue,
@@ -91,10 +90,6 @@ const LoadingScreen = ({ children, tokenId }) => {
 
   const isLoading = !metadata || progress !== 100;
 
-  console.log({
-    metadata
-  });
-
   return (
     <>
       {isLoading ? (
@@ -122,7 +117,7 @@ const VIEWS = {
   TRAINING: "TRAINING",
   QUESTING: "QUESTING",
   BATTLE: "BATTLE",
-    ITEM: 'ITEM'
+  ITEM: "ITEM",
 };
 
 const SubView = ({ children, title, subtitle, onBack }) => (
@@ -145,7 +140,9 @@ const SubView = ({ children, title, subtitle, onBack }) => (
       </div>
     </div>
     <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50 my-4" />
-    <div className="flex w-full overflow-auto my-2 md:my-4 px-3 tablet:px-6">{children}</div>
+    <div className="flex w-full overflow-auto my-2 md:my-4 px-3 tablet:px-6">
+      {children}
+    </div>
   </div>
 );
 
@@ -348,13 +345,18 @@ const ActionMenu = ({ metadata, isSimulated }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [viewState, setViewState] = useState(null);
   const [isViewingBaseStats, setViewingBaseStats] = useState(false);
-    const [viewContext, setViewContext] = useState(null);
+  const [viewContext, setViewContext] = useState(null);
 
-    console.log(metadata);
+  const {
+    metadata: onChainMetadata,
+    stats,
+    items,
+    faction,
+    calculated,
+    activity,
+  } = metadata || {};
 
-  const { metadata: onChainMetadata, stats, items, faction, calculated } = metadata || {};
-
-  const { name, ownerOf, tokenId } = onChainMetadata || {};
+  const { name, ownerOf, tokenId, image } = onChainMetadata || {};
 
   const { level, xp, str, end, int, lck, nextXpLevel } = stats || {};
 
@@ -369,9 +371,9 @@ const ActionMenu = ({ metadata, isSimulated }) => {
 
   useEffect(() => {
     setTimeout(() => {
-      setIsMounted(true)
+      setIsMounted(true);
     }, 500);
-  },[])
+  }, []);
 
   return (
     <>
@@ -380,7 +382,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
           <div className="flex flex-col gap-4 tablet:gap-0 tablet:flex-row tablet:items-center tablet:justify-between w-full px-3 tablet:px-6 pt-3 tablet:pt-6">
             <div className="flex flex-col gap-2">
               <h2 className="flex flex-row items-center space-x-3 text-sm md:text-xl font-bold">
-                <span title={name}>{name}</span>
+                <span title={`Token: #${tokenId}, ${name}`}>{name}</span>
                 {faction?.image && (
                   <img
                     className="h-[20px] w-[20px]"
@@ -389,6 +391,13 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                     alt={faction?.label}
                   />
                 )}
+                <a
+                    className="opacity-50 hover:opacity-100 text-[20px] cursor-pointer"
+                    href={image}
+                    download
+                >
+                  <DownloadIcon />
+                </a>
               </h2>
               <a
                 className="inline-flex opacity-50 text-[12px] hover:underline text-accent3"
@@ -396,9 +405,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                 target="_blank"
                 rel="noreferrer"
               >
-                <span title={ownerOf}>
-                  Owner: {shortenAddress(ownerOf)}
-                </span>
+                <span title={ownerOf}>{shortenAddress(ownerOf)}</span>
                 <span className="ml-2 text-lg">
                   <ExternalIcon />
                 </span>
@@ -416,85 +423,24 @@ const ActionMenu = ({ metadata, isSimulated }) => {
               </span>
               <div className="relative flex flex-row w-full justify-end space-x-1">
                 <div className="flex border border-1 border-accent bg-dark2 h-[12px] rounded-full w-[120px] overflow-hidden">
-                  <div title={`Next Level: ${formatNumber(nextXpLevel)} XP`} className="z-[1] bg-accent h-full rounded-full duration-300" style={{
-                    width: !isMounted ? 0 : `${xp / nextXpLevel * 100}%`
-                  }} />
+                  <div
+                    title={`Next Level: ${formatNumber(nextXpLevel)} XP`}
+                    className="z-[1] bg-accent h-full rounded-full duration-300"
+                    style={{
+                      width: !isMounted ? 0 : `${(xp / nextXpLevel) * 100}%`,
+                    }}
+                  />
                 </div>
-                <span className="hidden text-[8px] text-accent relative top-[2px] left-[2px] h-[12px]">{level + 1}</span>
+                <span className="hidden text-[8px] text-accent relative top-[2px] left-[2px] h-[12px]">
+                  {level + 1}
+                </span>
               </div>
             </div>
           </div>
           <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50 my-4" />
-          <div className="flex flex-col overflow-auto px-3 tablet:px-6">
-            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <div className="flex flex-row items-center justify-between">
-                <h3 className="text-xs opacity-50">{isViewingBaseStats ? 'Base Stats' : 'Stats'}</h3>
-                <button className="text-2xl text-white opacity-50 hover:opacity-100" onClick={() => {
-                  setViewingBaseStats(value => !value)
-                }} title={`View ${isViewingBaseStats ? 'current' : 'base'} stats`}><ToggleIcon /></button>
-              </div>
-              <div className="grid grid-cols-4 gap-4">
-                <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">STR</span>
-                  <span className="text-xs md:text-lg">{formatNumber(isViewingBaseStats ? calculated?.baseline.str : calculated?.baseAggregate.str)}</span>
-                  {!isViewingBaseStats && calculated?.computed?.str > 0 ? (
-                      <span className="text-[12px] text-accent">+{formatNumber(calculated?.computed?.str)}</span>
-                  ) : <span />}
-                </div>
-                <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">END</span>
-                  <span className="text-xs md:text-lg">{formatNumber(isViewingBaseStats ? calculated?.baseline.end : calculated?.baseAggregate.end)}</span>
-                  {!isViewingBaseStats && calculated?.computed?.end > 0 ? (
-                      <span className="text-[12px] text-accent">+{formatNumber(calculated?.computed?.end)}</span>
-                  ) : <span />}
-                </div>
-                <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">INT</span>
-                  <span className="text-xs md:text-lg">{formatNumber(isViewingBaseStats ? calculated?.baseline.int : calculated?.baseAggregate.int)}</span>
-                  {!isViewingBaseStats && calculated?.computed?.int > 0 ? (
-                      <span className="text-[12px] text-accent">+{formatNumber(calculated?.computed?.int)}</span>
-                  ) : <span />}
-                </div>
-                <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">LCK</span>
-                  <span className="text-xs md:text-lg">{formatNumber(isViewingBaseStats ? calculated?.baseline.lck : calculated?.baseAggregate.lck)}</span>
-                  {!isViewingBaseStats && calculated?.computed?.lck > 0 ? (
-                      <span className="text-[12px] text-accent">+{formatNumber(calculated?.computed?.lck)}</span>
-                  ) : <span />}
-                </div>
-              </div>
-            </div>
-            {items.length > 0 && (
-                <>
-                  <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-                    <h3 className="text-xs opacity-50">Equipped Item(s)</h3>
-                    <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
-                      {items.map((item) => (
-                          <button
-                              key={item?.tokenId}
-                              title={item.label}
-                              onClick={() => {
-                                setViewContext({
-                                  ...item,
-                                  boost: calculated?.boostsByItemId?.[item?.tokenId]
-                                });
-                                setViewState(VIEWS.ITEM);
-                              }}
-                              className="flex flex-col flex-shrink-0 w-[100px] gap-2"
-                          >
-                            <img
-                                className="h-full w-full"
-                                src={item.image}
-                                alt={item.label}
-                            />
-                          </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-            )}
-            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <h3 className="text-xs opacity-50">Manage Brawler</h3>
+          <div className="flex flex-col overflow-auto px-3 tablet:px-6 pb-6">
+            <div className="flex flex-col flex-shrink-0 w-full space-y-4">
+              <h3 className="hidden text-xs opacity-50">Manage Brawler</h3>
               {!isSimulated ? (
                   <ConnectKitButton.Custom>
                     {({ isConnected, show, truncatedAddress, ensName }) => {
@@ -509,8 +455,8 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                                 alt="button"
                             />
                             <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                        Connect
-                      </span>
+                          Connect
+                        </span>
                           </button>
                       ) : (
                           <button
@@ -523,164 +469,330 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                     }}
                   </ConnectKitButton.Custom>
               ) : (
-                  <p className="text-[10px] py-2">
+                  <p className="text-[8px] py-2">
                     Note: We have detected you are in an environment that cannot
-                    connect a wallet. The experience will run in a <u>simulated</u>{" "}
-                    mode. You can make changes but no real transactions will take
-                    place.
+                    connect a wallet. The experience will run in a{" "}
+                    <u>simulated</u> mode. You can make changes but no real
+                    transactions will take place.
                   </p>
               )}
               <div className="flex flex-wrap w-full gap-2 tablet:gap-4">
-                {isConnected && isOwnerOfNFT ? (
-                    <>
-                      {!actionsLive ? (
-                          <p className="text-[10px]">
-                            The Brawler Bearz interactive NFT is in development. If
-                            you like, you will be able to run simulations and perform
-                            your daily bearz upkeep!
-                          </p>
-                      ) : (
-                          <>
-                            <button
-                                className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                                type="button"
-                                onClick={() => {
-                                  setViewState(VIEWS.WARDROBE);
-                                }}
-                            >
-                              <img
-                                  className="object-cover h-full w-full"
-                                  src={buttonBackground}
-                                  alt="button"
-                              />
-                              <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                          Wardrobe
-                        </span>
-                            </button>
-                            <button
-                                className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                                type="button"
-                                onClick={() => {
-                                  setViewState(VIEWS.TRAINING);
-                                }}
-                            >
-                              <img
-                                  className="object-cover h-full w-full"
-                                  src={buttonBackground}
-                                  alt="button"
-                              />
-                              <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                          Training
-                        </span>
-                            </button>
-                            <button
-                                className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                                type="button"
-                                onClick={() => {
-                                  setViewState(VIEWS.QUESTING);
-                                }}
-                            >
-                              <img
-                                  className="object-cover h-full w-full"
-                                  src={buttonBackground}
-                                  alt="button"
-                              />
-                              <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                          Questing
-                        </span>
-                            </button>
-                            <button
-                                className="hidden relative flex items-center justify-center w-[250px] cursor-pointer"
-                                type="button"
-                                onClick={() => {
-                                  setViewState(VIEWS.BATTLE);
-                                }}
-                            >
-                              <img
-                                  className="object-cover h-full w-full"
-                                  src={buttonBackground}
-                                  alt="button"
-                              />
-                              <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                          Battle
-                        </span>
-                            </button>
-                          </>
-                      )}
-                    </>
-                ) : isConnected ? (
-                    <p className="text-[10px]">
-                      You do not own this NFT to perform actions.
-                    </p>
-                ) : null}
+                {isConnected && !isOwnerOfNFT && (
+                    <div className="flex flex-row items-center text-warn py-2 space-x-2">
+                    <span className="text-base">
+                       <WarnIcon />
+                    </span>
+                      <span className="text-[10px] leading-[16px] relative top-[1px]"> You do not own this NFT to perform actions</span>
+                    </div>
+                )}
               </div>
+            </div>
+            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+              <div className="flex flex-row items-center justify-between">
+                <h3 className="text-xs opacity-50">
+                  {isViewingBaseStats ? "Base Stats" : "Stats"}
+                </h3>
+                <button
+                  className="text-xl text-white opacity-50 hover:opacity-100"
+                  onClick={() => {
+                    setViewingBaseStats((value) => !value);
+                  }}
+                  title={`View ${
+                    isViewingBaseStats ? "current" : "base"
+                  } stats`}
+                >
+                  <ToggleIcon />
+                </button>
+              </div>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="flex flex-col items-center justify-center space-y-1">
+                  <span className="text-xs opacity-50 text-accent3">STR</span>
+                  <span className="text-xs md:text-lg">
+                    {formatNumber(
+                      isViewingBaseStats
+                        ? calculated?.baseline.str
+                        : calculated?.baseAggregate.str,
+                    )}
+                  </span>
+                  {!isViewingBaseStats && calculated?.computed?.str > 0 ? (
+                    <span className="text-[12px] text-accent">
+                      +{formatNumber(calculated?.computed?.str)}
+                    </span>
+                  ) : (
+                      <span className="h-[18px]" />
+                  )}
+                </div>
+                <div className="flex flex-col items-center justify-center space-y-1">
+                  <span className="text-xs opacity-50 text-accent3">END</span>
+                  <span className="text-xs md:text-lg">
+                    {formatNumber(
+                      isViewingBaseStats
+                        ? calculated?.baseline.end
+                        : calculated?.baseAggregate.end,
+                    )}
+                  </span>
+                  {!isViewingBaseStats && calculated?.computed?.end > 0 ? (
+                    <span className="text-[12px] text-accent">
+                      +{formatNumber(calculated?.computed?.end)}
+                    </span>
+                  ) : (
+                      <span className="h-[18px]" />
+                  )}
+                </div>
+                <div className="flex flex-col items-center justify-center space-y-1">
+                  <span className="text-xs opacity-50 text-accent3">INT</span>
+                  <span className="text-xs md:text-lg">
+                    {formatNumber(
+                      isViewingBaseStats
+                        ? calculated?.baseline.int
+                        : calculated?.baseAggregate.int,
+                    )}
+                  </span>
+                  {!isViewingBaseStats && calculated?.computed?.int > 0 ? (
+                    <span className="text-[12px] text-accent">
+                      +{formatNumber(calculated?.computed?.int)}
+                    </span>
+                  ) : (
+                      <span className="h-[18px]" />
+                  )}
+                </div>
+                <div className="flex flex-col items-center justify-center space-y-1">
+                  <span className="text-xs opacity-50 text-accent3">LCK</span>
+                  <span className="text-xs md:text-lg">
+                    {formatNumber(
+                      isViewingBaseStats
+                        ? calculated?.baseline.lck
+                        : calculated?.baseAggregate.lck,
+                    )}
+                  </span>
+                  {!isViewingBaseStats && calculated?.computed?.lck > 0 ? (
+                    <span className="text-[12px] text-accent">
+                      +{formatNumber(calculated?.computed?.lck)}
+                    </span>
+                  ) : (
+                      <span className="h-[18px]" />
+                  )}
+                </div>
+              </div>
+              {!metadata?.isSynced && !isViewingBaseStats && (
+                  <div className="flex flex-row items-center text-accent2 py-2 space-x-2">
+                    <span className="text-base">
+                       <InfoIcon />
+                    </span>
+                    <span className="text-[10px] leading-[16px] relative top-[1px]">This bearz stats are not fully synced to Ethereum</span>
+                  </div>
+              )}
+            </div>
+              <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+                <h3 className="text-xs opacity-50">Equipped Item(s)</h3>
+                {items.length > 0 ? (
+                    <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
+                      {items.map((item) => (
+                          <button
+                              key={item?.tokenId}
+                              title={item.label}
+                              onClick={() => {
+                                setViewContext({
+                                  ...item,
+                                  boost: calculated?.boostsByItemId?.[item?.tokenId],
+                                });
+                                setViewState(VIEWS.ITEM);
+                              }}
+                              className="flex flex-col flex-shrink-0 w-[100px] gap-2"
+                          >
+                            <img
+                                className="h-full w-full"
+                                src={item.image}
+                                alt={item.label}
+                            />
+                          </button>
+                      ))}
+                    </div>
+                ) : (
+                    <p>
+                      <p className="text-[10px]">
+                        No equipped items
+                      </p>
+                    </p>
+                )}
+                {isConnected && isOwnerOfNFT && actionsLive && (
+                    <button
+                        className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                        type="button"
+                        onClick={() => {
+                          setViewState(VIEWS.WARDROBE);
+                        }}
+                    >
+                      <img
+                          className="object-cover h-full w-full"
+                          src={buttonBackground}
+                          alt="button"
+                      />
+                      <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                            Wardrobe
+                          </span>
+                    </button>
+                )}
+              </div>
+            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+              <div className="flex flex-row items-center justify-between">
+                <h3 className="text-xs opacity-50">
+                  Training
+                </h3>
+              </div>
+              {!activity?.training?.isTraining ? (
+                  <p className="text-[10px]">
+                    Not in training
+                  </p>
+              ) : (
+                  <div className="flex flex-col space-y-2">
+                    <h3 className="text-sm text-accent">XP: {formatNumber(Number(activity?.training?.training?.xp))}</h3>
+                    <p className="text-[10px]">
+                      Training for {formatDistanceToNow(new Date(fromUnixTime(activity?.training?.training?.startAt)))}
+                    </p>
+                  </div>
+              )}
+              {isConnected && isOwnerOfNFT && actionsLive && (
+                  <button
+                      className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                      type="button"
+                      onClick={() => {
+                        setViewState(VIEWS.TRAINING);
+                      }}
+                  >
+                    <img
+                        className="object-cover h-full w-full"
+                        src={buttonBackground}
+                        alt="button"
+                    />
+                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                            Train
+                          </span>
+                  </button>
+              )}
+            </div>
+            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+              <div className="flex flex-row items-center justify-between">
+                <h3 className="text-xs opacity-50">
+                  Questing
+                </h3>
+              </div>
+              {!activity?.questing?.isQuesting ? (
+                  <p className="text-[10px]">
+                    Not on a quest
+                  </p>
+              ) : (
+                  <div className="flex flex-col space-y-2">
+                    <h3 className="text-sm text-accent">{activity?.questing?.currentQuest?.name}</h3>
+                    <p className="text-[10px]">
+                      Started: {format(new Date(fromUnixTime(activity?.questing?.quest?.startAt)), 'yyyy-MM-dd hh:mm aaaa')}
+                    </p>
+                    <p className="text-[10px]">
+                      Ends: {format(new Date(fromUnixTime(activity?.questing?.quest?.endAt)), 'yyyy-MM-dd hh:mm aaaa')}
+                    </p>
+                  </div>
+              )}
+              {isConnected && isOwnerOfNFT && actionsLive && (
+                  <button
+                      className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                      type="button"
+                      onClick={() => {
+                        setViewState(VIEWS.QUESTING);
+                      }}
+                  >
+                    <img
+                        className="object-cover h-full w-full"
+                        src={buttonBackground}
+                        alt="button"
+                    />
+                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                            Quest
+                          </span>
+                  </button>
+              )}
             </div>
           </div>
         </div>
       )}
-        {viewState === VIEWS.ITEM && viewContext && (
-            <SubView
-                title={viewContext?.name}
-                subtitle="Detailed View"
-                onBack={() => {
-                    setViewState(null);
-                    setViewContext(null);
-                }}
-            >
-              <div className="flex flex-col w-full items-center space-y-4">
-                <div className="flex flex-col flex-shrink-0 w-full space-y-4">
-                  <h3 className="text-xs opacity-50">Stats</h3>
-                  <div className="grid grid-cols-4 gap-4">
-                    <div className="flex flex-col items-center justify-center space-y-1">
-                      <span className="text-xs opacity-50 text-accent3">STR</span>
-                      <span className="text-sm md:text-lg">{formatNumber(viewContext?.atk)}%</span>
-                      {viewContext?.boost?.str > 0 && (
-                          <span className="text-xs text-accent">+{formatNumber(viewContext?.boost?.str)}</span>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center justify-center space-y-1">
-                      <span className="text-xs opacity-50 text-accent3">END</span>
-                      <span className="text-sm md:text-lg">{formatNumber(viewContext?.def)}%</span>
-                      {viewContext?.boost?.end > 0 && (
-                          <span className="text-xs text-accent">+{formatNumber(viewContext?.boost?.end)}</span>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center justify-center space-y-1">
-                      <span className="text-xs opacity-50 text-accent3">INT</span>
-                      <span className="text-sm md:text-lg">{formatNumber(viewContext?.intel)}%</span>
-                      {viewContext?.boost?.int > 0 && (
-                          <span className="text-xs text-accent">+{formatNumber(viewContext?.boost?.int)}</span>
-                      )}
-                    </div>
-                    <div className="flex flex-col items-center justify-center space-y-1">
-                      <span className="text-xs opacity-50 text-accent3">LCK</span>
-                      <span className="text-sm md:text-lg">{formatNumber(viewContext?.luck)}%</span>
-                      {viewContext?.boost?.lck > 0 && (
-                          <span className="text-xs text-accent">+{formatNumber(viewContext?.boost?.lck)}</span>
-                      )}
-                    </div>
-                  </div>
+      {viewState === VIEWS.ITEM && viewContext && (
+        <SubView
+          title={viewContext?.name}
+          subtitle="Detailed View"
+          onBack={() => {
+            setViewState(null);
+            setViewContext(null);
+          }}
+        >
+          <div className="flex flex-col w-full items-center space-y-4">
+            <div className="flex flex-col flex-shrink-0 w-full space-y-4">
+              <h3 className="text-xs opacity-50">Stats</h3>
+              <div className="grid grid-cols-4 gap-4">
+                <div className="flex flex-col items-center justify-center space-y-1">
+                  <span className="text-xs opacity-50 text-accent3">STR</span>
+                  <span className="text-sm md:text-lg">
+                    {formatNumber(viewContext?.atk)}%
+                  </span>
+                  {viewContext?.boost?.str > 0 && (
+                    <span className="text-xs text-accent">
+                      +{formatNumber(viewContext?.boost?.str)}
+                    </span>
+                  )}
                 </div>
-                <div className="flex flex-col flex-shrink-0 w-full space-y-2 items-center justify-center">
-                <img
-                    className="w-[200px] h-auto py-4"
-                    src={viewContext?.image}
-                    alt={viewContext?.name}
-                />
+                <div className="flex flex-col items-center justify-center space-y-1">
+                  <span className="text-xs opacity-50 text-accent3">END</span>
+                  <span className="text-sm md:text-lg">
+                    {formatNumber(viewContext?.def)}%
+                  </span>
+                  {viewContext?.boost?.end > 0 && (
+                    <span className="text-xs text-accent">
+                      +{formatNumber(viewContext?.boost?.end)}
+                    </span>
+                  )}
                 </div>
-                {viewContext?.openseaUrl && (
-                    <a
-                        className="relative flex text-xs text-left py-4 opacity-50 hover:opacity-100 hover:underline"
-                        href={viewContext?.openseaUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                      View OpenSea
-                    </a>
-                )}
+                <div className="flex flex-col items-center justify-center space-y-1">
+                  <span className="text-xs opacity-50 text-accent3">INT</span>
+                  <span className="text-sm md:text-lg">
+                    {formatNumber(viewContext?.intel)}%
+                  </span>
+                  {viewContext?.boost?.int > 0 && (
+                    <span className="text-xs text-accent">
+                      +{formatNumber(viewContext?.boost?.int)}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col items-center justify-center space-y-1">
+                  <span className="text-xs opacity-50 text-accent3">LCK</span>
+                  <span className="text-sm md:text-lg">
+                    {formatNumber(viewContext?.luck)}%
+                  </span>
+                  {viewContext?.boost?.lck > 0 && (
+                    <span className="text-xs text-accent">
+                      +{formatNumber(viewContext?.boost?.lck)}
+                    </span>
+                  )}
+                </div>
               </div>
-            </SubView>
-        )}
+            </div>
+            <div className="flex flex-col flex-shrink-0 w-full space-y-2 items-center justify-center">
+              <img
+                className="w-[200px] h-auto py-4"
+                src={viewContext?.image}
+                alt={viewContext?.name}
+              />
+            </div>
+            {viewContext?.openseaUrl && (
+              <a
+                className="relative flex text-xs text-left py-4 opacity-50 hover:opacity-100 hover:underline"
+                href={viewContext?.openseaUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View OpenSea
+              </a>
+            )}
+          </div>
+        </SubView>
+      )}
       {viewState === VIEWS.WARDROBE && (
         <SubView
           title={
@@ -696,7 +808,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
             setViewState(null);
           }}
         >
-          asdas
+          Coming soon
         </SubView>
       )}
       {viewState === VIEWS.TRAINING && (
@@ -714,13 +826,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
             setViewState(null);
           }}
         >
-          <button
-            onClick={() => {
-              // actions.onTrain({ tokenIds: [tokenId]})
-            }}
-          >
-            Train em
-          </button>
+          Coming soon
         </SubView>
       )}
       {viewState === VIEWS.QUESTING && (
@@ -738,7 +844,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
             setViewState(null);
           }}
         >
-          asdas
+          Coming soon
         </SubView>
       )}
       {viewState === VIEWS.BATTLE && (

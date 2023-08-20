@@ -11,6 +11,7 @@ export const getAttributeValue = (attributes, trait) => {
   })?.value;
 };
 
-export const formatNumber = (num) => new Intl.NumberFormat("en-US", {
-  maximumFractionDigits: 1
-}).format(num);
+export const formatNumber = (num) =>
+  new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 1,
+  }).format(num);
