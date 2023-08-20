@@ -30,8 +30,15 @@ module.exports = {
         techheadz: "#afbfd2",
         mapwater: "#23356b",
       },
+      fontFamily: {
+        primary: ["PressStart2P", "sans-serif"],
+      },
+      screens: {
+        tablet: "440px",
+        laptop: "1024px",
+        desktop: "1280px",
+      },
     },
   },
   plugins: [],
-}
-
+};

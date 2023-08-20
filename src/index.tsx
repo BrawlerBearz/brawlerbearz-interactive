@@ -1,58 +1,38 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import './index.css';
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { HashRouter, Routes, Route } from "react-router-dom";
+import logoImage from "./interactive/logo.gif";
+import "./index.css";
 
 const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
+  document.getElementById("root") as HTMLElement,
 );
 
 const InteractiveNFT = React.lazy(() => import("./App"));
 
+const version = "v1.0.0";
+
 const Loading = () => {
-
-    const [isLoading, setIsLoading] = React.useState(true);
-    const [progress, setProgress] = React.useState(5);
-
-    React.useEffect(() => {
-        if (isLoading) {
-            const start = Math.floor(Math.random() * 30 + 20);
-            setProgress(start);
-            setTimeout(() => {
-                setProgress(100 - start > 70 ? Math.floor(100 - start / 2) : 90);
-            }, 500);
-            setTimeout(() => {
-                setIsLoading(false);
-            }, 1500);
-        }
-    }, [isLoading]);
-
-    return (
-        <div className="flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1] bg-[#]">
-            <img className="w-[200px]" src="/images/logo.gif" alt="logo" />
-            <div className="w-[200px] h-[6px] rounded-full bg-transparent border-bg-main mt-4 overflow-hidden">
-                <div
-                    className="h-full rounded-full bg-accent"
-                    style={{
-                        transition: "width 300ms ease-in",
-                        width: `${progress}%`,
-                    }}
-                />
-            </div>
-        </div>
-    );
+  return (
+    <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1] bg-[#]">
+      <img className="w-[200px]" src={logoImage} alt="logo" />
+      <div className="flex flex-col space-y-1 text-center text-white py-4">
+        <h1 className="text-sm">Interactive Experience</h1>
+        <span className="text-xs opacity-50">{version}</span>
+      </div>
+    </div>
+  );
 };
 
 root.render(
   <React.StrictMode>
-      <BrowserRouter>
-          <React.Suspense fallback={<Loading />}>
-          <Routes>
-              <Route path=":dna" element={<InteractiveNFT />} />
-              <Route element={<Loading />} />
-          </Routes>
-          </React.Suspense>
-      </BrowserRouter>
-  </React.StrictMode>
+    <HashRouter>
+      <React.Suspense fallback={<Loading />}>
+        <Routes>
+          <Route path=":tokenId" element={<InteractiveNFT />} />
+          <Route index element={<Loading />} />
+        </Routes>
+      </React.Suspense>
+    </HashRouter>
+  </React.StrictMode>,
 );
-

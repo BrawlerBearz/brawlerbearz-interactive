@@ -1,23 +1,26 @@
 {
   "name": "brawlerbearz-interactive",
+  "homepage": ".",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.38",
+    "@alchemy/aa-alchemy": "^0.1.0-alpha.25",
+    "@alchemy/aa-core": "^0.1.0-alpha.25",
+    "@react-hookz/web": "^23.1.0",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.7",
+    "bignumber.js": "^9.1.1",
     "classnames": "^2.3.2",
-    "ethers": "^5.5.4",
+    "connectkit": "^1.5.1",
+    "ethers": "^6.7.1",
+    "magic-sdk": "^19.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.14.1",
     "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "typescript": "^5.0.4",
+    "viem": "^1.6.2",
+    "wagmi": "^1.3.10"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -27,15 +30,16 @@
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {
     "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
+      "chrome >= 67",
+      "edge >= 79",
+      "firefox >= 68",
+      "opera >= 54",
+      "safari >= 14"
     ],
     "development": [
       "last 1 chrome version",
@@ -44,7 +48,8 @@
     ]
   },
   "devDependencies": {
-    "prettier": "^3.0.0",
+    "eslint-plugin-prettier": "5.0.0",
+    "prettier": "^3.0.2",
     "tailwindcss": "^3.3.2"
   }
 }
