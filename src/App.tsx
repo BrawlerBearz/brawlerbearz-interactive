@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from "react";
 import classnames from "classnames";
 import { useParams } from "react-router-dom";
-import { MdOpenInNew as ExternalIcon, MdWarning as WarnIcon, MdDownload as DownloadIcon } from "react-icons/md";
-import { format, fromUnixTime, formatDistanceToNow} from 'date-fns';
+import {
+  MdOpenInNew as ExternalIcon,
+  MdWarning as WarnIcon,
+  MdDownload as DownloadIcon,
+} from "react-icons/md";
+import { format, fromUnixTime, formatDistanceToNow } from "date-fns";
 import {
   GiClothes as WardrobeIcon,
   GiStrongMan as TrainingIcon,
   GiJourney as QuestIcon,
   GiBattleAxe as BattleIcon,
 } from "react-icons/gi";
-import { FaInfoCircle as InfoIcon, FaExchangeAlt as ToggleIcon } from "react-icons/fa";
+import {
+  FaInfoCircle as InfoIcon,
+  FaExchangeAlt as ToggleIcon,
+} from "react-icons/fa";
 import { WagmiConfig, createConfig, useAccount } from "wagmi";
 import { getWalletClient, getPublicClient, signMessage } from "@wagmi/core";
 import {
@@ -392,9 +399,9 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                   />
                 )}
                 <a
-                    className="opacity-50 hover:opacity-100 text-[20px] cursor-pointer"
-                    href={image}
-                    download
+                  className="opacity-50 hover:opacity-100 text-[20px] cursor-pointer"
+                  href={image}
+                  download
                 >
                   <DownloadIcon />
                 </a>
@@ -411,7 +418,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                 </span>
               </a>
             </div>
-            <div className="flex flex-col space-y-1 tablet:text-right items-end">
+            <div className="flex flex-col space-y-1 tablet:text-right tablet:items-end">
               <span title={`Level ${level}`} className="text-sm md:text-lg">
                 Level {level}
               </span>
@@ -442,41 +449,44 @@ const ActionMenu = ({ metadata, isSimulated }) => {
             <div className="flex flex-col flex-shrink-0 w-full space-y-4">
               <h3 className="hidden text-xs opacity-50">Manage Brawler</h3>
               {!isSimulated && (
-                  <ConnectKitButton.Custom>
-                    {({ isConnected, show, truncatedAddress, ensName }) => {
-                      return !isConnected ? (
-                          <button
-                              onClick={show}
-                              className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                          >
-                            <img
-                                className="object-cover h-full w-full"
-                                src={buttonBackground}
-                                alt="button"
-                            />
-                            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                <ConnectKitButton.Custom>
+                  {({ isConnected, show, truncatedAddress, ensName }) => {
+                    return !isConnected ? (
+                      <button
+                        onClick={show}
+                        className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                      >
+                        <img
+                          className="object-cover h-full w-full"
+                          src={buttonBackground}
+                          alt="button"
+                        />
+                        <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
                           Connect
                         </span>
-                          </button>
-                      ) : (
-                          <button
-                              className="hover:underline text-xs text-accent text-left"
-                              onClick={show}
-                          >
-                            Connected to {ensName ?? truncatedAddress}
-                          </button>
-                      );
-                    }}
-                  </ConnectKitButton.Custom>
+                      </button>
+                    ) : (
+                      <button
+                        className="hover:underline text-xs text-accent text-left"
+                        onClick={show}
+                      >
+                        Connected to {ensName ?? truncatedAddress}
+                      </button>
+                    );
+                  }}
+                </ConnectKitButton.Custom>
               )}
               <div className="flex flex-wrap w-full gap-2 tablet:gap-4">
                 {isConnected && !isOwnerOfNFT && (
-                    <div className="flex flex-row items-center text-warn py-2 space-x-2">
+                  <div className="flex flex-row items-center text-warn py-2 space-x-2">
                     <span className="text-base">
-                       <WarnIcon />
+                      <WarnIcon />
                     </span>
-                      <span className="text-[10px] leading-[16px] relative top-[1px]"> You do not own this NFT to perform actions</span>
-                    </div>
+                    <span className="text-[10px] leading-[16px] relative top-[1px]">
+                      {" "}
+                      You do not own this NFT to perform actions
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
@@ -512,7 +522,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                       +{formatNumber(calculated?.computed?.str)}
                     </span>
                   ) : (
-                      <span className="h-[18px]" />
+                    <span className="h-[18px]" />
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
@@ -529,7 +539,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                       +{formatNumber(calculated?.computed?.end)}
                     </span>
                   ) : (
-                      <span className="h-[18px]" />
+                    <span className="h-[18px]" />
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
@@ -546,7 +556,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                       +{formatNumber(calculated?.computed?.int)}
                     </span>
                   ) : (
-                      <span className="h-[18px]" />
+                    <span className="h-[18px]" />
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
@@ -563,154 +573,165 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                       +{formatNumber(calculated?.computed?.lck)}
                     </span>
                   ) : (
-                      <span className="h-[18px]" />
+                    <span className="h-[18px]" />
                   )}
                 </div>
               </div>
               {!metadata?.isSynced && !isViewingBaseStats && (
-                  <div className="flex flex-row items-center text-accent2 py-2 space-x-2">
-                    <span className="text-base">
-                       <InfoIcon />
-                    </span>
-                    <span className="text-[10px] leading-[16px] relative top-[1px]">This bearz stats are not fully synced to Ethereum</span>
-                  </div>
+                <div className="flex flex-row items-center text-accent2 py-2 space-x-2">
+                  <span className="text-base">
+                    <InfoIcon />
+                  </span>
+                  <span className="text-[10px] leading-[16px] relative top-[1px]">
+                    This bearz stats are not fully synced to Ethereum
+                  </span>
+                </div>
               )}
             </div>
-              <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-                <h3 className="text-xs opacity-50">Equipped Item(s)</h3>
-                {items.length > 0 ? (
-                    <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
-                      {items.map((item) => (
-                          <button
-                              key={item?.tokenId}
-                              title={item.label}
-                              onClick={() => {
-                                setViewContext({
-                                  ...item,
-                                  boost: calculated?.boostsByItemId?.[item?.tokenId],
-                                });
-                                setViewState(VIEWS.ITEM);
-                              }}
-                              className="flex flex-col flex-shrink-0 w-[100px] gap-2"
-                          >
-                            <img
-                                className="h-full w-full"
-                                src={item.image}
-                                alt={item.label}
-                            />
-                          </button>
-                      ))}
-                    </div>
-                ) : (
-                    <p>
-                      <p className="text-[10px]">
-                        No equipped items
-                      </p>
-                    </p>
-                )}
-                {isConnected && isOwnerOfNFT && actionsLive && (
+            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+              <h3 className="text-xs opacity-50">Equipped Item(s)</h3>
+              {items.length > 0 ? (
+                <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
+                  {items.map((item) => (
                     <button
-                        className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                        type="button"
-                        onClick={() => {
-                          setViewState(VIEWS.WARDROBE);
-                        }}
+                      key={item?.tokenId}
+                      title={item.label}
+                      onClick={() => {
+                        setViewContext({
+                          ...item,
+                          boost: calculated?.boostsByItemId?.[item?.tokenId],
+                        });
+                        setViewState(VIEWS.ITEM);
+                      }}
+                      className="flex flex-col flex-shrink-0 w-[100px] gap-2"
                     >
                       <img
-                          className="object-cover h-full w-full"
-                          src={buttonBackground}
-                          alt="button"
+                        className="h-full w-full"
+                        src={item.image}
+                        alt={item.label}
                       />
-                      <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                            Wardrobe
-                          </span>
                     </button>
-                )}
-              </div>
-            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <div className="flex flex-row items-center justify-between">
-                <h3 className="text-xs opacity-50">
-                  Training
-                </h3>
-              </div>
-              {!activity?.training?.isTraining ? (
-                  <p className="text-[10px]">
-                    Not in training
-                  </p>
+                  ))}
+                </div>
               ) : (
-                  <div className="flex flex-col space-y-2">
-                    <h3 className="text-sm text-accent">XP: {formatNumber(Number(activity?.training?.training?.xp))}</h3>
-                    <p className="text-[10px]">
-                      Training for {formatDistanceToNow(new Date(fromUnixTime(activity?.training?.training?.startAt)))}
-                    </p>
-                  </div>
+                <p>
+                  <p className="text-[10px]">No equipped items</p>
+                </p>
               )}
               {isConnected && isOwnerOfNFT && actionsLive && (
-                  <button
-                      className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                      type="button"
-                      onClick={() => {
-                        setViewState(VIEWS.TRAINING);
-                      }}
-                  >
-                    <img
-                        className="object-cover h-full w-full"
-                        src={buttonBackground}
-                        alt="button"
-                    />
-                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                            Train
-                          </span>
-                  </button>
+                <button
+                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    setViewState(VIEWS.WARDROBE);
+                  }}
+                >
+                  <img
+                    className="object-cover h-full w-full"
+                    src={buttonBackground}
+                    alt="button"
+                  />
+                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                    Wardrobe
+                  </span>
+                </button>
               )}
             </div>
             <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
               <div className="flex flex-row items-center justify-between">
-                <h3 className="text-xs opacity-50">
-                  Questing
-                </h3>
+                <h3 className="text-xs opacity-50">Training</h3>
               </div>
-              {!activity?.questing?.isQuesting ? (
-                  <p className="text-[10px]">
-                    Not on a quest
-                  </p>
+              {!activity?.training?.isTraining ? (
+                <p className="text-[10px]">Not in training</p>
               ) : (
-                  <div className="flex flex-col space-y-2">
-                    <h3 className="text-sm text-accent">{activity?.questing?.currentQuest?.name}</h3>
-                    <p className="text-[10px]">
-                      Started: {format(new Date(fromUnixTime(activity?.questing?.quest?.startAt)), 'yyyy-MM-dd hh:mm aaaa')}
-                    </p>
-                    <p className="text-[10px]">
-                      Ends: {format(new Date(fromUnixTime(activity?.questing?.quest?.endAt)), 'yyyy-MM-dd hh:mm aaaa')}
-                    </p>
-                  </div>
+                <div className="flex flex-col space-y-2">
+                  <h3 className="text-sm text-accent">
+                    XP: {formatNumber(Number(activity?.training?.training?.xp))}
+                  </h3>
+                  <p className="text-[10px]">
+                    Training for{" "}
+                    {formatDistanceToNow(
+                      new Date(
+                        fromUnixTime(activity?.training?.training?.startAt),
+                      ),
+                    )}
+                  </p>
+                </div>
               )}
               {isConnected && isOwnerOfNFT && actionsLive && (
-                  <button
-                      className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                      type="button"
-                      onClick={() => {
-                        setViewState(VIEWS.QUESTING);
-                      }}
-                  >
-                    <img
-                        className="object-cover h-full w-full"
-                        src={buttonBackground}
-                        alt="button"
-                    />
-                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                            Quest
-                          </span>
-                  </button>
+                <button
+                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    setViewState(VIEWS.TRAINING);
+                  }}
+                >
+                  <img
+                    className="object-cover h-full w-full"
+                    src={buttonBackground}
+                    alt="button"
+                  />
+                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                    Train
+                  </span>
+                </button>
+              )}
+            </div>
+            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+              <div className="flex flex-row items-center justify-between">
+                <h3 className="text-xs opacity-50">Questing</h3>
+              </div>
+              {!activity?.questing?.isQuesting ? (
+                <p className="text-[10px]">Not on a quest</p>
+              ) : (
+                <div className="flex flex-col space-y-2">
+                  <h3 className="text-sm text-accent">
+                    {activity?.questing?.currentQuest?.name}
+                  </h3>
+                  <p className="text-[10px]">
+                    Started:{" "}
+                    {format(
+                      new Date(
+                        fromUnixTime(activity?.questing?.quest?.startAt),
+                      ),
+                      "yyyy-MM-dd hh:mm aaaa",
+                    )}
+                  </p>
+                  <p className="text-[10px]">
+                    Ends:{" "}
+                    {format(
+                      new Date(fromUnixTime(activity?.questing?.quest?.endAt)),
+                      "yyyy-MM-dd hh:mm aaaa",
+                    )}
+                  </p>
+                </div>
+              )}
+              {isConnected && isOwnerOfNFT && actionsLive && (
+                <button
+                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                  type="button"
+                  onClick={() => {
+                    setViewState(VIEWS.QUESTING);
+                  }}
+                >
+                  <img
+                    className="object-cover h-full w-full"
+                    src={buttonBackground}
+                    alt="button"
+                  />
+                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                    Quest
+                  </span>
+                </button>
               )}
             </div>
             {isSimulated && (
-                <p className="text-[10px] opacity-50 py-2">
-                  Note: We have detected you are in an environment that cannot
-                  connect a wallet. The experience will run in a{" "}
-                  <u>simulated</u> mode. You can make changes but no real
-                  transactions will take place.
-                </p>
+              <p className="text-[10px] opacity-50 py-2">
+                Note: We have detected you are in an environment that cannot
+                connect a wallet. The experience will run in a <u>simulated</u>{" "}
+                mode. You can make changes but no real transactions will take
+                place.
+              </p>
             )}
           </div>
         </div>
@@ -893,7 +914,7 @@ const Header = ({
   onTogglePixel = null,
 }) => {
   return (
-    <div className="absolute top-0 flex flex-row items-center justify-between w-full z-[10001] px-3">
+    <div className="absolute top-0 flex flex-row items-center justify-between w-full min-h-[50px] z-[10001] px-3">
       {onToggleMenu ? (
         <button
           onClick={onToggleMenu}
@@ -976,7 +997,7 @@ const MobileFullExperience = ({
   );
 };
 
-const Experience = ({ metadata, isSimulated = false }) => {
+const Experience = ({ metadata, isSandboxed, isSimulated = false }) => {
   const [isShowingPixel, setIsShowingPixel] = useState(false);
 
   const { images, isSynthEnabled } = generateRenderingOrder({
@@ -1000,23 +1021,36 @@ const Experience = ({ metadata, isSimulated = false }) => {
           onTogglePixel={onTogglePixel}
         />
       </div>
-      <div className="flex tablet:hidden relative h-full w-full overflow-auto">
-        <MobileFullExperience
-          metadata={metadata}
-          isSimulated={isSimulated}
-          isShowingPixel={isShowingPixel}
-          images={images}
-          isSynthEnabled={isSynthEnabled}
-          onTogglePixel={onTogglePixel}
-        />
-      </div>
+      {isSandboxed ? (
+        <div className="flex tablet:hidden max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
+          <FullExperience
+            metadata={metadata}
+            isSimulated={isSimulated}
+            isShowingPixel={isShowingPixel}
+            images={images}
+            isSynthEnabled={isSynthEnabled}
+            onTogglePixel={onTogglePixel}
+          />
+        </div>
+      ) : (
+        <div className="flex tablet:hidden relative h-full w-full overflow-auto">
+          <MobileFullExperience
+            metadata={metadata}
+            isSimulated={isSimulated}
+            isShowingPixel={isShowingPixel}
+            images={images}
+            isSynthEnabled={isSynthEnabled}
+            onTogglePixel={onTogglePixel}
+          />
+        </div>
+      )}
     </div>
   );
 };
 
 const NFTViewer = ({ isSandboxed, metadata }) => {
   return isSandboxed ? (
-    <Experience metadata={metadata} isSimulated />
+    <Experience metadata={metadata} isSandboxed={isSandboxed} isSimulated />
   ) : (
     <WagmiConfig
       config={createConfig(
@@ -1035,7 +1069,11 @@ const NFTViewer = ({ isSandboxed, metadata }) => {
           walletConnectName: "Other Wallets",
         }}
       >
-        <Experience metadata={metadata} isSimulated={false} />
+        <Experience
+          metadata={metadata}
+          isSandboxed={isSandboxed}
+          isSimulated={false}
+        />
       </ConnectKitProvider>
     </WagmiConfig>
   );

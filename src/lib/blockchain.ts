@@ -184,7 +184,14 @@ export const getStatsByTokenId = async (
 
     const [state] = stateBatch as any;
 
-    const { syncXP: pendingXP, quest, isQuesting, isTraining, questMetadata, training } = state;
+    const {
+      syncXP: pendingXP,
+      quest,
+      isQuesting,
+      isTraining,
+      questMetadata,
+      training,
+    } = state;
 
     const xp = Number(pendingXP || 0);
 
@@ -440,12 +447,12 @@ export const getStatsByTokenId = async (
         questing: {
           isQuesting: state?.isQuesting,
           currentQuest: state?.questMetadata,
-          quest: state?.quest
+          quest: state?.quest,
         },
         training: {
           isTraining: state?.isTraining,
-          training: state?.training
-        }
+          training: state?.training,
+        },
       },
       stats: {
         level: aggregateLevel,
@@ -458,12 +465,15 @@ export const getStatsByTokenId = async (
         metadata?.equipped,
         itemLookup,
       ),
-      faction: factionId !== '0' ? {
-        image: `${
-          process.env.PUBLIC_URL
-        }/factions/${factionName?.toLowerCase()}.png`,
-        label: factionName,
-      } : null,
+      faction:
+        factionId !== "0"
+          ? {
+              image: `${
+                process.env.PUBLIC_URL
+              }/factions/${factionName?.toLowerCase()}.png`,
+              label: factionName,
+            }
+          : null,
       isSynced: baseLevel === aggregateLevel,
     };
   } catch (e) {
