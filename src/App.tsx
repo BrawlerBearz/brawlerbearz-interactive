@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import classnames from "classnames";
 import { useParams } from "react-router-dom";
@@ -5,6 +6,7 @@ import {
   MdOpenInNew as ExternalIcon,
   MdWarning as WarnIcon,
   MdDownload as DownloadIcon,
+  MdRefresh as RefreshIcon,
 } from "react-icons/md";
 import { format, fromUnixTime, formatDistanceToNow } from "date-fns";
 import {
@@ -18,6 +20,7 @@ import {
   FaExchangeAlt as ToggleIcon,
 } from "react-icons/fa";
 import { WagmiConfig, createConfig, useAccount } from "wagmi";
+import { Wallet, providers, ethers  } from 'ethers'
 import { getWalletClient, getPublicClient, signMessage } from "@wagmi/core";
 import {
   ConnectKitProvider,
@@ -30,7 +33,11 @@ import {
   SimpleSmartContractAccount,
   SmartAccountProvider,
 } from "@alchemy/aa-core";
-import { AlchemyProvider } from "@alchemy/aa-alchemy";
+import { IBundler, Bundler } from '@biconomy/bundler'
+import { BiconomySmartAccount, BiconomySmartAccountConfig, DEFAULT_ENTRYPOINT_ADDRESS } from "@biconomy/account"
+import { IPaymaster, BiconomyPaymaster, PaymasterMode } from '@biconomy/paymaster'
+import { ChainId } from "@biconomy/core-types"
+import { AlchemyProvider, withAlchemyGasManager } from "@alchemy/aa-alchemy";
 import { polygon } from "viem/chains";
 import {
   toHex,
@@ -39,6 +46,7 @@ import {
   http,
   createWalletClient,
   custom,
+    formatEther
 } from "viem";
 import { generateRenderingOrder } from "./lib/renderer";
 import { getStatsByTokenId } from "./lib/blockchain";
@@ -63,6 +71,7 @@ import {
   bearzStakeChildABI,
   bearzStakeChildContractAddress,
 } from "./lib/contracts";
+import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 
 // https://docs.alchemy.com/reference/simple-account-factory-addresses
 const SIMPLE_ACCOUNT_FACTORY_ADDRESS =
@@ -191,165 +200,243 @@ const useSimulatedAccount = (simulatedAddress) => {
 };
 
 const useNFTWrapped = ({ isSimulated, overrideAddress }) => {
+
   const account = !isSimulated
     ? useAccount()
     : useSimulatedAccount(overrideAddress);
 
-  // const owner: SimpleSmartAccountOwner = {
-  //   signMessage: async (msg) => {
-  //     console.log(msg);
-  //     return signMessage({
-  //       message: toHex(msg),
-  //     })
-  //   },
-  //   getAddress: async () => account?.address,
-  // };
-  //
-  // let provider = new AlchemyProvider({
-  //   apiKey: L2_ALCHEMY_KEY,
-  //   chain: polygon,
-  //   entryPointAddress: ENTRY_POINT_ADDRESS,
-  // }).connect(
-  //     (rpcClient) =>
-  //         new SimpleSmartContractAccount({
-  //           entryPointAddress: ENTRY_POINT_ADDRESS,
-  //           chain: polygon,
-  //           factoryAddress: SIMPLE_ACCOUNT_FACTORY_ADDRESS,
-  //           rpcClient,
-  //           owner,
-  //         })
-  // );
-  //
-  // console.log({
-  //   provider
-  // });
-  //
-  // provider = provider.withAlchemyGasManager({
-  //   provider: provider.rpcClient,
-  //   policyId: POLICY_ID,
-  //   entryPoint: ENTRY_POINT_ADDRESS,
-  // });
+  if(isSimulated){
+    return account
+  }
+
+  const { isLoading, owner: signer } = useSimpleAccountOwner();
+
+  if(isLoading || !signer?.getAddress()){
+    return account
+  }
+
+  const biconomyAccount = new BiconomySmartAccount({
+    signer,
+    chainId: ChainId.POLYGON_MAINNET,
+    rpcUrl: `https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`,
+    paymaster: new BiconomyPaymaster({
+      paymasterUrl: 'https://paymaster.biconomy.io/api/v1/137/pQ4YfSfVI.5f85bc99-110a-4594-9629-5f5c5ddacded'
+    }),
+    bundler: new Bundler({
+      bundlerUrl: 'https://bundler.biconomy.io/api/v2/137/BB897hJ89.dd7fopYh-iJkl-jI89-af80-6877f74b7Fcg',
+      chainId: ChainId.POLYGON_MAINNET,
+      entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
+    }),
+    entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
+  })
 
   return {
     ...account,
-    // owner,
-    // actions: {
-    //   onTrain: async ({ tokenIds }) => {
-    //     try {
-    //
-    //       // const publicClient = getPublicClient({
-    //       //   chainId: polygon.id
-    //       // })
-    //       //
-    //       // const { request } = await publicClient.simulateContract({
-    //       //   address: bearzStakeChildContractAddress,
-    //       //   abi: bearzStakeChildABI,
-    //       //   functionName: 'train',
-    //       //   args: [tokenIds],
-    //       //   account,
-    //       // })
-    //       //
-    //       // console.log({
-    //       //  request
-    //       // });
-    //       //
-    //       // const walletClient = await getWalletClient({
-    //       //   chainId: polygon.id
-    //       // })
-    //       //
-    //       // await walletClient.writeContract(request)
-    //
-    //       // const callData = encodeFunctionData({
-    //       //   abi: bearzStakeChildABI,
-    //       //   functionName: 'train',
-    //       //   args: [tokenIds],
-    //       // })
-    //       // // //
-    //       // console.log({
-    //       //   callData
-    //       // });
-    //       // //
-    //       // const { hash } = await provider.sendTransaction({
-    //       //   from: account.address,
-    //       //   to: bearzStakeChildContractAddress,
-    //       //   data: callData
-    //       // });
-    //       // //
-    //       // console.log({
-    //       //   hash
-    //       // });
-    //
-    //       // const gasPrice = await publicClient.getGasPrice()
-    //       //
-    //       // console.log({
-    //       //   callData,
-    //       //   gasPrice
-    //       // });
-    //       //
-    //       //
-    //       //
-    //       // fetch('https://polygon-mainnet.g.alchemy.com/v2/LCNPCoXan5scqbRr4KOZK8kofDifu2fz', {
-    //       //   method: 'POST',
-    //       //   headers: {accept: 'application/json', 'content-type': 'application/json'},
-    //       //   body: JSON.stringify({
-    //       //     id: 137,
-    //       //     jsonrpc: '2.0',
-    //       //     method: 'eth_estimateUserOperationGas',
-    //       //     params: [
-    //       //       {
-    //       //         sender: account.address,
-    //       //         nonce: '0x0',
-    //       //         initCode: '0x',
-    //       //         callData,
-    //       //         // callGasLimit: '0xF4240',
-    //       //         // verificationGasLimit: '0xF4240',
-    //       //         // preVerificationGas: '0xF4240',
-    //       //         // maxFeePerGas: toHex(gasPrice),
-    //       //         // maxPriorityFeePerGas: toHex(gasPrice / 10n),
-    //       //         signature: '0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c',
-    //       //         paymasterAndData: '0x4Fd9098af9ddcB41DA48A1d78F91F1398965addcfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c'
-    //       //       },
-    //       //         ENTRY_POINT_ADDRESS
-    //       //     ]
-    //       //   })
-    //       // })
-    //       //     .then(response => response.json())
-    //       //     .then(response => console.log(response))
-    //       //     .catch(err => console.error(err));
-    //
-    //       // const options = {
-    //       //   method: 'POST',
-    //       //   headers: {accept: 'application/json', 'content-type': 'application/json'},
-    //       //   body: JSON.stringify({
-    //       //     id: 1,
-    //       //     jsonrpc: '2.0',
-    //       //     method: 'alchemy_simulateExecution',
-    //       //     params: [
-    //       //       {
-    //       //         from: account.address,
-    //       //         to: bearzStakeChildContractAddress,
-    //       //         value: '0x0',
-    //       //         data: callData
-    //       //       }
-    //       //     ]
-    //       //   })
-    //       // };
-    //       //
-    //       // fetch('https://polygon-mainnet.g.alchemy.com/v2/LCNPCoXan5scqbRr4KOZK8kofDifu2fz', options)
-    //       //     .then(response => response.json())
-    //       //     .then(response => console.log(response))
-    //       //     .catch(err => console.error(err));
-    //
-    //     } catch (error){
-    //       console.log(error);
-    //     }
-    //   }
-    // }
+    actions: {
+      onStopTraining: async ({ tokenIds }) => {
+        try {
+
+          // const publicClient = getPublicClient({
+          //   chainId: polygon.id
+          // })
+          //
+          // const { request } = await publicClient.simulateContract({
+          //   address: bearzStakeChildContractAddress,
+          //   abi: bearzStakeChildABI,
+          //   functionName: 'stopTraining',
+          //   args: [tokenIds],
+          //   account: {
+          //     address: signer.getAddress()
+          //   },
+          // })
+          //
+          // const walletClient = await getWalletClient({
+          //   chainId: polygon.id
+          // })
+          //
+          // await walletClient.writeContract(request);
+
+          const smartAccount = await biconomyAccount.init()
+
+          const callData = encodeFunctionData({
+            abi: bearzStakeChildABI,
+            functionName: "stopTraining",
+            args: [tokenIds],
+          });
+
+          console.log(callData);
+
+          const partialUserOp = await smartAccount.buildUserOp([{
+            to: bearzStakeChildContractAddress,
+            data: callData,
+          }])
+
+          partialUserOp.callGasLimit = 30000000;
+          partialUserOp.preVerificationGas = 30000000;
+          partialUserOp.verificationGasLimit = 30000000;
+
+          const { paymasterAndData } =
+              await smartAccount.paymaster.getPaymasterAndData(
+                  partialUserOp,
+                  {
+                    mode: PaymasterMode.SPONSORED,
+                    calculateGasLimits: false
+                  }
+              );
+
+          partialUserOp.paymasterAndData = paymasterAndData;
+
+          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
+
+          console.log({
+            userOpResponse
+          });
+
+          const transactionDetails = await userOpResponse.wait()
+
+          console.log(
+              `transactionDetails: https://polygonscan.com/tx/${transactionDetails.receipt.transactionHash}`
+          )
+
+          // const smartAccountSigner = withAlchemyGasManager(baseSigner, {
+          //   provider: baseSigner.rpcClient,
+          //   policyId: POLICY_ID,
+          //   entryPoint: ENTRY_POINT_ADDRESS,
+          // });
+          //
+          // const from = await smartAccountSigner.account.getAddress();
+          //
+          // console.log(from);
+          //
+          // const hash = await smartAccountSigner.sendTransaction({
+          //   from,
+          //   to: bearzStakeChildContractAddress,
+          //   data: encodeFunctionData({
+          //     abi: bearzStakeChildABI,
+          //     functionName: "stopTraining",
+          //     args: [[tokenIds]],
+          //   }),
+          // });
+          //
+          // console.log({
+          //   hash,
+          // });
+        } catch (e) {
+          console.log(e);
+        }
+      },
+      onTrain: async ({ tokenIds }) => {
+        try {
+          // const publicClient = getPublicClient({
+          //   chainId: polygon.id
+          // })
+          //
+          // const { request } = await publicClient.simulateContract({
+          //   address: bearzStakeChildContractAddress,
+          //   abi: bearzStakeChildABI,
+          //   functionName: 'train',
+          //   args: [tokenIds],
+          //   account,
+          // })
+          //
+          // console.log({
+          //  request
+          // });
+          //
+          // const walletClient = await getWalletClient({
+          //   chainId: polygon.id
+          // })
+          //
+          // await walletClient.writeContract(request)
+          // const callData = encodeFunctionData({
+          //   abi: bearzStakeChildABI,
+          //   functionName: 'train',
+          //   args: [tokenIds],
+          // })
+          // // //
+          // console.log({
+          //   callData
+          // });
+          // //
+          // const { hash } = await provider.sendTransaction({
+          //   from: account.address,
+          //   to: bearzStakeChildContractAddress,
+          //   data: callData
+          // });
+          // //
+          // console.log({
+          //   hash
+          // });
+          // const gasPrice = await publicClient.getGasPrice()
+          //
+          // console.log({
+          //   callData,
+          //   gasPrice
+          // });
+          //
+          //
+          //
+          // fetch('https://polygon-mainnet.g.alchemy.com/v2/LCNPCoXan5scqbRr4KOZK8kofDifu2fz', {
+          //   method: 'POST',
+          //   headers: {accept: 'application/json', 'content-type': 'application/json'},
+          //   body: JSON.stringify({
+          //     id: 137,
+          //     jsonrpc: '2.0',
+          //     method: 'eth_estimateUserOperationGas',
+          //     params: [
+          //       {
+          //         sender: account.address,
+          //         nonce: '0x0',
+          //         initCode: '0x',
+          //         callData,
+          //         // callGasLimit: '0xF4240',
+          //         // verificationGasLimit: '0xF4240',
+          //         // preVerificationGas: '0xF4240',
+          //         // maxFeePerGas: toHex(gasPrice),
+          //         // maxPriorityFeePerGas: toHex(gasPrice / 10n),
+          //         signature: '0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c',
+          //         paymasterAndData: '0x4Fd9098af9ddcB41DA48A1d78F91F1398965addcfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c'
+          //       },
+          //         ENTRY_POINT_ADDRESS
+          //     ]
+          //   })
+          // })
+          //     .then(response => response.json())
+          //     .then(response => console.log(response))
+          //     .catch(err => console.error(err));
+          // const options = {
+          //   method: 'POST',
+          //   headers: {accept: 'application/json', 'content-type': 'application/json'},
+          //   body: JSON.stringify({
+          //     id: 1,
+          //     jsonrpc: '2.0',
+          //     method: 'alchemy_simulateExecution',
+          //     params: [
+          //       {
+          //         from: account.address,
+          //         to: bearzStakeChildContractAddress,
+          //         value: '0x0',
+          //         data: callData
+          //       }
+          //     ]
+          //   })
+          // };
+          //
+          // fetch('https://polygon-mainnet.g.alchemy.com/v2/LCNPCoXan5scqbRr4KOZK8kofDifu2fz', options)
+          //     .then(response => response.json())
+          //     .then(response => console.log(response))
+          //     .catch(err => console.error(err));
+        } catch (error) {
+          console.log(error);
+        }
+      },
+    },
   };
 };
 
-const ActionMenu = ({ metadata, isSimulated }) => {
+const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
   const [isMounted, setIsMounted] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewState, setViewState] = useState(null);
   const [isViewingBaseStats, setViewingBaseStats] = useState(false);
   const [viewContext, setViewContext] = useState(null);
@@ -367,7 +454,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
 
   const { level, xp, str, end, int, lck, nextXpLevel } = stats || {};
 
-  const { address, isConnected } = useNFTWrapped({
+  const { address, isConnected, actions } = useNFTWrapped({
     isSimulated,
     overrideAddress: ownerOf,
   });
@@ -387,7 +474,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
       {!viewState && (
         <div className="w-full h-full flex flex-col text-white">
           <div className="flex flex-col gap-4 tablet:gap-0 tablet:flex-row tablet:items-center tablet:justify-between w-full px-3 tablet:px-6 pt-3 tablet:pt-6">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 pt-2 tablet:pt-0">
               <h2 className="flex flex-row items-center space-x-3 text-sm md:text-xl font-bold">
                 <span title={`Token: #${tokenId}, ${name}`}>{name}</span>
                 {faction?.image && (
@@ -405,6 +492,28 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                 >
                   <DownloadIcon />
                 </a>
+                <button
+                  className={classnames(
+                    "opacity-50 hover:opacity-100 text-[20px] cursor-pointer ",
+                    {
+                      "animate-spin": isRefreshing,
+                    },
+                  )}
+                  onClick={async () => {
+                    try {
+                      setIsRefreshing(true);
+                      await fetch(
+                        `https://bearzbot.herokuapp.com/refresh?tokenId=${tokenId}`,
+                      ).then((res) => res.json());
+                    } catch (e) {
+                      console.log(e);
+                    } finally {
+                      setIsRefreshing(false);
+                    }
+                  }}
+                >
+                  <RefreshIcon />
+                </button>
               </h2>
               <a
                 className="inline-flex opacity-50 text-[12px] hover:underline text-accent3"
@@ -428,7 +537,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
               >
                 {formatNumber(xp)} XP
               </span>
-              <div className="relative flex flex-row w-full justify-end space-x-1">
+              <div className="relative flex flex-row w-full tablet:justify-end space-x-1">
                 <div className="flex border border-1 border-accent bg-dark2 h-[12px] rounded-full w-[120px] overflow-hidden">
                   <div
                     title={`Next Level: ${formatNumber(nextXpLevel)} XP`}
@@ -445,10 +554,11 @@ const ActionMenu = ({ metadata, isSimulated }) => {
             </div>
           </div>
           <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50 my-4" />
-          <div className="flex flex-col overflow-auto px-3 tablet:px-6 pb-6">
+          <div className="flex flex-col tablet:overflow-auto px-3 tablet:px-6 pb-6">
             <div className="flex flex-col flex-shrink-0 w-full space-y-4">
               <h3 className="hidden text-xs opacity-50">Manage Brawler</h3>
               {!isSimulated && (
+                  <div className="flex flex-col flex-shrink-0 w-full justify-center items-center">
                 <ConnectKitButton.Custom>
                   {({ isConnected, show, truncatedAddress, ensName }) => {
                     return !isConnected ? (
@@ -475,6 +585,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                     );
                   }}
                 </ConnectKitButton.Custom>
+                  </div>
               )}
               <div className="flex flex-wrap w-full gap-2 tablet:gap-4">
                 {isConnected && !isOwnerOfNFT && (
@@ -620,7 +731,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
               )}
               {isConnected && isOwnerOfNFT && actionsLive && (
                 <button
-                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                  className="hidden relative flex items-center justify-center w-[250px] cursor-pointer"
                   type="button"
                   onClick={() => {
                     setViewState(VIEWS.WARDROBE);
@@ -642,7 +753,32 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                 <h3 className="text-xs opacity-50">Training</h3>
               </div>
               {!activity?.training?.isTraining ? (
-                <p className="text-[10px]">Not in training</p>
+                <button
+                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const { success } = await actions?.onTrain({
+                        tokenIds: [tokenId],
+                      });
+
+                      if (success) {
+                        onRefresh();
+                      }
+                    } catch (e) {
+                      console.log(e);
+                    }
+                  }}
+                >
+                  <img
+                    className="object-cover h-full w-full"
+                    src={buttonBackground}
+                    alt="button"
+                  />
+                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                    Start Training
+                  </span>
+                </button>
               ) : (
                 <div className="flex flex-col space-y-2">
                   <h3 className="text-sm text-accent">
@@ -656,25 +792,35 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                       ),
                     )}
                   </p>
+                  {isConnected && isOwnerOfNFT && actionsLive && (
+                    <button
+                      className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const { success } = await actions?.onStopTraining({
+                            tokenIds: [tokenId],
+                          });
+
+                          if (success) {
+                            onRefresh();
+                          }
+                        } catch (e) {
+                          console.log(e);
+                        }
+                      }}
+                    >
+                      <img
+                        className="object-cover h-full w-full"
+                        src={buttonBackground}
+                        alt="button"
+                      />
+                      <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                        End Training
+                      </span>
+                    </button>
+                  )}
                 </div>
-              )}
-              {isConnected && isOwnerOfNFT && actionsLive && (
-                <button
-                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                  type="button"
-                  onClick={() => {
-                    setViewState(VIEWS.TRAINING);
-                  }}
-                >
-                  <img
-                    className="object-cover h-full w-full"
-                    src={buttonBackground}
-                    alt="button"
-                  />
-                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                    Train
-                  </span>
-                </button>
               )}
             </div>
             <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
@@ -949,6 +1095,7 @@ const FullExperience = ({
   isShowingPixel,
   onTogglePixel,
   isSimulated,
+  onRefresh,
 }) => {
   const [isShowingMenu, setIsShowingMenu] = useState(false);
   return (
@@ -968,7 +1115,11 @@ const FullExperience = ({
           setIsShowingMenu(false);
         }}
       >
-        <ActionMenu metadata={metadata} isSimulated={isSimulated} />
+        <ActionMenu
+          metadata={metadata}
+          isSimulated={isSimulated}
+          onRefresh={onRefresh}
+        />
       </Popup>
     </div>
   );
@@ -981,6 +1132,7 @@ const MobileFullExperience = ({
   isShowingPixel,
   onTogglePixel,
   isSimulated,
+  onRefresh,
 }) => {
   return (
     <div className="relative h-full w-full">
@@ -992,12 +1144,21 @@ const MobileFullExperience = ({
       <div className="aspect-square">
         <ImageRenderer images={images} />
       </div>
-      <ActionMenu metadata={metadata} isSimulated={isSimulated} />
+      <ActionMenu
+        metadata={metadata}
+        isSimulated={isSimulated}
+        onRefresh={onRefresh}
+      />
     </div>
   );
 };
 
-const Experience = ({ metadata, isSandboxed, isSimulated = false }) => {
+const Experience = ({
+  metadata,
+  onRefresh,
+  isSandboxed,
+  isSimulated = false,
+}) => {
   const [isShowingPixel, setIsShowingPixel] = useState(false);
 
   const { images, isSynthEnabled } = generateRenderingOrder({
@@ -1019,6 +1180,7 @@ const Experience = ({ metadata, isSandboxed, isSimulated = false }) => {
           images={images}
           isSynthEnabled={isSynthEnabled}
           onTogglePixel={onTogglePixel}
+          onRefresh={onRefresh}
         />
       </div>
       {isSandboxed ? (
@@ -1030,6 +1192,7 @@ const Experience = ({ metadata, isSandboxed, isSimulated = false }) => {
             images={images}
             isSynthEnabled={isSynthEnabled}
             onTogglePixel={onTogglePixel}
+            onRefresh={onRefresh}
           />
         </div>
       ) : (
@@ -1041,6 +1204,7 @@ const Experience = ({ metadata, isSandboxed, isSimulated = false }) => {
             images={images}
             isSynthEnabled={isSynthEnabled}
             onTogglePixel={onTogglePixel}
+            onRefresh={onRefresh}
           />
         </div>
       )}
@@ -1048,9 +1212,14 @@ const Experience = ({ metadata, isSandboxed, isSimulated = false }) => {
   );
 };
 
-const NFTViewer = ({ isSandboxed, metadata }) => {
+const NFTViewer = ({ isSandboxed, metadata, onRefresh }) => {
   return isSandboxed ? (
-    <Experience metadata={metadata} isSandboxed={isSandboxed} isSimulated />
+    <Experience
+      metadata={metadata}
+      isSandboxed={isSandboxed}
+      onRefresh={onRefresh}
+      isSimulated
+    />
   ) : (
     <WagmiConfig
       config={createConfig(
@@ -1067,10 +1236,12 @@ const NFTViewer = ({ isSandboxed, metadata }) => {
         options={{
           embedGoogleFonts: true,
           walletConnectName: "Other Wallets",
+          hideNoWalletCTA: true,
         }}
       >
         <Experience
           metadata={metadata}
+          onRefresh={onRefresh}
           isSandboxed={isSandboxed}
           isSimulated={false}
         />
@@ -1087,11 +1258,16 @@ const InteractiveNFT = () => {
     window.frameElement;
   return (
     <LoadingScreen tokenId={tokenId}>
-      {({ metadata }) => (
-        <NFTViewer metadata={metadata} isSandboxed={isSandboxed} />
+      {({ metadata, onRefresh }) => (
+        <NFTViewer
+          metadata={metadata}
+          isSandboxed={isSandboxed}
+          onRefresh={onRefresh}
+        />
       )}
     </LoadingScreen>
   );
 };
 
 export default InteractiveNFT;
+
