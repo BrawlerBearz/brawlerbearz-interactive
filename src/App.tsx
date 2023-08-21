@@ -441,7 +441,7 @@ const ActionMenu = ({ metadata, isSimulated }) => {
           <div className="flex flex-col overflow-auto px-3 tablet:px-6 pb-6">
             <div className="flex flex-col flex-shrink-0 w-full space-y-4">
               <h3 className="hidden text-xs opacity-50">Manage Brawler</h3>
-              {!isSimulated ? (
+              {!isSimulated && (
                   <ConnectKitButton.Custom>
                     {({ isConnected, show, truncatedAddress, ensName }) => {
                       return !isConnected ? (
@@ -468,13 +468,6 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                       );
                     }}
                   </ConnectKitButton.Custom>
-              ) : (
-                  <p className="text-[8px] py-2">
-                    Note: We have detected you are in an environment that cannot
-                    connect a wallet. The experience will run in a{" "}
-                    <u>simulated</u> mode. You can make changes but no real
-                    transactions will take place.
-                  </p>
               )}
               <div className="flex flex-wrap w-full gap-2 tablet:gap-4">
                 {isConnected && !isOwnerOfNFT && (
@@ -711,6 +704,14 @@ const ActionMenu = ({ metadata, isSimulated }) => {
                   </button>
               )}
             </div>
+            {isSimulated && (
+                <p className="text-[10px] opacity-50 py-2">
+                  Note: We have detected you are in an environment that cannot
+                  connect a wallet. The experience will run in a{" "}
+                  <u>simulated</u> mode. You can make changes but no real
+                  transactions will take place.
+                </p>
+            )}
           </div>
         </div>
       )}
