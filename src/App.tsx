@@ -594,7 +594,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
               )}
               <div className="flex flex-wrap w-full gap-2 tablet:gap-4">
                 {isConnected && !isOwnerOfNFT && (
-                  <div className="flex flex-row items-center text-warn py-2 space-x-2">
+                  <div className="flex flex-row w-full items-center justify-center text-center text-warn py-2 space-x-2">
                     <span className="text-base">
                       <WarnIcon />
                     </span>
@@ -881,7 +881,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
               )}
             </div>
             {isSimulated && (
-              <p className="text-[10px] opacity-50 py-2">
+              <p className="text-[10px] pt-6 pb-2">
                 Note: We have detected you are in an environment that cannot
                 connect a wallet. The experience will run in a <u>simulated</u>{" "}
                 mode. You can make changes but no real transactions will take
