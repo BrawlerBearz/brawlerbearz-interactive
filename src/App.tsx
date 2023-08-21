@@ -70,6 +70,8 @@ import {
   bearzShopContractAddress,
   bearzStakeChildABI,
   bearzStakeChildContractAddress,
+  bearzTokenABI,
+    bearzTokenContractAddress
 } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 
@@ -258,22 +260,25 @@ const useNFTWrapped = ({ isSimulated, overrideAddress }) => {
 
           const smartAccount = await biconomyAccount.init()
 
+          console.log("owner: ", smartAccount.owner)
+          console.log("address: ", await smartAccount.getSmartAccountAddress())
+
           const callData = encodeFunctionData({
-            abi: bearzStakeChildABI,
-            functionName: "stopTraining",
-            args: [tokenIds],
+            abi: bearzTokenABI,
+            functionName: "transfer",
+            args: ['0x3Ba6379FE6bC3CcAEd136B28781aD358dD348BA0', '1000000000000000000'],
           });
 
           console.log(callData);
 
           const partialUserOp = await smartAccount.buildUserOp([{
-            to: bearzStakeChildContractAddress,
+            to: bearzTokenContractAddress,
             data: callData,
           }])
-
-          partialUserOp.callGasLimit = 30000000;
-          partialUserOp.preVerificationGas = 30000000;
-          partialUserOp.verificationGasLimit = 30000000;
+          //
+          partialUserOp.callGasLimit = 20000000;
+          partialUserOp.preVerificationGas = 1000000;
+          partialUserOp.verificationGasLimit = 20000000;
 
           const { paymasterAndData } =
               await smartAccount.paymaster.getPaymasterAndData(
@@ -753,32 +758,36 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                 <h3 className="text-xs opacity-50">Training</h3>
               </div>
               {!activity?.training?.isTraining ? (
-                <button
-                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      const { success } = await actions?.onTrain({
-                        tokenIds: [tokenId],
-                      });
+                  <>
+                    <p className="text-[10px]">Not training</p>
+                    <button
+                        className="hidden relative flex items-center justify-center w-[250px] cursor-pointer"
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const { success } = await actions?.onTrain({
+                              tokenIds: [tokenId],
+                            });
 
-                      if (success) {
-                        onRefresh();
-                      }
-                    } catch (e) {
-                      console.log(e);
-                    }
-                  }}
-                >
-                  <img
-                    className="object-cover h-full w-full"
-                    src={buttonBackground}
-                    alt="button"
-                  />
-                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                            if (success) {
+                              onRefresh();
+                            }
+                          } catch (e) {
+                            console.log(e);
+                          }
+                        }}
+                    >
+                      <img
+                          className="object-cover h-full w-full"
+                          src={buttonBackground}
+                          alt="button"
+                      />
+                      <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
                     Start Training
                   </span>
-                </button>
+                    </button>
+                  </>
+
               ) : (
                 <div className="flex flex-col space-y-2">
                   <h3 className="text-sm text-accent">
