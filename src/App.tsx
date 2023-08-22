@@ -22,7 +22,11 @@ import {
 } from "react-icons/fa";
 import { WagmiConfig, createConfig, useAccount } from "wagmi";
 import { Wallet, providers, ethers } from "ethers";
-import { getWalletClient, getPublicClient, signMessage } from "@wagmi/core";
+import {
+  getWalletClient,
+  getPublicClient,
+  waitForTransaction,
+} from "@wagmi/core";
 import {
   ConnectKitProvider,
   ConnectKitButton,
@@ -242,50 +246,60 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
   });
 
   const checkSmartWalletAssociation = async ({ smartAccount }) => {
+    const polygonClient = createPublicClient({
+      chain: polygon,
+      transport: http(
+        `https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`,
+      ),
+    });
 
-      const polygonClient = createPublicClient({
-        chain: polygon,
-        transport: http(`https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`),
+    const smartAccountAddress = await smartAccount.getSmartAccountAddress();
+
+    // Check if smart wallet is enabled already and associated to leverage
+    const smartWalletAssociated = await polygonClient.readContract({
+      address: bearzStakeChildContractAddress,
+      abi: bearzStakeChildABI,
+      functionName: "operatorAccess",
+      args: [smartAccountAddress],
+    });
+
+    // Set up smart wallet association if different than expected
+    if (
+      smartWalletAssociated.toLowerCase() !== smartAccount.owner.toLowerCase()
+    ) {
+      toast.info(
+        `Setting up smart wallet permissions for EOA: ${smartAccount.owner}`,
+      );
+
+      const publicClient = getPublicClient({
+        chainId: polygon.id,
       });
 
-    const smartAccountAddress =
-        await smartAccount.getSmartAccountAddress();
-
-      // Check if smart wallet is enabled already and associated to leverage
-      const smartWalletAssociated = await polygonClient.readContract({
+      const { request } = await publicClient.simulateContract({
         address: bearzStakeChildContractAddress,
         abi: bearzStakeChildABI,
-        functionName: "operatorAccess",
+        functionName: "associateOperatorAsOwner",
         args: [smartAccountAddress],
+        account: {
+          address: signer.getAddress(),
+        },
       });
 
-      // Set up smart wallet association if different than expected
-      if (smartWalletAssociated.toLowerCase() !== smartAccount.owner.toLowerCase()) {
+      const walletClient = await getWalletClient({
+        chainId: polygon.id,
+      });
 
-        toast.info(`Setting up smart wallet permissions for EOA: ${smartAccount.owner}`);
+      const hash = await walletClient.writeContract(request);
 
-        const publicClient = getPublicClient({
-          chainId: polygon.id,
-        });
+      const receipt = await waitForTransaction({
+        hash: "0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060",
+      });
 
-        const { request } = await publicClient.simulateContract({
-          address: bearzStakeChildContractAddress,
-          abi: bearzStakeChildABI,
-          functionName: "associateOperatorAsOwner",
-          args: [smartAccountAddress],
-          account: {
-            address: signer.getAddress(),
-          },
-        });
-
-        const walletClient = await getWalletClient({
-          chainId: polygon.id,
-        });
-
-        await walletClient.writeContract(request);
-      }
-
-  }
+      toast.success(
+        `Created smart wallet: ${smartAccountAddress}...continuing...`,
+      );
+    }
+  };
 
   return {
     ...account,
@@ -319,16 +333,15 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
           const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
 
           await toast.promise(userOpResponse.wait(), {
-            pending: 'Calling bear on the intercom...please wait...',
+            pending: "Calling bear on the intercom...please wait...",
             success: "Bear left training.",
             error: "There was an error",
           });
 
           onRefresh();
-
         } catch (e) {
           console.log(e);
-          toast.error("There was an error. Please try again!")
+          toast.error("There was an error. Please try again!");
         }
       },
       onStartTraining: async ({ tokenIds }) => {
@@ -360,16 +373,15 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
           const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
 
           await toast.promise(userOpResponse.wait(), {
-            pending: 'Time to train!',
+            pending: "Time to train!",
             success: "Bear is in training.",
             error: "There was an error",
           });
 
           onRefresh();
-
         } catch (error) {
           console.log(error);
-          toast.error("There was an error. Please try again!")
+          toast.error("There was an error. Please try again!");
         }
       },
     },
@@ -399,7 +411,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
   const { address, isConnected, actions } = useNFTWrapped({
     isSimulated,
     overrideAddress: ownerOf,
-    onRefresh
+    onRefresh,
   });
 
   const isOwnerOfNFT = address?.toLowerCase() === ownerOf?.toLowerCase();
@@ -695,7 +707,10 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
               <div className="flex flex-row items-center justify-between">
                 <h3 className="text-xs opacity-50">Training</h3>
               </div>
-              {!activity?.training?.isTraining && actionsLive && isConnected && isOwnerOfNFT ? (
+              {!activity?.training?.isTraining &&
+              actionsLive &&
+              isConnected &&
+              isOwnerOfNFT ? (
                 <>
                   <p className="text-[10px]">Not training</p>
                   <button
@@ -704,7 +719,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                     onClick={async () => {
                       await actions?.onStartTraining({
                         tokenIds: [tokenId],
-                      })
+                      });
                     }}
                   >
                     <img
