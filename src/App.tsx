@@ -38,7 +38,7 @@ import { BiconomySmartAccount, BiconomySmartAccountConfig, DEFAULT_ENTRYPOINT_AD
 import { IPaymaster, BiconomyPaymaster, PaymasterMode } from '@biconomy/paymaster'
 import { ChainId } from "@biconomy/core-types"
 import { AlchemyProvider, withAlchemyGasManager } from "@alchemy/aa-alchemy";
-import { polygon } from "viem/chains";
+import {mainnet, polygon} from "viem/chains";
 import {
   toHex,
   encodeFunctionData,
@@ -264,21 +264,19 @@ const useNFTWrapped = ({ isSimulated, overrideAddress }) => {
           console.log("address: ", await smartAccount.getSmartAccountAddress())
 
           const callData = encodeFunctionData({
-            abi: bearzTokenABI,
-            functionName: "transfer",
-            args: ['0x3Ba6379FE6bC3CcAEd136B28781aD358dD348BA0', '1000000000000000000'],
+            abi: bearzStakeChildABI,
+            functionName: "stopTraining",
+            args: [tokenIds],
           });
 
           console.log(callData);
 
           const partialUserOp = await smartAccount.buildUserOp([{
-            to: bearzTokenContractAddress,
+            to: bearzStakeChildContractAddress,
             data: callData,
           }])
-          //
-          partialUserOp.callGasLimit = 20000000;
-          partialUserOp.preVerificationGas = 1000000;
-          partialUserOp.verificationGasLimit = 20000000;
+
+          partialUserOp.verificationGasLimit = 600000;
 
           const { paymasterAndData } =
               await smartAccount.paymaster.getPaymasterAndData(
@@ -330,107 +328,50 @@ const useNFTWrapped = ({ isSimulated, overrideAddress }) => {
           console.log(e);
         }
       },
-      onTrain: async ({ tokenIds }) => {
+      onStartTraining: async ({ tokenIds }) => {
         try {
-          // const publicClient = getPublicClient({
-          //   chainId: polygon.id
-          // })
-          //
-          // const { request } = await publicClient.simulateContract({
-          //   address: bearzStakeChildContractAddress,
-          //   abi: bearzStakeChildABI,
-          //   functionName: 'train',
-          //   args: [tokenIds],
-          //   account,
-          // })
-          //
-          // console.log({
-          //  request
-          // });
-          //
-          // const walletClient = await getWalletClient({
-          //   chainId: polygon.id
-          // })
-          //
-          // await walletClient.writeContract(request)
-          // const callData = encodeFunctionData({
-          //   abi: bearzStakeChildABI,
-          //   functionName: 'train',
-          //   args: [tokenIds],
-          // })
-          // // //
-          // console.log({
-          //   callData
-          // });
-          // //
-          // const { hash } = await provider.sendTransaction({
-          //   from: account.address,
-          //   to: bearzStakeChildContractAddress,
-          //   data: callData
-          // });
-          // //
-          // console.log({
-          //   hash
-          // });
-          // const gasPrice = await publicClient.getGasPrice()
-          //
-          // console.log({
-          //   callData,
-          //   gasPrice
-          // });
-          //
-          //
-          //
-          // fetch('https://polygon-mainnet.g.alchemy.com/v2/LCNPCoXan5scqbRr4KOZK8kofDifu2fz', {
-          //   method: 'POST',
-          //   headers: {accept: 'application/json', 'content-type': 'application/json'},
-          //   body: JSON.stringify({
-          //     id: 137,
-          //     jsonrpc: '2.0',
-          //     method: 'eth_estimateUserOperationGas',
-          //     params: [
-          //       {
-          //         sender: account.address,
-          //         nonce: '0x0',
-          //         initCode: '0x',
-          //         callData,
-          //         // callGasLimit: '0xF4240',
-          //         // verificationGasLimit: '0xF4240',
-          //         // preVerificationGas: '0xF4240',
-          //         // maxFeePerGas: toHex(gasPrice),
-          //         // maxPriorityFeePerGas: toHex(gasPrice / 10n),
-          //         signature: '0xfffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c',
-          //         paymasterAndData: '0x4Fd9098af9ddcB41DA48A1d78F91F1398965addcfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c'
-          //       },
-          //         ENTRY_POINT_ADDRESS
-          //     ]
-          //   })
-          // })
-          //     .then(response => response.json())
-          //     .then(response => console.log(response))
-          //     .catch(err => console.error(err));
-          // const options = {
-          //   method: 'POST',
-          //   headers: {accept: 'application/json', 'content-type': 'application/json'},
-          //   body: JSON.stringify({
-          //     id: 1,
-          //     jsonrpc: '2.0',
-          //     method: 'alchemy_simulateExecution',
-          //     params: [
-          //       {
-          //         from: account.address,
-          //         to: bearzStakeChildContractAddress,
-          //         value: '0x0',
-          //         data: callData
-          //       }
-          //     ]
-          //   })
-          // };
-          //
-          // fetch('https://polygon-mainnet.g.alchemy.com/v2/LCNPCoXan5scqbRr4KOZK8kofDifu2fz', options)
-          //     .then(response => response.json())
-          //     .then(response => console.log(response))
-          //     .catch(err => console.error(err));
+          const smartAccount = await biconomyAccount.init()
+
+          console.log("owner: ", smartAccount.owner)
+          console.log("address: ", await smartAccount.getSmartAccountAddress())
+
+          const callData = encodeFunctionData({
+            abi: bearzStakeChildABI,
+            functionName: "stopTraining",
+            args: [tokenIds],
+          });
+
+          console.log(callData);
+
+          const partialUserOp = await smartAccount.buildUserOp([{
+            to: bearzStakeChildContractAddress,
+            data: callData,
+          }])
+
+          partialUserOp.verificationGasLimit = 600000;
+
+          const { paymasterAndData } =
+              await smartAccount.paymaster.getPaymasterAndData(
+                  partialUserOp,
+                  {
+                    mode: PaymasterMode.SPONSORED,
+                    calculateGasLimits: false
+                  }
+              );
+
+          partialUserOp.paymasterAndData = paymasterAndData;
+
+          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
+
+          console.log({
+            userOpResponse
+          });
+
+          const transactionDetails = await userOpResponse.wait()
+
+          console.log(
+              `transactionDetails: https://polygonscan.com/tx/${transactionDetails.receipt.transactionHash}`
+          )
         } catch (error) {
           console.log(error);
         }
@@ -464,9 +405,9 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
     overrideAddress: ownerOf,
   });
 
-  const isOwnerOfNFT = address === ownerOf;
+  const isOwnerOfNFT = address?.toLowerCase() === ownerOf?.toLowerCase();
 
-  const actionsLive = false;
+  const actionsLive = true;
 
   useEffect(() => {
     setTimeout(() => {
@@ -757,15 +698,15 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
               <div className="flex flex-row items-center justify-between">
                 <h3 className="text-xs opacity-50">Training</h3>
               </div>
-              {!activity?.training?.isTraining ? (
+              {!activity?.training?.isTraining && actionsLive ? (
                   <>
                     <p className="text-[10px]">Not training</p>
                     <button
-                        className="hidden relative flex items-center justify-center w-[250px] cursor-pointer"
+                        className="relative flex items-center justify-center w-[250px] cursor-pointer"
                         type="button"
                         onClick={async () => {
                           try {
-                            const { success } = await actions?.onTrain({
+                            const { success } = await actions?.onStartTraining({
                               tokenIds: [tokenId],
                             });
 
@@ -1233,10 +1174,12 @@ const NFTViewer = ({ isSandboxed, metadata, onRefresh }) => {
     <WagmiConfig
       config={createConfig(
         getDefaultConfig({
-          alchemyId: ALCHEMY_KEY, // or infuraId
+          autoConnect: true,
+          alchemyId: L2_ALCHEMY_KEY, // or infuraId
           walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
           appName: "Brawler Bearz: Interactive Experience",
           appDescription: "A mini-dapp for managing your brawler bear",
+          chains: [polygon]
         }),
       )}
     >
