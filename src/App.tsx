@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import classnames from "classnames";
 import { useParams } from "react-router-dom";
 import {
@@ -9,6 +9,7 @@ import {
   MdRefresh as RefreshIcon,
 } from "react-icons/md";
 import { format, fromUnixTime, formatDistanceToNow } from "date-fns";
+import { ToastContainer, toast } from "react-toastify";
 import {
   GiClothes as WardrobeIcon,
   GiStrongMan as TrainingIcon,
@@ -20,25 +21,26 @@ import {
   FaExchangeAlt as ToggleIcon,
 } from "react-icons/fa";
 import { WagmiConfig, createConfig, useAccount } from "wagmi";
-import { Wallet, providers, ethers  } from 'ethers'
+import { Wallet, providers, ethers } from "ethers";
 import { getWalletClient, getPublicClient, signMessage } from "@wagmi/core";
 import {
   ConnectKitProvider,
   ConnectKitButton,
   getDefaultConfig,
 } from "connectkit";
+import { IBundler, Bundler } from "@biconomy/bundler";
 import {
-  BaseSmartContractAccount,
-  SimpleSmartAccountOwner,
-  SimpleSmartContractAccount,
-  SmartAccountProvider,
-} from "@alchemy/aa-core";
-import { IBundler, Bundler } from '@biconomy/bundler'
-import { BiconomySmartAccount, BiconomySmartAccountConfig, DEFAULT_ENTRYPOINT_ADDRESS } from "@biconomy/account"
-import { IPaymaster, BiconomyPaymaster, PaymasterMode } from '@biconomy/paymaster'
-import { ChainId } from "@biconomy/core-types"
-import { AlchemyProvider, withAlchemyGasManager } from "@alchemy/aa-alchemy";
-import {mainnet, polygon} from "viem/chains";
+  BiconomySmartAccount,
+  BiconomySmartAccountConfig,
+  DEFAULT_ENTRYPOINT_ADDRESS,
+} from "@biconomy/account";
+import {
+  IPaymaster,
+  BiconomyPaymaster,
+  PaymasterMode,
+} from "@biconomy/paymaster";
+import { ChainId } from "@biconomy/core-types";
+import { mainnet, polygon } from "viem/chains";
 import {
   toHex,
   encodeFunctionData,
@@ -46,7 +48,7 @@ import {
   http,
   createWalletClient,
   custom,
-    formatEther
+  formatEther,
 } from "viem";
 import { generateRenderingOrder } from "./lib/renderer";
 import { getStatsByTokenId } from "./lib/blockchain";
@@ -71,9 +73,10 @@ import {
   bearzStakeChildABI,
   bearzStakeChildContractAddress,
   bearzTokenABI,
-    bearzTokenContractAddress
+  bearzTokenContractAddress,
 } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
+import { AddressZero } from "@biconomy/common";
 
 // https://docs.alchemy.com/reference/simple-account-factory-addresses
 const SIMPLE_ACCOUNT_FACTORY_ADDRESS =
@@ -102,6 +105,11 @@ const LoadingScreen = ({ children, tokenId }) => {
     }, 500);
   };
 
+  const onRefresh = async () => {
+    const metadata = await getStatsByTokenId(tokenId);
+    setMetadata(metadata);
+  };
+
   useEffect(() => {
     fetchMetadata(tokenId);
   }, [tokenId]);
@@ -124,7 +132,7 @@ const LoadingScreen = ({ children, tokenId }) => {
           </div>
         </div>
       ) : (
-        children({ metadata })
+        children({ metadata, onRefresh })
       )}
     </>
   );
@@ -201,20 +209,19 @@ const useSimulatedAccount = (simulatedAddress) => {
   };
 };
 
-const useNFTWrapped = ({ isSimulated, overrideAddress }) => {
-
+const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
   const account = !isSimulated
     ? useAccount()
     : useSimulatedAccount(overrideAddress);
 
-  if(isSimulated){
-    return account
+  if (isSimulated) {
+    return account;
   }
 
   const { isLoading, owner: signer } = useSimpleAccountOwner();
 
-  if(isLoading || !signer?.getAddress()){
-    return account
+  if (isLoading || !signer?.getAddress()) {
+    return account;
   }
 
   const biconomyAccount = new BiconomySmartAccount({
@@ -222,46 +229,72 @@ const useNFTWrapped = ({ isSimulated, overrideAddress }) => {
     chainId: ChainId.POLYGON_MAINNET,
     rpcUrl: `https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`,
     paymaster: new BiconomyPaymaster({
-      paymasterUrl: 'https://paymaster.biconomy.io/api/v1/137/pQ4YfSfVI.5f85bc99-110a-4594-9629-5f5c5ddacded'
+      paymasterUrl:
+        "https://paymaster.biconomy.io/api/v1/137/pQ4YfSfVI.5f85bc99-110a-4594-9629-5f5c5ddacded",
     }),
     bundler: new Bundler({
-      bundlerUrl: 'https://bundler.biconomy.io/api/v2/137/BB897hJ89.dd7fopYh-iJkl-jI89-af80-6877f74b7Fcg',
+      bundlerUrl:
+        "https://bundler.biconomy.io/api/v2/137/BB897hJ89.dd7fopYh-iJkl-jI89-af80-6877f74b7Fcg",
       chainId: ChainId.POLYGON_MAINNET,
       entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
     }),
     entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-  })
+  });
+
+  const checkSmartWalletAssociation = async ({ smartAccount }) => {
+
+      const polygonClient = createPublicClient({
+        chain: polygon,
+        transport: http(`https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`),
+      });
+
+    const smartAccountAddress =
+        await smartAccount.getSmartAccountAddress();
+
+      // Check if smart wallet is enabled already and associated to leverage
+      const smartWalletAssociated = await polygonClient.readContract({
+        address: bearzStakeChildContractAddress,
+        abi: bearzStakeChildABI,
+        functionName: "operatorAccess",
+        args: [smartAccountAddress],
+      });
+
+      // Set up smart wallet association if different than expected
+      if (smartWalletAssociated.toLowerCase() !== smartAccount.owner.toLowerCase()) {
+
+        toast.info(`Setting up smart wallet permissions for EOA: ${smartAccount.owner}`);
+
+        const publicClient = getPublicClient({
+          chainId: polygon.id,
+        });
+
+        const { request } = await publicClient.simulateContract({
+          address: bearzStakeChildContractAddress,
+          abi: bearzStakeChildABI,
+          functionName: "associateOperatorAsOwner",
+          args: [smartAccountAddress],
+          account: {
+            address: signer.getAddress(),
+          },
+        });
+
+        const walletClient = await getWalletClient({
+          chainId: polygon.id,
+        });
+
+        await walletClient.writeContract(request);
+      }
+
+  }
 
   return {
     ...account,
     actions: {
       onStopTraining: async ({ tokenIds }) => {
         try {
+          const smartAccount = await biconomyAccount.init();
 
-          // const publicClient = getPublicClient({
-          //   chainId: polygon.id
-          // })
-          //
-          // const { request } = await publicClient.simulateContract({
-          //   address: bearzStakeChildContractAddress,
-          //   abi: bearzStakeChildABI,
-          //   functionName: 'stopTraining',
-          //   args: [tokenIds],
-          //   account: {
-          //     address: signer.getAddress()
-          //   },
-          // })
-          //
-          // const walletClient = await getWalletClient({
-          //   chainId: polygon.id
-          // })
-          //
-          // await walletClient.writeContract(request);
-
-          const smartAccount = await biconomyAccount.init()
-
-          console.log("owner: ", smartAccount.owner)
-          console.log("address: ", await smartAccount.getSmartAccountAddress())
+          await checkSmartWalletAssociation({ smartAccount });
 
           const callData = encodeFunctionData({
             abi: bearzStakeChildABI,
@@ -269,111 +302,74 @@ const useNFTWrapped = ({ isSimulated, overrideAddress }) => {
             args: [tokenIds],
           });
 
-          console.log(callData);
-
-          const partialUserOp = await smartAccount.buildUserOp([{
-            to: bearzStakeChildContractAddress,
-            data: callData,
-          }])
-
-          partialUserOp.verificationGasLimit = 600000;
+          const partialUserOp = await smartAccount.buildUserOp([
+            {
+              to: bearzStakeChildContractAddress,
+              data: callData,
+            },
+          ]);
 
           const { paymasterAndData } =
-              await smartAccount.paymaster.getPaymasterAndData(
-                  partialUserOp,
-                  {
-                    mode: PaymasterMode.SPONSORED,
-                    calculateGasLimits: false
-                  }
-              );
+            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
+              mode: PaymasterMode.SPONSORED,
+            });
 
           partialUserOp.paymasterAndData = paymasterAndData;
 
           const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
 
-          console.log({
-            userOpResponse
+          await toast.promise(userOpResponse.wait(), {
+            pending: 'Calling bear on the intercom...please wait...',
+            success: "Bear left training.",
+            error: "There was an error",
           });
 
-          const transactionDetails = await userOpResponse.wait()
+          onRefresh();
 
-          console.log(
-              `transactionDetails: https://polygonscan.com/tx/${transactionDetails.receipt.transactionHash}`
-          )
-
-          // const smartAccountSigner = withAlchemyGasManager(baseSigner, {
-          //   provider: baseSigner.rpcClient,
-          //   policyId: POLICY_ID,
-          //   entryPoint: ENTRY_POINT_ADDRESS,
-          // });
-          //
-          // const from = await smartAccountSigner.account.getAddress();
-          //
-          // console.log(from);
-          //
-          // const hash = await smartAccountSigner.sendTransaction({
-          //   from,
-          //   to: bearzStakeChildContractAddress,
-          //   data: encodeFunctionData({
-          //     abi: bearzStakeChildABI,
-          //     functionName: "stopTraining",
-          //     args: [[tokenIds]],
-          //   }),
-          // });
-          //
-          // console.log({
-          //   hash,
-          // });
         } catch (e) {
           console.log(e);
+          toast.error("There was an error. Please try again!")
         }
       },
       onStartTraining: async ({ tokenIds }) => {
         try {
-          const smartAccount = await biconomyAccount.init()
+          const smartAccount = await biconomyAccount.init();
 
-          console.log("owner: ", smartAccount.owner)
-          console.log("address: ", await smartAccount.getSmartAccountAddress())
+          await checkSmartWalletAssociation({ smartAccount });
 
           const callData = encodeFunctionData({
             abi: bearzStakeChildABI,
-            functionName: "stopTraining",
+            functionName: "train",
             args: [tokenIds],
           });
 
-          console.log(callData);
-
-          const partialUserOp = await smartAccount.buildUserOp([{
-            to: bearzStakeChildContractAddress,
-            data: callData,
-          }])
-
-          partialUserOp.verificationGasLimit = 600000;
+          const partialUserOp = await smartAccount.buildUserOp([
+            {
+              to: bearzStakeChildContractAddress,
+              data: callData,
+            },
+          ]);
 
           const { paymasterAndData } =
-              await smartAccount.paymaster.getPaymasterAndData(
-                  partialUserOp,
-                  {
-                    mode: PaymasterMode.SPONSORED,
-                    calculateGasLimits: false
-                  }
-              );
+            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
+              mode: PaymasterMode.SPONSORED,
+            });
 
           partialUserOp.paymasterAndData = paymasterAndData;
 
           const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
 
-          console.log({
-            userOpResponse
+          await toast.promise(userOpResponse.wait(), {
+            pending: 'Time to train!',
+            success: "Bear is in training.",
+            error: "There was an error",
           });
 
-          const transactionDetails = await userOpResponse.wait()
+          onRefresh();
 
-          console.log(
-              `transactionDetails: https://polygonscan.com/tx/${transactionDetails.receipt.transactionHash}`
-          )
         } catch (error) {
           console.log(error);
+          toast.error("There was an error. Please try again!")
         }
       },
     },
@@ -403,6 +399,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
   const { address, isConnected, actions } = useNFTWrapped({
     isSimulated,
     overrideAddress: ownerOf,
+    onRefresh
   });
 
   const isOwnerOfNFT = address?.toLowerCase() === ownerOf?.toLowerCase();
@@ -504,34 +501,34 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
             <div className="flex flex-col flex-shrink-0 w-full space-y-4">
               <h3 className="hidden text-xs opacity-50">Manage Brawler</h3>
               {!isSimulated && (
-                  <div className="flex flex-col flex-shrink-0 w-full justify-center items-center">
-                <ConnectKitButton.Custom>
-                  {({ isConnected, show, truncatedAddress, ensName }) => {
-                    return !isConnected ? (
-                      <button
-                        onClick={show}
-                        className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                      >
-                        <img
-                          className="object-cover h-full w-full"
-                          src={buttonBackground}
-                          alt="button"
-                        />
-                        <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                          Connect
-                        </span>
-                      </button>
-                    ) : (
-                      <button
-                        className="hover:underline text-xs text-accent text-left"
-                        onClick={show}
-                      >
-                        Connected to {ensName ?? truncatedAddress}
-                      </button>
-                    );
-                  }}
-                </ConnectKitButton.Custom>
-                  </div>
+                <div className="flex flex-col flex-shrink-0 w-full justify-center items-center">
+                  <ConnectKitButton.Custom>
+                    {({ isConnected, show, truncatedAddress, ensName }) => {
+                      return !isConnected ? (
+                        <button
+                          onClick={show}
+                          className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                        >
+                          <img
+                            className="object-cover h-full w-full"
+                            src={buttonBackground}
+                            alt="button"
+                          />
+                          <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                            Connect
+                          </span>
+                        </button>
+                      ) : (
+                        <button
+                          className="hover:underline text-xs text-accent text-left"
+                          onClick={show}
+                        >
+                          Connected to {ensName ?? truncatedAddress}
+                        </button>
+                      );
+                    }}
+                  </ConnectKitButton.Custom>
+                </div>
               )}
               <div className="flex flex-wrap w-full gap-2 tablet:gap-4">
                 {isConnected && !isOwnerOfNFT && (
@@ -699,36 +696,27 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                 <h3 className="text-xs opacity-50">Training</h3>
               </div>
               {!activity?.training?.isTraining && actionsLive ? (
-                  <>
-                    <p className="text-[10px]">Not training</p>
-                    <button
-                        className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const { success } = await actions?.onStartTraining({
-                              tokenIds: [tokenId],
-                            });
-
-                            if (success) {
-                              onRefresh();
-                            }
-                          } catch (e) {
-                            console.log(e);
-                          }
-                        }}
-                    >
-                      <img
-                          className="object-cover h-full w-full"
-                          src={buttonBackground}
-                          alt="button"
-                      />
-                      <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                    Start Training
-                  </span>
-                    </button>
-                  </>
-
+                <>
+                  <p className="text-[10px]">Not training</p>
+                  <button
+                    className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                    type="button"
+                    onClick={async () => {
+                      await actions?.onStartTraining({
+                        tokenIds: [tokenId],
+                      })
+                    }}
+                  >
+                    <img
+                      className="object-cover h-full w-full"
+                      src={buttonBackground}
+                      alt="button"
+                    />
+                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                      Start Training
+                    </span>
+                  </button>
+                </>
               ) : (
                 <div className="flex flex-col space-y-2">
                   <h3 className="text-sm text-accent">
@@ -747,17 +735,9 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                       className="relative flex items-center justify-center w-[250px] cursor-pointer"
                       type="button"
                       onClick={async () => {
-                        try {
-                          const { success } = await actions?.onStopTraining({
-                            tokenIds: [tokenId],
-                          });
-
-                          if (success) {
-                            onRefresh();
-                          }
-                        } catch (e) {
-                          console.log(e);
-                        }
+                        await actions?.onStopTraining({
+                          tokenIds: [tokenId],
+                        });
                       }}
                     >
                       <img
@@ -1121,20 +1101,9 @@ const Experience = ({
   };
 
   return (
-    <div className="h-screen w-screen bg-dark font-primary">
-      <div className="hidden tablet:flex max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
-        <FullExperience
-          metadata={metadata}
-          isSimulated={isSimulated}
-          isShowingPixel={isShowingPixel}
-          images={images}
-          isSynthEnabled={isSynthEnabled}
-          onTogglePixel={onTogglePixel}
-          onRefresh={onRefresh}
-        />
-      </div>
-      {isSandboxed ? (
-        <div className="flex tablet:hidden max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
+    <>
+      <div className="h-screen w-screen bg-dark font-primary">
+        <div className="hidden tablet:flex max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
           <FullExperience
             metadata={metadata}
             isSimulated={isSimulated}
@@ -1145,20 +1114,42 @@ const Experience = ({
             onRefresh={onRefresh}
           />
         </div>
-      ) : (
-        <div className="flex tablet:hidden relative h-full w-full overflow-auto">
-          <MobileFullExperience
-            metadata={metadata}
-            isSimulated={isSimulated}
-            isShowingPixel={isShowingPixel}
-            images={images}
-            isSynthEnabled={isSynthEnabled}
-            onTogglePixel={onTogglePixel}
-            onRefresh={onRefresh}
-          />
-        </div>
-      )}
-    </div>
+        {isSandboxed ? (
+          <div className="flex tablet:hidden max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
+            <FullExperience
+              metadata={metadata}
+              isSimulated={isSimulated}
+              isShowingPixel={isShowingPixel}
+              images={images}
+              isSynthEnabled={isSynthEnabled}
+              onTogglePixel={onTogglePixel}
+              onRefresh={onRefresh}
+            />
+          </div>
+        ) : (
+          <div className="flex tablet:hidden relative h-full w-full overflow-auto">
+            <MobileFullExperience
+              metadata={metadata}
+              isSimulated={isSimulated}
+              isShowingPixel={isShowingPixel}
+              images={images}
+              isSynthEnabled={isSynthEnabled}
+              onTogglePixel={onTogglePixel}
+              onRefresh={onRefresh}
+            />
+          </div>
+        )}
+      </div>
+      <ToastContainer
+        theme="dark"
+        position="bottom-center"
+        autoClose={6000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+      />
+    </>
   );
 };
 
@@ -1179,7 +1170,7 @@ const NFTViewer = ({ isSandboxed, metadata, onRefresh }) => {
           walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
           appName: "Brawler Bearz: Interactive Experience",
           appDescription: "A mini-dapp for managing your brawler bear",
-          chains: [polygon]
+          chains: [polygon],
         }),
       )}
     >
@@ -1222,4 +1213,3 @@ const InteractiveNFT = () => {
 };
 
 export default InteractiveNFT;
-
