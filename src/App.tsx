@@ -695,7 +695,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
               <div className="flex flex-row items-center justify-between">
                 <h3 className="text-xs opacity-50">Training</h3>
               </div>
-              {!activity?.training?.isTraining && actionsLive ? (
+              {!activity?.training?.isTraining && actionsLive && isConnected && isOwnerOfNFT ? (
                 <>
                   <p className="text-[10px]">Not training</p>
                   <button
