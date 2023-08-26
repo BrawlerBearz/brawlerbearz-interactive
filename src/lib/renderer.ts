@@ -1,3 +1,11 @@
+export const getRenderingGene = (dna, position) => {
+  const normalizedDna = BigInt(dna);
+  const shiftBy = BigInt(16 * position);
+  const mask = BigInt(0xfff) << shiftBy;
+  const gene = normalizedDna & mask;
+  return Number(gene >> shiftBy);
+};
+
 export const getGene = (dna, position) => {
   const normalizedDna = BigInt(dna);
   const shiftBy = BigInt(8 * position);
@@ -836,12 +844,12 @@ export const geneToOutfit = (gene) => {
 };
 
 export const dnaToFields = (dna) => {
-  const backgroundId = getGene(dna, 12);
-  const skinId = getGene(dna, 11);
-  const headId = getGene(dna, 10);
-  const eyesId = getGene(dna, 9);
-  const mouthId = getGene(dna, 8);
-  const outfitId = getGene(dna, 7);
+  const backgroundId = getRenderingGene(dna, 12);
+  const skinId = getRenderingGene(dna, 11);
+  const headId = getRenderingGene(dna, 10);
+  const eyesId = getRenderingGene(dna, 9);
+  const mouthId = getRenderingGene(dna, 8);
+  const outfitId = getRenderingGene(dna, 7);
   return {
     backgroundId: backgroundId,
     skinId: skinId,
@@ -849,13 +857,13 @@ export const dnaToFields = (dna) => {
     eyesId: eyesId,
     mouthId: mouthId,
     outfitId: outfitId,
-    dynamicBackgroundId: getGene(dna, 6),
-    weaponId: getGene(dna, 5),
-    armorId: getGene(dna, 4),
-    faceArmorId: getGene(dna, 3),
-    dynamicEyewearId: getGene(dna, 2),
-    miscId: getGene(dna, 1),
-    dynamicHeadId: getGene(dna, 0),
+    dynamicBackgroundId: getRenderingGene(dna, 6),
+    weaponId: getRenderingGene(dna, 5),
+    armorId: getRenderingGene(dna, 4),
+    faceArmorId: getRenderingGene(dna, 3),
+    dynamicEyewearId: getRenderingGene(dna, 2),
+    miscId: getRenderingGene(dna, 1),
+    dynamicHeadId: getRenderingGene(dna, 0),
     backgroundValue: geneToBackground(backgroundId),
     skinValue: geneToSkin(skinId),
     headValue: geneToHead(headId),
@@ -868,7 +876,7 @@ export const dnaToFields = (dna) => {
 const completed2Ds = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
   23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
-  42, 43, 44, 45, 46, 47, 49, 50, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
+  42, 43, 44, 45, 46, 47, 48, 49, 50, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
   63, 64, 65, 66, 67, 68, 69, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
   83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101,
   102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 115, 116, 117,
@@ -877,7 +885,7 @@ const completed2Ds = [
   149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163,
   164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178,
   180, 181, 182, 183, 184, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195,
-  196, 198, 199, 200, 204, 205, 206, 207, 208, 209, 210,
+  196, 198, 199, 200, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
 ];
 
 const SYNTH_ITEM_ID = 211;

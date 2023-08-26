@@ -1185,7 +1185,7 @@ const NFTViewer = ({ isSandboxed, metadata, onRefresh }) => {
           walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
           appName: "Brawler Bearz: Interactive Experience",
           appDescription: "A mini-dapp for managing your brawler bear",
-          chains: [polygon],
+          chains: [mainnet, polygon],
         }),
       )}
     >
