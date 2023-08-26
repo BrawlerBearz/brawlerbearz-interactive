@@ -7,20 +7,25 @@ import {
   MdWarning as WarnIcon,
   MdDownload as DownloadIcon,
   MdRefresh as RefreshIcon,
+  MdOpenInNew as OpenWindowIcon,
+    MdChevronRight as ArrowRightIcon,
 } from "react-icons/md";
-import { format, fromUnixTime, formatDistanceToNow } from "date-fns";
+import { format, fromUnixTime, formatDistanceToNow, isAfter } from "date-fns";
 import { ToastContainer, toast } from "react-toastify";
 import {
   GiClothes as WardrobeIcon,
   GiStrongMan as TrainingIcon,
   GiJourney as QuestIcon,
   GiBattleAxe as BattleIcon,
+  GiWorld as WorldIcon
 } from "react-icons/gi";
 import {
+  FaSkull as SkullIcon,
   FaInfoCircle as InfoIcon,
   FaExchangeAlt as ToggleIcon,
 } from "react-icons/fa";
-import { WagmiConfig, createConfig, useAccount } from "wagmi";
+import { orderBy } from 'lodash';
+import { WagmiConfig, createConfig, useAccount, useBalance, useContractReads, useContractRead } from "wagmi";
 import { Wallet, providers, ethers } from "ethers";
 import {
   getWalletClient,
@@ -55,7 +60,7 @@ import {
   formatEther,
 } from "viem";
 import { generateRenderingOrder } from "./lib/renderer";
-import { getStatsByTokenId } from "./lib/blockchain";
+import {BEARZ_SHOP_IMAGE_URI, getStatsByTokenId} from "./lib/blockchain";
 import {
   shortenAddress,
   getAttributeValue,
@@ -73,6 +78,8 @@ import twoDButton from "./interactive/toggle2d.png";
 import pixelButton from "./interactive/togglepixel.png";
 import logoImage from "./interactive/logo.gif";
 import {
+  bearzQuestABI,
+  bearzQuestContractAddress, bearzShopABI,
   bearzShopContractAddress,
   bearzStakeChildABI,
   bearzStakeChildContractAddress,
@@ -80,15 +87,6 @@ import {
   bearzTokenContractAddress,
 } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
-import { AddressZero } from "@biconomy/common";
-
-// https://docs.alchemy.com/reference/simple-account-factory-addresses
-const SIMPLE_ACCOUNT_FACTORY_ADDRESS =
-  "0x15Ba39375ee2Ab563E8873C8390be6f2E2F50232";
-
-const ENTRY_POINT_ADDRESS = "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789";
-
-const POLICY_ID = "0d885d06-13ce-49de-bb92-8644673da502";
 
 const LoadingScreen = ({ children, tokenId }) => {
   const [progress, setProgress] = useState(25);
@@ -143,6 +141,7 @@ const LoadingScreen = ({ children, tokenId }) => {
 };
 
 const VIEWS = {
+  NEOCITY: "NEOCITY",
   WARDROBE: "WARDROBE",
   TRAINING: "TRAINING",
   QUESTING: "QUESTING",
@@ -151,7 +150,7 @@ const VIEWS = {
 };
 
 const SubView = ({ children, title, subtitle, onBack }) => (
-  <div className="w-full h-full flex flex-col text-white overflow-auto">
+  <div className="w-full h-full flex flex-col text-white">
     <div className="flex flex-row items-center justify-between w-full px-3 tablet:px-6 pt-3 tablet:pt-6">
       <div className="flex flex-col space-y-2">
         <h2 className="text-sm md:text-xl font-bold truncate">{title}</h2>
@@ -170,7 +169,7 @@ const SubView = ({ children, title, subtitle, onBack }) => (
       </div>
     </div>
     <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50 my-4" />
-    <div className="flex w-full overflow-auto my-2 md:my-4 px-3 tablet:px-6">
+    <div className="flex w-full tablet:overflow-auto my-2 md:my-4 px-2 tablet:px-4">
       {children}
     </div>
   </div>
@@ -292,7 +291,7 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
       const hash = await walletClient.writeContract(request);
 
       const receipt = await waitForTransaction({
-        hash: "0x5c504ed432cb51138bcf09aa5e8a410dd4a1e204ef84bfed1be16dfba1b22060",
+        hash,
       });
 
       toast.success(
@@ -304,6 +303,46 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
   return {
     ...account,
     actions: {
+      onQuest: async ({ tokenIds, questTypeIds, tokenAmount }) => {
+        try {
+          const smartAccount = await biconomyAccount.init();
+
+          await checkSmartWalletAssociation({ smartAccount });
+
+          const callData = encodeFunctionData({
+            abi: bearzStakeChildABI,
+            functionName: "quest",
+            args: [tokenIds, questTypeIds, tokenAmount],
+          });
+
+          const partialUserOp = await smartAccount.buildUserOp([
+            {
+              to: bearzStakeChildContractAddress,
+              data: callData,
+            },
+          ]);
+
+          const { paymasterAndData } =
+              await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
+                mode: PaymasterMode.SPONSORED,
+              });
+
+          partialUserOp.paymasterAndData = paymasterAndData;
+
+          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
+
+          await toast.promise(userOpResponse.wait(), {
+            pending: "Packing up to go out on quest...",
+            success: "Bear left to go on quest.",
+            error: "There was an error",
+          });
+
+          onRefresh();
+        } catch (e) {
+          console.log(e);
+          toast.error("There was an error. Please try again!");
+        }
+      },
       onStopTraining: async ({ tokenIds }) => {
         try {
           const smartAccount = await biconomyAccount.init();
@@ -388,6 +427,210 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
   };
 };
 
+const useQuests = ({ address }) => {
+
+  const { data, isLoading } = useContractReads({
+    contracts: [
+      {
+        address: bearzStakeChildContractAddress,
+        abi: bearzStakeChildABI,
+        chainId: polygon.id,
+        functionName: 'getAllQuests',
+      },
+      {
+        address: bearzQuestContractAddress,
+      abi: bearzQuestABI,
+        chainId: polygon.id,
+        functionName: 'getClaimableRewards',
+        args: [address]
+      },
+      {
+        address: bearzTokenContractAddress,
+        abi: bearzTokenABI,
+        chainId: polygon.id,
+        functionName: 'balanceOf',
+        args: [address]
+      },
+    ],
+  })
+
+  console.log({
+    data
+  })
+
+  return [{
+    isLoading,
+    quests: orderBy(data?.[0]?.result, (quest) => fromUnixTime(quest?.activeUntil), 'desc'),
+    rewards: data?.[1]?.result,
+    balance: formatEther(data?.[2]?.result ?? 0n)
+  }]
+}
+
+const SelectedQuestView = ({ quest }) => {
+
+  const { data: items, isLoading } = useContractRead({
+
+    address: bearzShopContractAddress,
+        abi: bearzShopABI,
+      chainId: mainnet.id,
+    functionName: "getMetadataBatch",
+    args: [quest?.itemIds],
+  })
+
+  return (
+      <div className="flex flex-col flex-shrink-0 w-full space-y-4">
+        <h3 className="text-sm text-accent">{quest?.name}</h3>
+        <p className="text-xs opacity-90">{quest?.description}</p>
+        <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+          <h3 className="text-xs opacity-50">Duration</h3>
+          <span className="text-xs">{Number(quest.duration) / 86400} day(s)</span>
+          <h3 className="text-xs opacity-50">Cooldown</h3>
+          <span className="text-xs">{Number(quest.cooldownPeriod) / 86400} day(s)</span>
+          <h3 className="text-xs opacity-50">Item(s)</h3>
+          {isLoading ? (
+              <div className="flex flex-col items-center justify-center h-full w-full">
+                <img className="w-[100px]" src={logoImage} alt="logo" />
+                <span className="text-white opacity-50 text-xs">
+                Loading...
+              </span>
+              </div>
+          ) : (
+              <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
+                {quest?.itemIds.map((item, index) => {
+
+                  const isValidItem = Number(item) !== 0;
+
+                  const metadata = isValidItem ? items?.[index] : {};
+
+                  const currentRarity =
+                      index === quest?.rarities.length - 1
+                          ? Number(quest?.rarities[index]) - 1
+                          : Number(quest?.rarities[index]);
+
+                  const dropRarity =
+                      (index === 0
+                          ? Number(currentRarity)
+                          : Number(currentRarity) - Number(quest?.rarities[index - 1])) / 100;
+
+                  return (
+                      <div key={item} className="flex flex-col space-y-2">
+                        {isValidItem ? (
+                            <div
+
+                                title={metadata.name}
+                                className="flex flex-col flex-shrink-0 w-[100px] gap-2"
+                            >
+                              <img
+                                  className="h-full w-full"
+                                  src={`${BEARZ_SHOP_IMAGE_URI}${item}.png`}
+                                  alt={metadata.name}
+                              />
+                            </div>
+                        ) : (<div key={`NONE_${index}`} className="flex flex-col items-center bg-main border border-[1px] border-white rounded-md justify-center space-y-2 p-4 text-center flex flex-col flex-shrink-0 w-[100px] h-[140px] gap-2">
+                              <SkullIcon className="relative h-[60px] w-[60px] object-contain" />
+                              <span className="text-[10px] opacity-50">Nothing</span>
+                            </div>
+                        )}
+                        <span className="text-[10px] text-center">{dropRarity}%</span>
+                      </div>
+                  )
+                })}
+              </div>
+          )}
+
+        </div>
+      </div>
+  )
+}
+
+const QuestingView = ({ address, name, onBack }) => {
+  const [{ isLoading, quests, rewards, balance }] = useQuests({ address });
+  const [selectedQuest, setSelectedQuest] = useState(null);
+
+  console.log({
+    quests, rewards
+  });
+
+  return (
+      <SubView
+          title={
+            <div className="flex flex-row items-center space-x-3">
+              <span className="text-2xl">
+                <QuestIcon />
+              </span>
+              <span>Questing</span>
+            </div>
+          }
+          subtitle={selectedQuest?.questType ?? name}
+          onBack={() => {
+            if(selectedQuest){
+              setSelectedQuest(null)
+            } else {
+              onBack();
+            }
+          }}
+      >
+        <div className="flex flex-col w-full h-full">
+          {isLoading ? (
+              <div className="flex flex-col items-center justify-center h-full w-full">
+                <img className="w-[100px]" src={logoImage} alt="logo" />
+                <span className="text-white opacity-50 text-xs">
+                Loading...
+              </span>
+              </div>
+          ) : (
+              <div className="flex flex-col space-y-4 w-full">
+                {selectedQuest ? (
+                    <SelectedQuestView quest={selectedQuest} />
+                ) : (
+                    <div className="flex flex-col flex-shrink-0 w-full space-y-4">
+                      <h3 className="hidden text-xs opacity-50">Recent Quests</h3>
+                      {quests?.length > 0 ? (
+                          <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-2">
+                            {quests.map((quest) => {
+                              const activeDate = new Date(
+                                  fromUnixTime(quest?.activeUntil),
+                              );
+                              const isActive = isAfter(activeDate, new Date());
+
+                              return (
+                                  <div key={quest.id} className="min-h-[80px] flex flex-row space-x-2 w-full justify-between">
+                                    <div className="flex flex-col flex-grow-1 space-y-2 truncate">
+                                      <h3 className="text-xs text-accent">{quest?.name}</h3>
+                                      <p className="text-[10px] opacity-90 truncate">{quest?.description}</p>
+                                      <span className="text-[10px] opacity-50">{isActive ? 'Ends in ' : 'Ended '}{formatDistanceToNow(
+                                          new Date(
+                                              fromUnixTime(quest?.activeUntil),
+                                          ),
+                                      )}{isActive ? '' : ' ago'}</span>
+                                    </div>
+                                    <div className="flex flex-shrink-0 items-center justify-center w-[60px] min-h-[80px]">
+                                      <button className="text-4xl text-accent" onClick={() => {
+                                        setSelectedQuest(quest);
+                                      }}>
+                                        <ArrowRightIcon />
+                                      </button>
+                                    </div>
+                                  </div>
+                              )
+                            })}
+                          </div>
+                      ) : (
+                          <p>
+                            <p className="text-[10px]">No recent quests</p>
+                          </p>
+                      )}
+                    </div>
+                )}
+
+              </div>
+          )}
+        </div>
+      </SubView>
+
+  )
+}
+
 const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -408,7 +651,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
 
   const { level, xp, str, end, int, lck, nextXpLevel } = stats || {};
 
-  const { address, isConnected, actions } = useNFTWrapped({
+  const { address, balance, isConnected, actions } = useNFTWrapped({
     isSimulated,
     overrideAddress: ownerOf,
     onRefresh,
@@ -469,6 +712,17 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                 >
                   <RefreshIcon />
                 </button>
+                {isSimulated && (
+                    <a
+                        className="opacity-50 hover:opacity-100 text-[20px] cursor-pointer"
+                        href={`https://brawlerbearz.eth.limo/#/${tokenId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        title="Right-click + 'Open in new tab'"
+                    >
+                      <OpenWindowIcon />
+                    </a>
+                )}
               </h2>
               <a
                 className="inline-flex opacity-50 text-[12px] hover:underline text-accent3"
@@ -541,6 +795,24 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                     }}
                   </ConnectKitButton.Custom>
                 </div>
+              )}
+              {isConnected && isOwnerOfNFT && actionsLive && (
+                  <button
+                      className="relative flex items-center justify-center w-[250px] cursor-pointer mx-auto"
+                      type="button"
+                      onClick={() => {
+                        setViewState(VIEWS.NEOCITY);
+                      }}
+                  >
+                    <img
+                        className="object-cover h-full w-full"
+                        src={buttonBackground}
+                        alt="button"
+                    />
+                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                    Neo City
+                  </span>
+                  </button>
               )}
               <div className="flex flex-wrap w-full gap-2 tablet:gap-4">
                 {isConnected && !isOwnerOfNFT && (
@@ -728,7 +1000,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                       alt="button"
                     />
                     <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                      Start Training
+                      Train
                     </span>
                   </button>
                 </>
@@ -747,7 +1019,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                   </p>
                   {isConnected && isOwnerOfNFT && actionsLive && (
                     <button
-                      className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                      className="relative flex items-center justify-center w-[250px] cursor-pointer pt-2"
                       type="button"
                       onClick={async () => {
                         await actions?.onStopTraining({
@@ -943,22 +1215,25 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
         </SubView>
       )}
       {viewState === VIEWS.QUESTING && (
-        <SubView
-          title={
-            <div className="flex flex-row items-center space-x-3">
+          <QuestingView address={address} name={name} onBack={() => setViewState(null)} />
+      )}
+      {viewState === VIEWS.NEOCITY && (
+          <SubView
+              title={
+                <div className="flex flex-row items-center space-x-3">
               <span className="text-2xl">
-                <QuestIcon />
+                <WorldIcon />
               </span>
-              <span>Questing</span>
-            </div>
-          }
-          subtitle={name}
-          onBack={() => {
-            setViewState(null);
-          }}
-        >
-          Coming soon
-        </SubView>
+                  <span>Neo City</span>
+                </div>
+              }
+              subtitle={name}
+              onBack={() => {
+                setViewState(null);
+              }}
+          >
+            Coming soon
+          </SubView>
       )}
       {viewState === VIEWS.BATTLE && (
         <SubView

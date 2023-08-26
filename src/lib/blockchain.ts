@@ -27,7 +27,7 @@ const BASE_MAX_RATIO = 115;
 const BASE_MIN_RATIO = 50;
 const COEFFICIENT = 50;
 
-const BEARZ_SHOP_IMAGE_URI =
+export const BEARZ_SHOP_IMAGE_URI =
   "https://allofthethings.s3.amazonaws.com/brawlerbearzshop/";
 
 const itemKeyToStatKey = {
