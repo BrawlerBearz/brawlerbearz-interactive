@@ -470,10 +470,6 @@ const useQuests = ({ address }) => {
     ],
   });
 
-  console.log({
-    data,
-  });
-
   return [
     {
       isLoading,
@@ -1385,10 +1381,12 @@ const hasConflictWithAnotherLayer = (selected, images) => {
 };
 
 const isInvalidWithAnotherLayer = (selected, images) => {
-  return (
-    selected === LAYERS.HEAD &&
-    images.findIndex((item) => item.typeOf === LAYERS.FACE_ARMOR) > -1
-  );
+  // TODO
+  return false;
+  // return (
+  //   selected === LAYERS.HEAD &&
+  //   images.findIndex((item) => item.typeOf === LAYERS.FACE_ARMOR) > -1
+  // );
 };
 
 const ImageRenderer = ({
@@ -1648,7 +1646,7 @@ const WardrobeHeader = ({
               const imageURL = URL.createObjectURL(imageBlog);
               const link = document.createElement("a");
               link.href = imageURL;
-              link.download = `BrawlerBearzPreview_${new Date().getTime()}.${ext}`;
+              link.download = `BrawlerBearzPreview_${new Date().getTime()}.${isShowingPixel ? 'gif' : 'png'}`;
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
