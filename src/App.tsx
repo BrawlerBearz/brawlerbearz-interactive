@@ -1336,27 +1336,66 @@ const LAYERS = {
 };
 
 const selectedToItemIds = {
-  BACKGROUND: [
-    0, 7, 8, 19, 21, 22, 40, 67, 70, 74, 77, 81, 101, 102, 103, 120, 142, 154,
-    155, 169, 184, 210,
-  ],
-  HEAD: [
-    0, 9, 32, 41, 42, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108, 113,
-    115, 121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157, 158, 164,
-    165, 191, 206, 208,
-  ],
-  ARMOR: [
-    0, 1, 4, 34, 35, 37, 38, 43, 44, 52, 54, 57, 61, 63, 71, 75, 76, 84, 87, 95,
-    96, 97, 105, 106, 107, 109, 110, 111, 112, 116, 117, 122, 123, 127, 128,
-    129, 130, 141, 144, 146, 147, 148, 150, 151, 161, 170, 178, 180, 186, 190,
-    193, 194, 196, 198, 205, 209,
-  ],
-  FACE_ARMOR: [0, 15, 91, 171, 172, 187, 188, 195],
-  EYEWEAR: [
-    0, 5, 39, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167, 181,
-    199,
-  ],
-  MISC: [0, 20, 59, 66, 69, 78, 79, 89, 125, 137, 160, 168, 182, 183, 185],
+  gif: {
+    BACKGROUND: [
+      0, 7, 8, 19, 21, 22, 23, 40, 67, 70, 74, 77, 81, 92, 93, 101, 102, 103,
+      120, 142, 152, 153, 154, 155, 166, 169, 184, 200, 210,
+    ],
+    HEAD: [
+      0, 9, 32, 41, 42, 49, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108,
+      113, 115, 119, 121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157,
+      158, 164, 165, 191, 193, 194, 196, 198, 205, 208,
+    ],
+    ARMOR: [
+      0, 1, 4, 34, 35, 37, 38, 43, 44, 48, 52, 54, 57, 61, 63, 71, 75, 76, 84,
+      87, 95, 96, 97, 105, 106, 107, 109, 110, 111, 112, 116, 117, 122, 123,
+      127, 128, 129, 130, 141, 144, 146, 147, 148, 150, 151, 170, 178, 180, 186,
+      190, 205, 209,
+    ],
+    FACE_ARMOR: [0, 15, 91, 171, 172, 187, 188, 195, 206],
+    EYEWEAR: [
+      0, 5, 39, 47, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167,
+      181, 199,
+    ],
+    MISC: [
+      0, 10, 11, 12, 13, 14, 24, 51, 59, 69, 78, 79, 89, 125, 137, 160, 168,
+      182, 183, 189, 201, 202, 203, 207,
+    ],
+    WEAPON: [
+      0, 2, 3, 6, 16, 17, 18, 20, 25, 26, 27, 28, 29, 30, 31, 33, 36, 45, 46,
+      50, 56, 65, 86, 90, 94, 139, 159, 163, 173, 174, 175, 176, 177, 192, 204,
+    ],
+  },
+  png: {
+    BACKGROUND: [
+      0, 7, 8, 19, 21, 22, 23, 40, 67, 70, 74, 77, 81, 92, 93, 101, 102, 103,
+      120, 142, 152, 153, 154, 155, 166, 169, 184, 200, 210,
+    ],
+    HEAD: [
+      0, 9, 32, 41, 42, 49, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108,
+      113, 115, 119, 121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157,
+      158, 164, 165, 191, 193, 194, 196, 198, 205, 208,
+    ],
+    ARMOR: [
+      0, 1, 4, 34, 35, 37, 38, 43, 44, 48, 52, 54, 57, 61, 63, 71, 75, 76, 84,
+      87, 95, 96, 97, 105, 106, 107, 109, 110, 111, 112, 116, 117, 122, 123,
+      127, 128, 129, 130, 141, 144, 146, 147, 148, 150, 151, 170, 178, 180, 186,
+      190, 205, 209,
+    ],
+    FACE_ARMOR: [0, 15, 91, 171, 172, 187, 188, 195, 206],
+    EYEWEAR: [
+      0, 5, 39, 47, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167,
+      181, 199,
+    ],
+    MISC: [
+      0, 10, 11, 12, 13, 14, 24, 51, 59, 69, 78, 79, 89, 125, 137, 160, 168,
+      182, 183, 189, 201, 202, 203, 207,
+    ],
+    WEAPON: [
+      0, 2, 3, 6, 16, 17, 18, 20, 25, 26, 27, 28, 29, 30, 31, 33, 36, 45, 46,
+      50, 56, 65, 86, 90, 94, 139, 159, 163, 173, 174, 175, 176, 177, 192, 204,
+    ],
+  },
 };
 
 const hasFaceArmorAndHead = (selected, images) =>
@@ -1438,85 +1477,90 @@ const ImageRenderer = ({
       >
         {selected ? (
           <div className="flex flex-row items-center space-x-4 min-w-full h-full text-xs overflow-x-auto pb-4">
-            {selectedToItemIds[selected].map((itemId) => {
-              const wontShow = isInvalidWithAnotherLayer(selected, images);
-              const hasConflict = hasConflictWithAnotherLayer(selected, images);
-              const isNone = itemId === 0;
-              const path = `${process.env.PUBLIC_URL}/${
-                isShowingPixel ? "layers" : "layers2d"
-              }/Dynamic/${itemId}.${isShowingPixel ? "gif" : "png"}`;
-              const isSelectedItem =
-                images.findIndex(
-                  (item) =>
-                    item.typeOf === selected &&
-                    String(item.id) === String(itemId),
-                ) > -1;
-              return (
-                <div
-                  key={itemId}
-                  className={classnames(
-                    "relative flex-shrink-0 relative rounded-md overflow-hidden h-[90px] w-[90px] hover:border-accent hover:border-[3px] duration-100 ease-in-out",
-                    {
-                      "border-accent border-[3px]": isSelectedItem,
-                    },
-                  )}
-                >
-                  {selected !== LAYERS.BACKGROUND && (
-                    <div className="h-full w-full bg-main bg-opacity-50 z-[1] pointer-events-none absolute top-0 left-0" />
-                    //   <img
-                    //   src={images?.[0]?.path || `${process.env.PUBLIC_URL}/placeholders/None.${
-                    //       isShowingPixel ? "gif" : "png"
-                    //   }`}
-                    //   className="h-full w-full object-contain z-[1] pointer-events-none absolute top-0 left-0"
-                    //   alt={`Background placeholder: ${itemId}`}
-                    // />
-                  )}
-                  {isNone ? (
-                    <div
-                      src={path}
-                      className="absolute top-0 left-0 h-full w-full flex items-center justify-center z-[2] rounded-md border border-1 border-white"
-                      role="button"
-                      onClick={() => {
-                        onChange(selected, {
-                          id: 0,
-                          typeOf: selected,
-                          path: null,
-                        });
-                      }}
-                    >
-                      <span className="text-white text-[10px] opacity-50">
-                        None
-                      </span>
-                    </div>
-                  ) : (
-                    <>
-                      <img
+            {selectedToItemIds[isShowingPixel ? "gif" : "png"][selected].map(
+              (itemId) => {
+                const wontShow = isInvalidWithAnotherLayer(selected, images);
+                const hasConflict = hasConflictWithAnotherLayer(
+                  selected,
+                  images,
+                );
+                const isNone = itemId === 0;
+                const path = `${process.env.PUBLIC_URL}/${
+                  isShowingPixel ? "layers" : "layers2d"
+                }/Dynamic/${itemId}.${isShowingPixel ? "gif" : "png"}`;
+                const isSelectedItem =
+                  images.findIndex(
+                    (item) =>
+                      item.typeOf === selected &&
+                      String(item.id) === String(itemId),
+                  ) > -1;
+                return (
+                  <div
+                    key={itemId}
+                    className={classnames(
+                      "relative flex-shrink-0 relative rounded-md overflow-hidden h-[90px] w-[90px] hover:border-accent hover:border-[3px] duration-100 ease-in-out",
+                      {
+                        "border-accent border-[3px]": isSelectedItem,
+                      },
+                    )}
+                  >
+                    {selected !== LAYERS.BACKGROUND && (
+                      <div className="h-full w-full bg-main bg-opacity-50 z-[1] pointer-events-none absolute top-0 left-0" />
+                      //   <img
+                      //   src={images?.[0]?.path || `${process.env.PUBLIC_URL}/placeholders/None.${
+                      //       isShowingPixel ? "gif" : "png"
+                      //   }`}
+                      //   className="h-full w-full object-contain z-[1] pointer-events-none absolute top-0 left-0"
+                      //   alt={`Background placeholder: ${itemId}`}
+                      // />
+                    )}
+                    {isNone ? (
+                      <div
                         src={path}
-                        className="absolute top-0 left-0 h-full w-full object-contain z-[2]"
-                        alt={`Item: ${itemId}`}
+                        className="absolute top-0 left-0 h-full w-full flex items-center justify-center z-[2] rounded-md border border-1 border-white"
                         role="button"
                         onClick={() => {
                           onChange(selected, {
-                            id: itemId,
+                            id: 0,
                             typeOf: selected,
-                            path,
+                            path: null,
                           });
                         }}
-                      />
-                      {wontShow ? (
-                        <div className="opacity-100 text-error text-base absolute top-[4px] right-[4px] text-xl z-[3]">
-                          <ErrorIcon />
-                        </div>
-                      ) : hasConflict ? (
-                        <div className="opacity-100 text-warn text-base absolute top-[4px] right-[4px] text-xl z-[3]">
-                          <WarnIcon />
-                        </div>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-              );
-            })}
+                      >
+                        <span className="text-white text-[10px] opacity-50">
+                          None
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <img
+                          src={path}
+                          className="absolute top-0 left-0 h-full w-full object-contain z-[2]"
+                          alt={`Item: ${itemId}`}
+                          role="button"
+                          onClick={() => {
+                            onChange(selected, {
+                              id: itemId,
+                              typeOf: selected,
+                              path,
+                            });
+                          }}
+                        />
+                        {wontShow ? (
+                          <div className="opacity-100 text-error text-base absolute top-[4px] right-[4px] text-xl z-[3]">
+                            <ErrorIcon />
+                          </div>
+                        ) : hasConflict ? (
+                          <div className="opacity-100 text-warn text-base absolute top-[4px] right-[4px] text-xl z-[3]">
+                            <WarnIcon />
+                          </div>
+                        ) : null}
+                      </>
+                    )}
+                  </div>
+                );
+              },
+            )}
           </div>
         ) : null}
       </div>
@@ -1639,14 +1683,14 @@ const WardrobeHeader = ({
 
             // Download image
             if (data.preview) {
-              const file = last(data.preview.split("/"));
-              const ext = file.slice(file.length - 3);
               const image = await fetch(data.preview);
               const imageBlog = await image.blob();
               const imageURL = URL.createObjectURL(imageBlog);
               const link = document.createElement("a");
               link.href = imageURL;
-              link.download = `BrawlerBearzPreview_${new Date().getTime()}.${isShowingPixel ? 'gif' : 'png'}`;
+              link.download = `BrawlerBearzPreview_${new Date().getTime()}.${
+                isShowingPixel ? "gif" : "png"
+              }`;
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
