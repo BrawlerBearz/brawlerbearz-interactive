@@ -876,16 +876,17 @@ export const dnaToFields = (dna) => {
 const completed2Ds = [
   1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
   23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
-  42, 43, 44, 45, 46, 47, 48, 49, 50, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62,
-  63, 64, 65, 66, 67, 68, 69, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82,
-  83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101,
-  102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 115, 116, 117,
-  119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133,
-  134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148,
-  149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163,
-  164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178,
-  180, 181, 182, 183, 184, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195,
-  196, 198, 199, 200, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210,
+  42, 43, 44, 45, 46, 47, 48, 49, 50, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61,
+  62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80,
+  81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+  100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 115,
+  116, 117, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131,
+  132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146,
+  147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161,
+  162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176,
+  177, 178, 180, 181, 182, 183, 184, 186, 187, 188, 189, 190, 191, 192, 193,
+  194, 195, 196, 198, 199, 200, 200, 201, 202, 203, 204, 205, 206, 207, 208,
+  209, 210,
 ];
 
 const SYNTH_ITEM_ID = 211;
@@ -902,83 +903,163 @@ export const generateRenderingOrder = ({ dna, isShowingPixel }) => {
   return {
     images: isRendering2d
       ? [
-          fields.dynamicBackgroundId &&
-          completed2Ds.includes(fields?.dynamicBackgroundId)
-            ? `${basePath}/Dynamic/${fields?.dynamicBackgroundId}.png`
-            : `${basePath}/Background/${fields?.backgroundValue}.png`,
-          fields?.weaponId && completed2Ds.includes(fields?.weaponId)
-            ? `${basePath}/Dynamic/${fields?.weaponId}.png`
-            : null,
-          `${basePath}/Skin/${fields?.skinValue}.png`,
-          fields?.outfitValue === "None"
-            ? null
-            : fields?.armorId && completed2Ds.includes(fields?.armorId)
-            ? `${basePath}/Dynamic/${fields?.armorId}.png`
-            : `${basePath}/Outfit/${fields?.outfitValue}.png`,
-          `${basePath}/Eyes/${fields?.eyesValue}.png`,
-          fields.dynamicEyewearId &&
-          completed2Ds.includes(fields?.dynamicEyewearId)
-            ? `${basePath}/Dynamic/${fields?.dynamicEyewearId}.png`
-            : null,
-          `${basePath}/Mouth/${fields?.mouthValue}.png`,
-          fields.dynamicHeadId && completed2Ds.includes(fields?.dynamicHeadId)
-            ? `${basePath}/Dynamic/${fields?.dynamicHeadId}.png`
-            : fields.headValue === "None" || fields.faceArmorId
-            ? null
-            : `${basePath}/Head/${fields?.headValue}.png`,
-          // Face armor
-          fields?.faceArmorId && completed2Ds.includes(fields?.faceArmorId)
-            ? `${basePath}/Dynamic/${fields?.faceArmorId}.png`
-            : null,
-          // MISC
-          fields?.miscId &&
-          completed2Ds.includes(fields?.miscId) &&
-          fields?.miscId !== 211
-            ? `${basePath}/Dynamic/${fields?.miscId}.png`
-            : null,
-        ].filter(Boolean)
+          {
+            id: fields.dynamicBackgroundId,
+            typeOf: "BACKGROUND",
+            path:
+              fields.dynamicBackgroundId &&
+              completed2Ds.includes(fields?.dynamicBackgroundId)
+                ? `${basePath}/Dynamic/${fields?.dynamicBackgroundId}.png`
+                : `${basePath}/Background/${fields?.backgroundValue}.png`,
+          },
+          {
+            id: fields?.weaponId,
+            typeOf: "WEAPON",
+            path:
+              fields?.weaponId && completed2Ds.includes(fields?.weaponId)
+                ? `${basePath}/Dynamic/${fields?.weaponId}.png`
+                : null,
+          },
+          {
+            id: 0,
+            typeOf: "SKIN",
+            path: `${basePath}/Skin/${fields?.skinValue}.png`,
+          },
+          {
+            id: fields?.armorId,
+            typeOf: "ARMOR",
+            path:
+              fields?.outfitValue === "None"
+                ? null
+                : fields?.armorId && completed2Ds.includes(fields?.armorId)
+                ? `${basePath}/Dynamic/${fields?.armorId}.png`
+                : `${basePath}/Outfit/${fields?.outfitValue}.png`,
+          },
+          {
+            id: 0,
+            typeOf: "EYES",
+            path: `${basePath}/Eyes/${fields?.eyesValue}.png`,
+          },
+          {
+            id: fields.dynamicEyewearId,
+            typeOf: "EYEWEAR",
+            path:
+              fields.dynamicEyewearId &&
+              completed2Ds.includes(fields?.dynamicEyewearId)
+                ? `${basePath}/Dynamic/${fields?.dynamicEyewearId}.png`
+                : null,
+          },
+          {
+            id: 0,
+            typeOf: "MOUTH",
+            path: `${basePath}/Mouth/${fields?.mouthValue}.png`,
+          },
+          {
+            id: fields.dynamicHeadId,
+            typeOf: "HEAD",
+            path:
+              fields.dynamicHeadId &&
+              completed2Ds.includes(fields?.dynamicHeadId)
+                ? `${basePath}/Dynamic/${fields?.dynamicHeadId}.png`
+                : fields.headValue === "None" || fields.faceArmorId
+                ? null
+                : `${basePath}/Head/${fields?.headValue}.png`,
+          },
+          {
+            id: fields?.faceArmorId,
+            typeOf: "FACE_ARMOR",
+            path:
+              fields?.faceArmorId && completed2Ds.includes(fields?.faceArmorId)
+                ? `${basePath}/Dynamic/${fields?.faceArmorId}.png`
+                : null,
+          },
+          {
+            id: fields?.miscId,
+            typeOf: "MISC",
+            path:
+              fields?.miscId &&
+              completed2Ds.includes(fields?.miscId) &&
+              fields?.miscId !== 211
+                ? `${basePath}/Dynamic/${fields?.miscId}.png`
+                : null,
+          },
+        ].filter((item) => item.path)
       : [
-          fields.dynamicBackgroundId > 0
-            ? `${basePath}/Dynamic/${fields?.dynamicBackgroundId}.gif`
-            : `${basePath}/Background/${fields?.backgroundValue}.gif`,
-          // Weapon
-          fields?.weaponId
-            ? `${basePath}/Dynamic/${fields?.weaponId}.gif`
-            : null,
-          // Skin
-          `${basePath}/Skin/${fields?.skinValue}.gif`,
-          // Outfit or Armor
-          fields?.outfitValue === "None"
-            ? null
-            : fields?.armorId
-            ? `${basePath}/Dynamic/${fields?.armorId}.gif`
-            : `${basePath}/Outfit/${fields?.outfitValue}.gif`,
-          ,
-          // Eyes
-          `${basePath}/Eyes/${fields?.eyesValue}.gif`,
-          // Eyewear
-          fields.dynamicEyewearId
-            ? `${basePath}/Dynamic/${fields?.dynamicEyewearId}.gif`
-            : null,
-          // Mouth
-          `${basePath}/Mouth/${fields?.mouthValue}.gif`,
-          // Head or Blocking Face Armor
-          fields.dynamicHeadId
-            ? `${basePath}/Dynamic/${fields?.dynamicHeadId}.gif`
-            : fields.headValue === "None" || fields.faceArmorId
-            ? null
-            : `${basePath}/Head/${fields?.headValue}.gif`,
-          // Face armor
-          fields?.faceArmorId
-            ? `${basePath}/Dynamic/${fields?.faceArmorId}.gif`
-            : null,
-          ,
-          // Misc
-          fields?.miscId && !isSynthEnabled
-            ? `${basePath}/Dynamic/${fields?.miscId}.gif`
-            : null,
-          ,
-        ].filter(Boolean),
+          {
+            id: fields.dynamicBackgroundId,
+            typeOf: "BACKGROUND",
+            path:
+              fields.dynamicBackgroundId > 0
+                ? `${basePath}/Dynamic/${fields?.dynamicBackgroundId}.gif`
+                : `${basePath}/Background/${fields?.backgroundValue}.gif`,
+          },
+          {
+            id: fields.weaponId,
+            typeOf: "WEAPON",
+            path: fields?.weaponId
+              ? `${basePath}/Dynamic/${fields?.weaponId}.gif`
+              : null,
+          },
+          {
+            id: 0,
+            typeOf: "SKIN",
+            path: `${basePath}/Skin/${fields?.skinValue}.gif`,
+          },
+          {
+            id: fields.armorId,
+            typeOf: "ARMOR",
+            path:
+              fields?.outfitValue === "None"
+                ? null
+                : fields?.armorId
+                ? `${basePath}/Dynamic/${fields?.armorId}.gif`
+                : `${basePath}/Outfit/${fields?.outfitValue}.gif`,
+          },
+          {
+            id: 0,
+            typeOf: "EYES",
+            path: `${basePath}/Eyes/${fields?.eyesValue}.gif`,
+          },
+          {
+            id: fields.dynamicEyewearId,
+            typeOf: "EYEWEAR",
+            path: fields.dynamicEyewearId
+              ? `${basePath}/Dynamic/${fields?.dynamicEyewearId}.gif`
+              : null,
+          },
+          {
+            id: 0,
+            typeOf: "MOUTH",
+            path: `${basePath}/Mouth/${fields?.mouthValue}.gif`,
+          },
+
+          {
+            id: fields.dynamicHeadId,
+            typeOf: "HEAD",
+            path: fields.dynamicHeadId
+              ? `${basePath}/Dynamic/${fields?.dynamicHeadId}.gif`
+              : fields.headValue === "None" || fields.faceArmorId
+              ? null
+              : `${basePath}/Head/${fields?.headValue}.gif`,
+          },
+
+          {
+            id: fields?.faceArmorId,
+            typeOf: "FACE_ARMOR",
+            path: fields?.faceArmorId
+              ? `${basePath}/Dynamic/${fields?.faceArmorId}.gif`
+              : null,
+          },
+
+          {
+            id: fields?.faceArmorId,
+            typeOf: "MISC",
+            path:
+              fields?.miscId && !isSynthEnabled
+                ? `${basePath}/Dynamic/${fields?.miscId}.gif`
+                : null,
+          },
+        ].filter((item) => item.path),
     isSynthEnabled,
     isRendering2d,
     basePath,

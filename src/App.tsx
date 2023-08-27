@@ -8,7 +8,10 @@ import {
   MdDownload as DownloadIcon,
   MdRefresh as RefreshIcon,
   MdOpenInNew as OpenWindowIcon,
-    MdChevronRight as ArrowRightIcon,
+  MdChevronRight as ArrowRightIcon,
+  MdChevronLeft as ArrowLeftIcon,
+  MdCamera as CameraIcon,
+  MdRedo as RedoIcon,
 } from "react-icons/md";
 import { format, fromUnixTime, formatDistanceToNow, isAfter } from "date-fns";
 import { ToastContainer, toast } from "react-toastify";
@@ -17,15 +20,22 @@ import {
   GiStrongMan as TrainingIcon,
   GiJourney as QuestIcon,
   GiBattleAxe as BattleIcon,
-  GiWorld as WorldIcon
+  GiWorld as WorldIcon,
 } from "react-icons/gi";
 import {
   FaSkull as SkullIcon,
   FaInfoCircle as InfoIcon,
   FaExchangeAlt as ToggleIcon,
 } from "react-icons/fa";
-import { orderBy } from 'lodash';
-import { WagmiConfig, createConfig, useAccount, useBalance, useContractReads, useContractRead } from "wagmi";
+import { orderBy } from "lodash";
+import {
+  WagmiConfig,
+  createConfig,
+  useAccount,
+  useBalance,
+  useContractReads,
+  useContractRead,
+} from "wagmi";
 import { Wallet, providers, ethers } from "ethers";
 import {
   getWalletClient,
@@ -60,7 +70,7 @@ import {
   formatEther,
 } from "viem";
 import { generateRenderingOrder } from "./lib/renderer";
-import {BEARZ_SHOP_IMAGE_URI, getStatsByTokenId} from "./lib/blockchain";
+import { BEARZ_SHOP_IMAGE_URI, getStatsByTokenId } from "./lib/blockchain";
 import {
   shortenAddress,
   getAttributeValue,
@@ -77,9 +87,12 @@ import buttonBackground from "./interactive/button.png";
 import twoDButton from "./interactive/toggle2d.png";
 import pixelButton from "./interactive/togglepixel.png";
 import logoImage from "./interactive/logo.gif";
+import neocityMap from "./interactive/map/neocity.png";
+import neocityShop from "./interactive/map/shop.png";
 import {
   bearzQuestABI,
-  bearzQuestContractAddress, bearzShopABI,
+  bearzQuestContractAddress,
+  bearzShopABI,
   bearzShopContractAddress,
   bearzStakeChildABI,
   bearzStakeChildContractAddress,
@@ -143,15 +156,14 @@ const LoadingScreen = ({ children, tokenId }) => {
 const VIEWS = {
   NEOCITY: "NEOCITY",
   WARDROBE: "WARDROBE",
-  TRAINING: "TRAINING",
   QUESTING: "QUESTING",
   BATTLE: "BATTLE",
   ITEM: "ITEM",
 };
 
-const SubView = ({ children, title, subtitle, onBack }) => (
+const SubView = ({ children, childClassName, title, subtitle, onBack }) => (
   <div className="w-full h-full flex flex-col text-white">
-    <div className="flex flex-row items-center justify-between w-full px-3 tablet:px-6 pt-3 tablet:pt-6">
+    <div className="flex flex-row items-center justify-between w-full px-3 tablet:px-6 py-3 tablet:pt-6">
       <div className="flex flex-col space-y-2">
         <h2 className="text-sm md:text-xl font-bold truncate">{title}</h2>
         <span className="opacity-50 text-[12px]">{subtitle}</span>
@@ -168,8 +180,13 @@ const SubView = ({ children, title, subtitle, onBack }) => (
         </button>
       </div>
     </div>
-    <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50 my-4" />
-    <div className="flex w-full tablet:overflow-auto my-2 md:my-4 px-2 tablet:px-4">
+    <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50" />
+    <div
+      className={classnames(
+        "flex w-full h-full tablet:overflow-auto px-2 tablet:px-4",
+        childClassName,
+      )}
+    >
       {children}
     </div>
   </div>
@@ -182,7 +199,7 @@ const Popup = ({ children, isOpen, onClose }) => {
         className={classnames(
           "z-[10000] absolute flex shadow-xl flex-row top-0 left-0 h-full w-full bg-dark duration-300 ease-in-out",
           {
-            "bg-opacity-0": !isOpen,
+            "bg-opacity-0 pointer-events-none": !isOpen,
             "bg-opacity-50": isOpen,
           },
         )}
@@ -323,9 +340,9 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
           ]);
 
           const { paymasterAndData } =
-              await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-                mode: PaymasterMode.SPONSORED,
-              });
+            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
+              mode: PaymasterMode.SPONSORED,
+            });
 
           partialUserOp.paymasterAndData = paymasterAndData;
 
@@ -428,210 +445,237 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
 };
 
 const useQuests = ({ address }) => {
-
   const { data, isLoading } = useContractReads({
     contracts: [
       {
         address: bearzStakeChildContractAddress,
         abi: bearzStakeChildABI,
         chainId: polygon.id,
-        functionName: 'getAllQuests',
+        functionName: "getAllQuests",
       },
       {
         address: bearzQuestContractAddress,
-      abi: bearzQuestABI,
+        abi: bearzQuestABI,
         chainId: polygon.id,
-        functionName: 'getClaimableRewards',
-        args: [address]
+        functionName: "getClaimableRewards",
+        args: [address],
       },
       {
         address: bearzTokenContractAddress,
         abi: bearzTokenABI,
         chainId: polygon.id,
-        functionName: 'balanceOf',
-        args: [address]
+        functionName: "balanceOf",
+        args: [address],
       },
     ],
-  })
+  });
 
   console.log({
-    data
-  })
+    data,
+  });
 
-  return [{
-    isLoading,
-    quests: orderBy(data?.[0]?.result, (quest) => fromUnixTime(quest?.activeUntil), 'desc'),
-    rewards: data?.[1]?.result,
-    balance: formatEther(data?.[2]?.result ?? 0n)
-  }]
-}
+  return [
+    {
+      isLoading,
+      quests: orderBy(
+        data?.[0]?.result,
+        (quest) => fromUnixTime(quest?.activeUntil),
+        "desc",
+      ),
+      rewards: data?.[1]?.result,
+      balance: formatEther(data?.[2]?.result ?? 0n),
+    },
+  ];
+};
 
 const SelectedQuestView = ({ quest }) => {
-
   const { data: items, isLoading } = useContractRead({
-
     address: bearzShopContractAddress,
-        abi: bearzShopABI,
-      chainId: mainnet.id,
+    abi: bearzShopABI,
+    chainId: mainnet.id,
     functionName: "getMetadataBatch",
     args: [quest?.itemIds],
-  })
+  });
 
   return (
-      <div className="flex flex-col flex-shrink-0 w-full space-y-4">
-        <h3 className="text-sm text-accent">{quest?.name}</h3>
-        <p className="text-xs opacity-90">{quest?.description}</p>
-        <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-          <h3 className="text-xs opacity-50">Duration</h3>
-          <span className="text-xs">{Number(quest.duration) / 86400} day(s)</span>
-          <h3 className="text-xs opacity-50">Cooldown</h3>
-          <span className="text-xs">{Number(quest.cooldownPeriod) / 86400} day(s)</span>
-          <h3 className="text-xs opacity-50">Item(s)</h3>
-          {isLoading ? (
-              <div className="flex flex-col items-center justify-center h-full w-full">
-                <img className="w-[100px]" src={logoImage} alt="logo" />
-                <span className="text-white opacity-50 text-xs">
-                Loading...
-              </span>
-              </div>
-          ) : (
-              <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
-                {quest?.itemIds.map((item, index) => {
-
-                  const isValidItem = Number(item) !== 0;
-
-                  const metadata = isValidItem ? items?.[index] : {};
-
-                  const currentRarity =
-                      index === quest?.rarities.length - 1
-                          ? Number(quest?.rarities[index]) - 1
-                          : Number(quest?.rarities[index]);
-
-                  const dropRarity =
-                      (index === 0
-                          ? Number(currentRarity)
-                          : Number(currentRarity) - Number(quest?.rarities[index - 1])) / 100;
-
-                  return (
-                      <div key={item} className="flex flex-col space-y-2">
-                        {isValidItem ? (
-                            <div
-
-                                title={metadata.name}
-                                className="flex flex-col flex-shrink-0 w-[100px] gap-2"
-                            >
-                              <img
-                                  className="h-full w-full"
-                                  src={`${BEARZ_SHOP_IMAGE_URI}${item}.png`}
-                                  alt={metadata.name}
-                              />
-                            </div>
-                        ) : (<div key={`NONE_${index}`} className="flex flex-col items-center bg-main border border-[1px] border-white rounded-md justify-center space-y-2 p-4 text-center flex flex-col flex-shrink-0 w-[100px] h-[140px] gap-2">
-                              <SkullIcon className="relative h-[60px] w-[60px] object-contain" />
-                              <span className="text-[10px] opacity-50">Nothing</span>
-                            </div>
-                        )}
-                        <span className="text-[10px] text-center">{dropRarity}%</span>
-                      </div>
-                  )
-                })}
-              </div>
-          )}
-
+    <div className="flex flex-col flex-shrink-0 w-full space-y-4">
+      <h3 className="text-sm text-accent">{quest?.name}</h3>
+      <p className="text-xs opacity-90 pb-4">{quest?.description}</p>
+      <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+        <div className="grid grid-cols-1 tablet:grid-cols-2 gap-2">
+          <div className="flex flex-col">
+            <h3 className="text-xs opacity-50">Duration</h3>
+            <span className="text-xs">
+              {Number(quest.duration) / 86400} day(s)
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <h3 className="text-xs opacity-50">Cooldown</h3>
+            <span className="text-xs">
+              {Number(quest.cooldownPeriod) / 86400} day(s)
+            </span>
+          </div>
         </div>
+        <h3 className="text-xs opacity-50 pt-4">Item(s)</h3>
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full w-full">
+            <img className="w-[100px]" src={logoImage} alt="logo" />
+            <span className="text-white opacity-50 text-xs">Loading...</span>
+          </div>
+        ) : (
+          <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
+            {quest?.itemIds.map((item, index) => {
+              const isValidItem = Number(item) !== 0;
+
+              const metadata = isValidItem ? items?.[index] : {};
+
+              const currentRarity =
+                index === quest?.rarities.length - 1
+                  ? Number(quest?.rarities[index]) - 1
+                  : Number(quest?.rarities[index]);
+
+              const dropRarity =
+                (index === 0
+                  ? Number(currentRarity)
+                  : Number(currentRarity) -
+                    Number(quest?.rarities[index - 1])) / 100;
+
+              return (
+                <div key={item} className="flex flex-col space-y-2">
+                  {isValidItem ? (
+                    <div
+                      title={metadata.name}
+                      className="flex flex-col flex-shrink-0 w-[100px] gap-2"
+                    >
+                      <img
+                        className="h-full w-full"
+                        src={`${BEARZ_SHOP_IMAGE_URI}${item}.png`}
+                        alt={metadata.name}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      key={`NONE_${index}`}
+                      className="flex flex-col items-center bg-main border border-[1px] border-white rounded-md justify-center space-y-2 p-4 text-center flex flex-col flex-shrink-0 w-[100px] h-[140px] gap-2"
+                    >
+                      <SkullIcon className="relative h-[60px] w-[60px] object-contain" />
+                      <span className="text-[10px] opacity-50">Nothing</span>
+                    </div>
+                  )}
+                  <span className="text-[10px] text-center">{dropRarity}%</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-  )
-}
+    </div>
+  );
+};
 
 const QuestingView = ({ address, name, onBack }) => {
   const [{ isLoading, quests, rewards, balance }] = useQuests({ address });
   const [selectedQuest, setSelectedQuest] = useState(null);
-
-  console.log({
-    quests, rewards
-  });
-
   return (
-      <SubView
-          title={
-            <div className="flex flex-row items-center space-x-3">
-              <span className="text-2xl">
-                <QuestIcon />
-              </span>
-              <span>Questing</span>
-            </div>
-          }
-          subtitle={selectedQuest?.questType ?? name}
-          onBack={() => {
-            if(selectedQuest){
-              setSelectedQuest(null)
-            } else {
-              onBack();
-            }
-          }}
-      >
-        <div className="flex flex-col w-full h-full">
-          {isLoading ? (
-              <div className="flex flex-col items-center justify-center h-full w-full">
-                <img className="w-[100px]" src={logoImage} alt="logo" />
-                <span className="text-white opacity-50 text-xs">
-                Loading...
-              </span>
-              </div>
-          ) : (
-              <div className="flex flex-col space-y-4 w-full">
-                {selectedQuest ? (
-                    <SelectedQuestView quest={selectedQuest} />
-                ) : (
-                    <div className="flex flex-col flex-shrink-0 w-full space-y-4">
-                      <h3 className="hidden text-xs opacity-50">Recent Quests</h3>
-                      {quests?.length > 0 ? (
-                          <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-2">
-                            {quests.map((quest) => {
-                              const activeDate = new Date(
-                                  fromUnixTime(quest?.activeUntil),
-                              );
-                              const isActive = isAfter(activeDate, new Date());
-
-                              return (
-                                  <div key={quest.id} className="min-h-[80px] flex flex-row space-x-2 w-full justify-between">
-                                    <div className="flex flex-col flex-grow-1 space-y-2 truncate">
-                                      <h3 className="text-xs text-accent">{quest?.name}</h3>
-                                      <p className="text-[10px] opacity-90 truncate">{quest?.description}</p>
-                                      <span className="text-[10px] opacity-50">{isActive ? 'Ends in ' : 'Ended '}{formatDistanceToNow(
-                                          new Date(
-                                              fromUnixTime(quest?.activeUntil),
-                                          ),
-                                      )}{isActive ? '' : ' ago'}</span>
-                                    </div>
-                                    <div className="flex flex-shrink-0 items-center justify-center w-[60px] min-h-[80px]">
-                                      <button className="text-4xl text-accent" onClick={() => {
-                                        setSelectedQuest(quest);
-                                      }}>
-                                        <ArrowRightIcon />
-                                      </button>
-                                    </div>
-                                  </div>
-                              )
-                            })}
-                          </div>
-                      ) : (
-                          <p>
-                            <p className="text-[10px]">No recent quests</p>
-                          </p>
-                      )}
-                    </div>
-                )}
-
-              </div>
-          )}
+    <SubView
+      title={
+        <div className="flex flex-row items-center space-x-3">
+          <span className="text-2xl">
+            <QuestIcon />
+          </span>
+          <span>Questing</span>
         </div>
-      </SubView>
+      }
+      subtitle={selectedQuest?.questType ?? name}
+      onBack={() => {
+        if (selectedQuest) {
+          setSelectedQuest(null);
+        } else {
+          onBack();
+        }
+      }}
+    >
+      <div className="flex flex-col w-full h-full py-4">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center h-full w-full">
+            <img className="w-[100px]" src={logoImage} alt="logo" />
+            <span className="text-white opacity-50 text-xs">Loading...</span>
+          </div>
+        ) : (
+          <div className="flex flex-col space-y-4 w-full">
+            {selectedQuest ? (
+              <SelectedQuestView quest={selectedQuest} />
+            ) : (
+              <div className="flex flex-col flex-shrink-0 w-full space-y-4">
+                <h3 className="hidden text-xs opacity-50">Recent Quests</h3>
+                {quests?.length > 0 ? (
+                  <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-2">
+                    {quests.map((quest) => {
+                      const activeDate = new Date(
+                        fromUnixTime(quest?.activeUntil),
+                      );
+                      const isActive = isAfter(activeDate, new Date());
 
-  )
-}
+                      return (
+                        <div
+                          key={quest.id}
+                          className="min-h-[80px] flex flex-row space-x-2 w-full justify-between"
+                        >
+                          <div className="flex flex-col flex-grow-1 space-y-2 truncate">
+                            <h3
+                              className="text-xs text-accent"
+                              role="button"
+                              onClick={() => {
+                                setSelectedQuest(quest);
+                              }}
+                            >
+                              {quest?.name}
+                            </h3>
+                            <p className="text-[10px] opacity-90 truncate">
+                              {quest?.description}
+                            </p>
+                            <span className="text-[10px] opacity-50">
+                              {isActive ? "Ends in " : "Ended "}
+                              {formatDistanceToNow(
+                                new Date(fromUnixTime(quest?.activeUntil)),
+                              )}
+                              {isActive ? "" : " ago"}
+                            </span>
+                          </div>
+                          <div className="flex flex-shrink-0 items-center justify-center w-[60px] min-h-[80px]">
+                            <button
+                              className="text-4xl text-accent"
+                              onClick={() => {
+                                setSelectedQuest(quest);
+                              }}
+                            >
+                              <ArrowRightIcon />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p>
+                    <p className="text-[10px]">No recent quests</p>
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </SubView>
+  );
+};
 
-const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
+const ActionMenu = ({
+  metadata,
+  isSimulated,
+  onRefresh,
+  onWardrobeExperience,
+}) => {
   const [isMounted, setIsMounted] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [viewState, setViewState] = useState(null);
@@ -713,15 +757,15 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                   <RefreshIcon />
                 </button>
                 {isSimulated && (
-                    <a
-                        className="opacity-50 hover:opacity-100 text-[20px] cursor-pointer"
-                        href={`https://brawlerbearz.eth.limo/#/${tokenId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        title="Right-click + 'Open in new tab'"
-                    >
-                      <OpenWindowIcon />
-                    </a>
+                  <a
+                    className="opacity-50 hover:opacity-100 text-[20px] cursor-pointer"
+                    href={`https://brawlerbearz.eth.limo/#/${tokenId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    title="Right-click + 'Open in new tab'"
+                  >
+                    <OpenWindowIcon />
+                  </a>
                 )}
               </h2>
               <a
@@ -764,7 +808,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
           </div>
           <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50 my-4" />
           <div className="flex flex-col tablet:overflow-auto px-3 tablet:px-6 pb-6">
-            <div className="flex flex-col flex-shrink-0 w-full space-y-4">
+            <div className="flex flex-col flex-shrink-0 w-full space-y-2">
               <h3 className="hidden text-xs opacity-50">Manage Brawler</h3>
               {!isSimulated && (
                 <div className="flex flex-col flex-shrink-0 w-full justify-center items-center">
@@ -786,7 +830,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                         </button>
                       ) : (
                         <button
-                          className="hover:underline text-xs text-accent text-left"
+                          className="hover:underline text-[12px] text-accent text-left"
                           onClick={show}
                         >
                           Connected to {ensName ?? truncatedAddress}
@@ -796,27 +840,10 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                   </ConnectKitButton.Custom>
                 </div>
               )}
-              {isConnected && isOwnerOfNFT && actionsLive && (
-                  <button
-                      className="relative flex items-center justify-center w-[250px] cursor-pointer mx-auto"
-                      type="button"
-                      onClick={() => {
-                        setViewState(VIEWS.NEOCITY);
-                      }}
-                  >
-                    <img
-                        className="object-cover h-full w-full"
-                        src={buttonBackground}
-                        alt="button"
-                    />
-                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                    Neo City
-                  </span>
-                  </button>
-              )}
-              <div className="flex flex-wrap w-full gap-2 tablet:gap-4">
-                {isConnected && !isOwnerOfNFT && (
-                  <div className="flex flex-row w-full items-center justify-center text-center text-warn py-2 space-x-2">
+
+              {isConnected && !isOwnerOfNFT && (
+                <div className="flex flex-wrap w-full">
+                  <div className="flex flex-row w-full items-center justify-center text-center text-warn py-1 space-x-2">
                     <span className="text-base">
                       <WarnIcon />
                     </span>
@@ -825,8 +852,8 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                       You do not own this NFT to perform actions
                     </span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
             <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
               <div className="flex flex-row items-center justify-between">
@@ -916,7 +943,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                 </div>
               </div>
               {!metadata?.isSynced && !isViewingBaseStats && (
-                <div className="flex flex-row items-center text-accent2 py-2 space-x-2">
+                <div className="flex flex-row items-center text-accent2 py-2 space-x-2 justify-center">
                   <span className="text-base">
                     <InfoIcon />
                   </span>
@@ -956,13 +983,11 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                   <p className="text-[10px]">No equipped items</p>
                 </p>
               )}
-              {isConnected && isOwnerOfNFT && actionsLive && (
+              {isConnected && actionsLive && (
                 <button
                   className="hidden relative flex items-center justify-center w-[250px] cursor-pointer"
                   type="button"
-                  onClick={() => {
-                    setViewState(VIEWS.WARDROBE);
-                  }}
+                  onClick={onWardrobeExperience}
                 >
                   <img
                     className="object-cover h-full w-full"
@@ -975,54 +1000,22 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                 </button>
               )}
             </div>
-            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <div className="flex flex-row items-center justify-between">
-                <h3 className="text-xs opacity-50">Training</h3>
-              </div>
-              {!activity?.training?.isTraining &&
-              actionsLive &&
-              isConnected &&
-              isOwnerOfNFT ? (
-                <>
-                  <p className="text-[10px]">Not training</p>
-                  <button
-                    className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                    type="button"
-                    onClick={async () => {
-                      await actions?.onStartTraining({
-                        tokenIds: [tokenId],
-                      });
-                    }}
-                  >
-                    <img
-                      className="object-cover h-full w-full"
-                      src={buttonBackground}
-                      alt="button"
-                    />
-                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                      Train
-                    </span>
-                  </button>
-                </>
-              ) : (
-                <div className="flex flex-col space-y-2">
-                  <h3 className="text-sm text-accent">
-                    XP: {formatNumber(Number(activity?.training?.training?.xp))}
-                  </h3>
-                  <p className="text-[10px]">
-                    Training for{" "}
-                    {formatDistanceToNow(
-                      new Date(
-                        fromUnixTime(activity?.training?.training?.startAt),
-                      ),
-                    )}
-                  </p>
-                  {isConnected && isOwnerOfNFT && actionsLive && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 w-full items-center gap-4">
+              <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+                <div className="flex flex-row items-center justify-between">
+                  <h3 className="text-xs opacity-50">Training</h3>
+                </div>
+                {!activity?.training?.isTraining &&
+                actionsLive &&
+                isConnected &&
+                isOwnerOfNFT ? (
+                  <>
+                    <p className="text-[10px]">Not training</p>
                     <button
-                      className="relative flex items-center justify-center w-[250px] cursor-pointer pt-2"
+                      className="relative flex items-center justify-center w-[250px] cursor-pointer"
                       type="button"
                       onClick={async () => {
-                        await actions?.onStopTraining({
+                        await actions?.onStartTraining({
                           tokenIds: [tokenId],
                         });
                       }}
@@ -1033,48 +1026,106 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                         alt="button"
                       />
                       <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                        End Training
+                        Train
                       </span>
                     </button>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <div className="flex flex-row items-center justify-between">
-                <h3 className="text-xs opacity-50">Questing</h3>
+                  </>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <h3 className="text-sm text-accent">
+                      XP:{" "}
+                      {formatNumber(Number(activity?.training?.training?.xp))}
+                    </h3>
+                    <p className="text-[10px]">
+                      Training for{" "}
+                      {formatDistanceToNow(
+                        new Date(
+                          fromUnixTime(activity?.training?.training?.startAt),
+                        ),
+                      )}
+                    </p>
+                    {isConnected && isOwnerOfNFT && actionsLive && (
+                      <button
+                        className="relative flex items-center justify-center w-[250px] cursor-pointer pt-2"
+                        type="button"
+                        onClick={async () => {
+                          await actions?.onStopTraining({
+                            tokenIds: [tokenId],
+                          });
+                        }}
+                      >
+                        <img
+                          className="object-cover h-full w-full"
+                          src={buttonBackground}
+                          alt="button"
+                        />
+                        <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                          End Training
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
-              {!activity?.questing?.isQuesting ? (
-                <p className="text-[10px]">Not on a quest</p>
-              ) : (
-                <div className="flex flex-col space-y-2">
-                  <h3 className="text-sm text-accent">
-                    {activity?.questing?.currentQuest?.name}
-                  </h3>
-                  <p className="text-[10px]">
-                    Started:{" "}
-                    {format(
-                      new Date(
-                        fromUnixTime(activity?.questing?.quest?.startAt),
-                      ),
-                      "yyyy-MM-dd hh:mm aaaa",
-                    )}
-                  </p>
-                  <p className="text-[10px]">
-                    Ends:{" "}
-                    {format(
-                      new Date(fromUnixTime(activity?.questing?.quest?.endAt)),
-                      "yyyy-MM-dd hh:mm aaaa",
-                    )}
-                  </p>
+              <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+                <div className="flex flex-row items-center justify-between">
+                  <h3 className="text-xs opacity-50">Questing</h3>
                 </div>
-              )}
-              {isConnected && isOwnerOfNFT && actionsLive && (
+                {!activity?.questing?.isQuesting ? (
+                  <p className="text-[10px]">Not on a quest</p>
+                ) : (
+                  <div className="flex flex-col space-y-2">
+                    <h3 className="text-sm text-accent">
+                      {activity?.questing?.currentQuest?.name}
+                    </h3>
+                    <p className="text-[10px]">
+                      Started:{" "}
+                      {format(
+                        new Date(
+                          fromUnixTime(activity?.questing?.quest?.startAt),
+                        ),
+                        "yyyy-MM-dd hh:mm aaaa",
+                      )}
+                    </p>
+                    <p className="text-[10px]">
+                      Ends:{" "}
+                      {format(
+                        new Date(
+                          fromUnixTime(activity?.questing?.quest?.endAt),
+                        ),
+                        "yyyy-MM-dd hh:mm aaaa",
+                      )}
+                    </p>
+                  </div>
+                )}
+                {isConnected && isOwnerOfNFT && actionsLive && (
+                  <button
+                    className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                    type="button"
+                    onClick={() => {
+                      setViewState(VIEWS.QUESTING);
+                    }}
+                  >
+                    <img
+                      className="object-cover h-full w-full"
+                      src={buttonBackground}
+                      alt="button"
+                    />
+                    <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                      Quest
+                    </span>
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="hidden flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+              <h3 className="text-xs opacity-50">Game</h3>
+              {isConnected && actionsLive && (
                 <button
                   className="relative flex items-center justify-center w-[250px] cursor-pointer"
                   type="button"
                   onClick={() => {
-                    setViewState(VIEWS.QUESTING);
+                    setViewState(VIEWS.NEOCITY);
                   }}
                 >
                   <img
@@ -1083,7 +1134,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                     alt="button"
                   />
                   <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                    Quest
+                    Neo City
                   </span>
                 </button>
               )}
@@ -1108,7 +1159,7 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
             setViewContext(null);
           }}
         >
-          <div className="flex flex-col w-full items-center space-y-4">
+          <div className="flex flex-col w-full items-center space-y-4 py-4">
             <div className="flex flex-col flex-shrink-0 w-full space-y-4">
               <h3 className="text-xs opacity-50">Stats</h3>
               <div className="grid grid-cols-4 gap-4">
@@ -1117,10 +1168,12 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.atk)}%
                   </span>
-                  {viewContext?.boost?.str > 0 && (
+                  {viewContext?.boost?.str > 0 ? (
                     <span className="text-xs text-accent">
                       +{formatNumber(viewContext?.boost?.str)}
                     </span>
+                  ) : (
+                    <span className="h-[18px]" />
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
@@ -1128,10 +1181,12 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.def)}%
                   </span>
-                  {viewContext?.boost?.end > 0 && (
+                  {viewContext?.boost?.end > 0 ? (
                     <span className="text-xs text-accent">
                       +{formatNumber(viewContext?.boost?.end)}
                     </span>
+                  ) : (
+                    <span className="h-[18px]" />
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
@@ -1139,10 +1194,12 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.intel)}%
                   </span>
-                  {viewContext?.boost?.int > 0 && (
+                  {viewContext?.boost?.int > 0 ? (
                     <span className="text-xs text-accent">
                       +{formatNumber(viewContext?.boost?.int)}
                     </span>
+                  ) : (
+                    <span className="h-[18px]" />
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
@@ -1150,10 +1207,12 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.luck)}%
                   </span>
-                  {viewContext?.boost?.lck > 0 && (
+                  {viewContext?.boost?.lck > 0 ? (
                     <span className="text-xs text-accent">
                       +{formatNumber(viewContext?.boost?.lck)}
                     </span>
+                  ) : (
+                    <span className="h-[18px]" />
                   )}
                 </div>
               </div>
@@ -1193,47 +1252,61 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
             setViewState(null);
           }}
         >
-          Coming soon
+          <div className="flex flex-col w-full items-center space-y-4 py-10 opacity-50">
+            Coming Soon
+          </div>
         </SubView>
       )}
-      {viewState === VIEWS.TRAINING && (
+      {viewState === VIEWS.QUESTING && (
+        <QuestingView
+          address={address}
+          name={name}
+          onBack={() => setViewState(null)}
+        />
+      )}
+      {viewState === VIEWS.NEOCITY && (
         <SubView
           title={
             <div className="flex flex-row items-center space-x-3">
               <span className="text-2xl">
-                <TrainingIcon />
+                <WorldIcon />
               </span>
-              <span>Training</span>
+              <span>Neo City</span>
             </div>
           }
           subtitle={name}
           onBack={() => {
             setViewState(null);
           }}
+          childClassName="!p-0"
         >
-          Coming soon
-        </SubView>
-      )}
-      {viewState === VIEWS.QUESTING && (
-          <QuestingView address={address} name={name} onBack={() => setViewState(null)} />
-      )}
-      {viewState === VIEWS.NEOCITY && (
-          <SubView
-              title={
-                <div className="flex flex-row items-center space-x-3">
-              <span className="text-2xl">
-                <WorldIcon />
-              </span>
-                  <span>Neo City</span>
+          <div className="flex flex-col items-center justify-center z-[1] mx-auto h-full w-full">
+            <div className="relative flex flex-col items-center justify-center w-full mx-auto aspect-square overflow-hidden">
+              <img
+                className="absolute top-0 left-0 w-full"
+                src={neocityMap}
+                alt="neo city map"
+              />
+              {/* Shop */}
+              <button
+                onClick={() => {
+                  window.alert("test");
+                }}
+              >
+                <div className="absolute top-[275px] left-[384px] w-[180px] h-[96px] z-[2] scale-[58%] cursor-pointer shadow-xs hover:shadow-hl">
+                  <div className="shadow-xs hover:shadow-inhl">
+                    <div className="absolute top-[123px] left-[89px] bg-accent h-[9px] w-[9px] animate-ping duration-500" />
+                    <img
+                      className="w-full h-full"
+                      src={neocityShop}
+                      alt="neo city shop"
+                    />
+                  </div>
                 </div>
-              }
-              subtitle={name}
-              onBack={() => {
-                setViewState(null);
-              }}
-          >
-            Coming soon
-          </SubView>
+              </button>
+            </div>
+          </div>
+        </SubView>
       )}
       {viewState === VIEWS.BATTLE && (
         <SubView
@@ -1257,18 +1330,258 @@ const ActionMenu = ({ metadata, isSimulated, onRefresh }) => {
   );
 };
 
-const ImageRenderer = ({ images }) => {
-  return (
-    <div className="max-h-[2048px] relative h-full w-full max-w-[2048px]">
-      {images.map((imageURL, index) => (
+const LAYERS = {
+  BACKGROUND: "BACKGROUND",
+  HEAD: "HEAD",
+  ARMOR: "ARMOR",
+  FACE_ARMOR: "FACE ARMOR",
+  EYEWEAR: "EYEWEAR",
+  MISC: "MISC.",
+};
+
+const selectedToItemIds = {
+  BACKGROUND: [
+    0, 7, 8, 19, 21, 22, 40, 67, 70, 74, 77, 81, 101, 102, 103, 120, 142, 154,
+    155, 169, 184, 210,
+  ],
+  HEAD: [
+    9, 32, 41, 42, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108, 113, 115,
+    121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157, 158, 164, 165,
+    191, 206, 208,
+  ],
+  ARMOR: [
+    1, 4, 34, 35, 37, 38, 43, 44, 52, 54, 57, 61, 63, 71, 75, 76, 84, 87, 95,
+    96, 97, 105, 106, 107, 109, 110, 111, 112, 116, 117, 122, 123, 127, 128,
+    129, 130, 141, 144, 146, 147, 148, 150, 151, 161, 170, 178, 180, 186, 190,
+    193, 194, 196, 198, 205, 209,
+  ],
+  FACE_ARMOR: [15, 91, 171, 172, 187, 188, 195],
+  EYEWEAR: [
+    5, 39, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167, 181, 199,
+  ],
+  MISC: [20, 59, 66, 69, 78, 79, 89, 125, 137, 160, 168, 182, 183, 185],
+};
+
+const ImageRenderer = ({
+  isShowingPixel,
+  images,
+  isEditing,
+  selected,
+  onChange,
+  onSelect,
+}) => {
+  return isEditing ? (
+    <div className="relative h-full w-full">
+      <img
+        src={images?.[0]?.path || ""}
+        className="h-full w-full absolute top-0 left-0"
+        style={{ zIndex: 0 }}
+        alt="Background image"
+      />
+      <div
+        className={classnames("absolute top-0 left-0 z-[1]", {
+          "w-[calc(100%-80px)] h-[calc(100%-80px)] z-[1] ml-[40px]": !selected,
+          "w-[calc(100%-200px)] h-[calc(100%-200px)] z-[1] ml-[100px]":
+            selected,
+        })}
+      >
+        {images.slice(1).map(({ path }, index) => (
+          <img
+            key={`${path}_${index}`}
+            src={path || ""}
+            className="h-full w-full absolute top-0 left-0"
+            style={{ zIndex: images.length + index }}
+            alt="Layered image"
+          />
+        ))}
+      </div>
+      <div
+        className={classnames(
+          "z-[1] absolute flex shadow-xl flex-row h-[140px] pt-4 mb-[80px] w-full bg-dark border-t-[5px] border-accent duration-300 ease-in-out",
+          {
+            "-bottom-[100%]": !selected,
+            "bottom-0": selected,
+          },
+        )}
+      >
+        {selected ? (
+          <div className="flex flex-row items-center space-x-4 min-w-full h-full text-xs overflow-x-auto pb-4">
+            {selectedToItemIds[selected].map((itemId) => {
+              const isNone = itemId === 0;
+              const path = `${process.env.PUBLIC_URL}/${
+                isShowingPixel ? "layers" : "layers2d"
+              }/Dynamic/${itemId}.${isShowingPixel ? "gif" : "png"}`;
+              const isSelectedItem =
+                images.findIndex(
+                  (item) =>
+                    item.typeOf === selected &&
+                    String(item.id) === String(itemId),
+                ) > -1;
+              return (
+                <div
+                  key={itemId}
+                  className={classnames(
+                    "flex-shrink-0 relative rounded-md overflow-hidden h-[90px] w-[90px] hover:border-accent hover:border-[3px] duration-100 ease-in-out",
+                    {
+                      "border-accent border-[3px]": isSelectedItem,
+                    },
+                  )}
+                >
+                  {selected !== LAYERS.BACKGROUND && (
+                    <img
+                      src={images?.[0]?.path || ""}
+                      className="h-full w-full object-contain z-[1] pointer-events-none absolute top-0 left-0"
+                      alt={`Background placeholder: ${itemId}`}
+                    />
+                  )}
+                  {isNone ? (
+                    <div
+                      src={path}
+                      className="absolute top-0 left-0 h-full w-full flex items-center justify-center z-[2] rounded-md border border-1 border-white"
+                      role="button"
+                      onClick={() => {
+                        onChange(selected, {
+                          id: 0,
+                          typeOf: selected,
+                          path: null,
+                        });
+                      }}
+                    >
+                      <span className="text-white text-sm opacity-50">
+                        None
+                      </span>
+                    </div>
+                  ) : (
+                    <img
+                      src={path}
+                      className="absolute top-0 left-0 h-full w-full object-contain z-[2]"
+                      alt={`Item: ${itemId}`}
+                      role="button"
+                      onClick={() => {
+                        onChange(selected, {
+                          id: itemId,
+                          typeOf: selected,
+                          path,
+                        });
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+      <div className="absolute bottom-0 left-0 w-full h-[80px] bg-dark z-[2]">
+        <div className="flex flex-row items-center lg:justify-center space-x-2 min-w-full h-full text-xs overflow-x-auto">
+          {Object.keys(LAYERS).map((item) => (
+            <button
+              key={item}
+              className={classnames(
+                "flex flex-shrink-0 items-center px-4 h-full duration-300",
+                {
+                  "opacity-100 text-accent": item === selected,
+                  "opacity-50 hover:opacity-80 text-white": item !== selected,
+                },
+              )}
+              onClick={() => {
+                onSelect(item);
+              }}
+            >
+              {LAYERS[item]}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div className="relative max-h-[2048px] max-w-[2048px] h-full w-full">
+      {images.map(({ path }, index) => (
         <img
-          key={`${imageURL}_${index}`}
-          src={imageURL || ""}
+          key={`${path}_${index}`}
+          src={path || ""}
           className="h-full w-full absolute top-0 left-0"
           style={{ zIndex: images.length + index }}
           alt="Layered image"
         />
       ))}
+    </div>
+  );
+};
+
+const WardrobeHeader = ({
+  isSynthEnabled = false,
+  isShowingPixel = true,
+  onClose = null,
+  onRedo,
+  onTogglePixel = null,
+}) => {
+  const [inPictureMode, setInPictureMode] = useState(false);
+  return (
+    <div
+      className={classnames(
+        "absolute top-0 flex flex-row items-center justify-between w-full min-h-[50px] z-[10001] px-3",
+        {
+          hidden: inPictureMode,
+        },
+      )}
+    >
+      <div className="flex flex-row items-center space-x-2">
+        <button
+          onClick={onClose}
+          className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+        >
+          <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
+            <span className="text-2xl text-white">
+              <ArrowLeftIcon />
+            </span>
+          </div>
+          <h2 className="hidden pl-2 text-white text-sm">Exit Wardrobe</h2>
+        </button>
+        <button
+          onClick={() => {
+            setInPictureMode(true);
+          }}
+          className="hidden flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+        >
+          <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
+            <span className="text-2xl text-white">
+              <CameraIcon />
+            </span>
+          </div>
+          <h2 className="hidden pl-2 text-white text-sm">Take Picture</h2>
+        </button>
+        <button className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300">
+          <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
+            <span className="text-2xl text-white">
+              <DownloadIcon />
+            </span>
+          </div>
+          <h2 className="hidden pl-2 text-white text-sm">Download</h2>
+        </button>
+        <button
+          className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+          onClick={() => {
+            onRedo();
+          }}
+        >
+          <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
+            <span className="text-2xl text-white">
+              <RedoIcon />
+            </span>
+          </div>
+          <h2 className="hidden pl-2 text-white text-sm">Reset</h2>
+        </button>
+      </div>
+      {isSynthEnabled && onTogglePixel && (
+        <button onClick={onTogglePixel}>
+          <img
+            src={!isShowingPixel ? twoDButton : pixelButton}
+            className="h-[57px] w-[104px]"
+            alt="enabler icon"
+          />
+        </button>
+      )}
     </div>
   );
 };
@@ -1310,7 +1623,7 @@ const Header = ({
 
 const FullExperience = ({
   metadata,
-  images,
+  images: defaultImages,
   isSynthEnabled,
   isShowingPixel,
   onTogglePixel,
@@ -1318,27 +1631,75 @@ const FullExperience = ({
   onRefresh,
 }) => {
   const [isShowingMenu, setIsShowingMenu] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [images, setImages] = useState(defaultImages);
+  const [selected, setSelected] = useState(null);
+
+  const swapOutImageType = (typeOf, replacement) => {
+    setImages((prev) => {
+      const foundIndex = prev.findIndex((item) => item.typeOf === typeOf);
+      if (foundIndex > -1) {
+        prev.splice(foundIndex, 1, replacement);
+        return [...prev];
+      } else {
+        return [...prev, replacement];
+      }
+    });
+  };
+
+  const onRedo = useCallback(() => {
+    setImages(defaultImages);
+  }, [defaultImages]);
+
+  const onClose = () => {
+    setIsShowingMenu(false);
+  };
+
+  const onCloseEditor = () => {
+    setIsEditing(false);
+  };
+
+  useEffect(() => {
+    onRedo();
+  }, [defaultImages]);
+
   return (
     <div className="relative h-full w-full">
-      <Header
-        onToggleMenu={() => {
-          setIsShowingMenu((value) => !value);
-        }}
-        isSynthEnabled={isSynthEnabled}
+      {isEditing ? (
+        <WardrobeHeader
+          onRedo={onRedo}
+          onClose={onCloseEditor}
+          isSynthEnabled={isSynthEnabled}
+          isShowingPixel={isShowingPixel}
+          onTogglePixel={onTogglePixel}
+        />
+      ) : (
+        <Header
+          onToggleMenu={() => {
+            setIsShowingMenu((value) => !value);
+          }}
+          isSynthEnabled={isSynthEnabled}
+          isShowingPixel={isShowingPixel}
+          onTogglePixel={onTogglePixel}
+        />
+      )}
+      <ImageRenderer
+        images={images}
+        isEditing={isEditing}
         isShowingPixel={isShowingPixel}
-        onTogglePixel={onTogglePixel}
+        selected={selected}
+        onSelect={setSelected}
+        onChange={swapOutImageType}
       />
-      <ImageRenderer images={images} />
-      <Popup
-        isOpen={isShowingMenu}
-        onClose={() => {
-          setIsShowingMenu(false);
-        }}
-      >
+      <Popup isOpen={isShowingMenu} onClose={onClose}>
         <ActionMenu
           metadata={metadata}
           isSimulated={isSimulated}
           onRefresh={onRefresh}
+          onWardrobeExperience={() => {
+            onClose();
+            setIsEditing(true);
+          }}
         />
       </Popup>
     </div>
