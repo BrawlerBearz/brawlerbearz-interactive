@@ -5,19 +5,19 @@ import { useParams } from "react-router-dom";
 import {
   MdOpenInNew as ExternalIcon,
   MdWarning as WarnIcon,
+  MdError as ErrorIcon,
   MdDownload as DownloadIcon,
   MdRefresh as RefreshIcon,
   MdOpenInNew as OpenWindowIcon,
   MdChevronRight as ArrowRightIcon,
   MdChevronLeft as ArrowLeftIcon,
   MdCamera as CameraIcon,
-  MdRedo as RedoIcon,
+  MdUndo as UndoIcon,
 } from "react-icons/md";
 import { format, fromUnixTime, formatDistanceToNow, isAfter } from "date-fns";
 import { ToastContainer, toast } from "react-toastify";
 import {
   GiClothes as WardrobeIcon,
-  GiStrongMan as TrainingIcon,
   GiJourney as QuestIcon,
   GiBattleAxe as BattleIcon,
   GiWorld as WorldIcon,
@@ -27,7 +27,7 @@ import {
   FaInfoCircle as InfoIcon,
   FaExchangeAlt as ToggleIcon,
 } from "react-icons/fa";
-import { orderBy } from "lodash";
+import { orderBy, last } from "lodash";
 import {
   WagmiConfig,
   createConfig,
@@ -985,7 +985,7 @@ const ActionMenu = ({
               )}
               {isConnected && actionsLive && (
                 <button
-                  className="hidden relative flex items-center justify-center w-[250px] cursor-pointer"
+                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
                   type="button"
                   onClick={onWardrobeExperience}
                 >
@@ -1334,9 +1334,9 @@ const LAYERS = {
   BACKGROUND: "BACKGROUND",
   HEAD: "HEAD",
   ARMOR: "ARMOR",
-  FACE_ARMOR: "FACE ARMOR",
+  FACE_ARMOR: "FACE_ARMOR",
   EYEWEAR: "EYEWEAR",
-  MISC: "MISC.",
+  MISC: "MISC",
 };
 
 const selectedToItemIds = {
@@ -1345,21 +1345,50 @@ const selectedToItemIds = {
     155, 169, 184, 210,
   ],
   HEAD: [
-    9, 32, 41, 42, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108, 113, 115,
-    121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157, 158, 164, 165,
-    191, 206, 208,
+    0, 9, 32, 41, 42, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108, 113,
+    115, 121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157, 158, 164,
+    165, 191, 206, 208,
   ],
   ARMOR: [
-    1, 4, 34, 35, 37, 38, 43, 44, 52, 54, 57, 61, 63, 71, 75, 76, 84, 87, 95,
+    0, 1, 4, 34, 35, 37, 38, 43, 44, 52, 54, 57, 61, 63, 71, 75, 76, 84, 87, 95,
     96, 97, 105, 106, 107, 109, 110, 111, 112, 116, 117, 122, 123, 127, 128,
     129, 130, 141, 144, 146, 147, 148, 150, 151, 161, 170, 178, 180, 186, 190,
     193, 194, 196, 198, 205, 209,
   ],
-  FACE_ARMOR: [15, 91, 171, 172, 187, 188, 195],
+  FACE_ARMOR: [0, 15, 91, 171, 172, 187, 188, 195],
   EYEWEAR: [
-    5, 39, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167, 181, 199,
+    0, 5, 39, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167, 181,
+    199,
   ],
-  MISC: [20, 59, 66, 69, 78, 79, 89, 125, 137, 160, 168, 182, 183, 185],
+  MISC: [0, 20, 59, 66, 69, 78, 79, 89, 125, 137, 160, 168, 182, 183, 185],
+};
+
+const hasFaceArmorAndHead = (selected, images) =>
+  selected === LAYERS.FACE_ARMOR &&
+  images.findIndex((item) => item.typeOf === LAYERS.HEAD) > -1;
+
+const applyRenderingRules = (images) => {
+  const normalizedImages = images.filter((item) => item.path);
+  const hasHead =
+    normalizedImages.findIndex((item) => item.typeOf === LAYERS.HEAD) > -1;
+  const hasFaceArmor =
+    normalizedImages.findIndex((item) => item.typeOf === LAYERS.FACE_ARMOR) >
+    -1;
+  if (hasFaceArmor && hasHead) {
+    return normalizedImages.filter((item) => item.typeOf !== LAYERS.HEAD);
+  }
+  return normalizedImages;
+};
+
+const hasConflictWithAnotherLayer = (selected, images) => {
+  return hasFaceArmorAndHead(selected, images);
+};
+
+const isInvalidWithAnotherLayer = (selected, images) => {
+  return (
+    selected === LAYERS.HEAD &&
+    images.findIndex((item) => item.typeOf === LAYERS.FACE_ARMOR) > -1
+  );
 };
 
 const ImageRenderer = ({
@@ -1373,7 +1402,12 @@ const ImageRenderer = ({
   return isEditing ? (
     <div className="relative h-full w-full">
       <img
-        src={images?.[0]?.path || ""}
+        src={
+          images?.[0]?.path ||
+          `${process.env.PUBLIC_URL}/placeholders/None.${
+            isShowingPixel ? "gif" : "png"
+          }`
+        }
         className="h-full w-full absolute top-0 left-0"
         style={{ zIndex: 0 }}
         alt="Background image"
@@ -1385,7 +1419,7 @@ const ImageRenderer = ({
             selected,
         })}
       >
-        {images.slice(1).map(({ path }, index) => (
+        {applyRenderingRules(images.slice(1)).map(({ path }, index) => (
           <img
             key={`${path}_${index}`}
             src={path || ""}
@@ -1407,6 +1441,8 @@ const ImageRenderer = ({
         {selected ? (
           <div className="flex flex-row items-center space-x-4 min-w-full h-full text-xs overflow-x-auto pb-4">
             {selectedToItemIds[selected].map((itemId) => {
+              const wontShow = isInvalidWithAnotherLayer(selected, images);
+              const hasConflict = hasConflictWithAnotherLayer(selected, images);
               const isNone = itemId === 0;
               const path = `${process.env.PUBLIC_URL}/${
                 isShowingPixel ? "layers" : "layers2d"
@@ -1421,18 +1457,21 @@ const ImageRenderer = ({
                 <div
                   key={itemId}
                   className={classnames(
-                    "flex-shrink-0 relative rounded-md overflow-hidden h-[90px] w-[90px] hover:border-accent hover:border-[3px] duration-100 ease-in-out",
+                    "relative flex-shrink-0 relative rounded-md overflow-hidden h-[90px] w-[90px] hover:border-accent hover:border-[3px] duration-100 ease-in-out",
                     {
                       "border-accent border-[3px]": isSelectedItem,
                     },
                   )}
                 >
                   {selected !== LAYERS.BACKGROUND && (
-                    <img
-                      src={images?.[0]?.path || ""}
-                      className="h-full w-full object-contain z-[1] pointer-events-none absolute top-0 left-0"
-                      alt={`Background placeholder: ${itemId}`}
-                    />
+                    <div className="h-full w-full bg-main bg-opacity-50 z-[1] pointer-events-none absolute top-0 left-0" />
+                    //   <img
+                    //   src={images?.[0]?.path || `${process.env.PUBLIC_URL}/placeholders/None.${
+                    //       isShowingPixel ? "gif" : "png"
+                    //   }`}
+                    //   className="h-full w-full object-contain z-[1] pointer-events-none absolute top-0 left-0"
+                    //   alt={`Background placeholder: ${itemId}`}
+                    // />
                   )}
                   {isNone ? (
                     <div
@@ -1447,24 +1486,35 @@ const ImageRenderer = ({
                         });
                       }}
                     >
-                      <span className="text-white text-sm opacity-50">
+                      <span className="text-white text-[10px] opacity-50">
                         None
                       </span>
                     </div>
                   ) : (
-                    <img
-                      src={path}
-                      className="absolute top-0 left-0 h-full w-full object-contain z-[2]"
-                      alt={`Item: ${itemId}`}
-                      role="button"
-                      onClick={() => {
-                        onChange(selected, {
-                          id: itemId,
-                          typeOf: selected,
-                          path,
-                        });
-                      }}
-                    />
+                    <>
+                      <img
+                        src={path}
+                        className="absolute top-0 left-0 h-full w-full object-contain z-[2]"
+                        alt={`Item: ${itemId}`}
+                        role="button"
+                        onClick={() => {
+                          onChange(selected, {
+                            id: itemId,
+                            typeOf: selected,
+                            path,
+                          });
+                        }}
+                      />
+                      {wontShow ? (
+                        <div className="opacity-100 text-error text-base absolute top-[4px] right-[4px] text-xl z-[3]">
+                          <ErrorIcon />
+                        </div>
+                      ) : hasConflict ? (
+                        <div className="opacity-100 text-warn text-base absolute top-[4px] right-[4px] text-xl z-[3]">
+                          <WarnIcon />
+                        </div>
+                      ) : null}
+                    </>
                   )}
                 </div>
               );
@@ -1488,7 +1538,7 @@ const ImageRenderer = ({
                 onSelect(item);
               }}
             >
-              {LAYERS[item]}
+              {LAYERS[item]?.replace(/_/gi, " ")}
             </button>
           ))}
         </div>
@@ -1496,7 +1546,7 @@ const ImageRenderer = ({
     </div>
   ) : (
     <div className="relative max-h-[2048px] max-w-[2048px] h-full w-full">
-      {images.map(({ path }, index) => (
+      {applyRenderingRules(images).map(({ path }, index) => (
         <img
           key={`${path}_${index}`}
           src={path || ""}
@@ -1510,13 +1560,17 @@ const ImageRenderer = ({
 };
 
 const WardrobeHeader = ({
+  tokenId,
   isSynthEnabled = false,
   isShowingPixel = true,
   onClose = null,
-  onRedo,
+  onUndo,
+  onReset,
   onTogglePixel = null,
+  images,
 }) => {
   const [inPictureMode, setInPictureMode] = useState(false);
+  const canUndo = images.length > 1;
   return (
     <div
       className={classnames(
@@ -1551,7 +1605,56 @@ const WardrobeHeader = ({
           </div>
           <h2 className="hidden pl-2 text-white text-sm">Take Picture</h2>
         </button>
-        <button className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300">
+        <button
+          className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+          onClick={async () => {
+            const baseURL = process.env.REACT_APP_PREVIEW_URL;
+
+            const current = last(images);
+
+            const dynamicBackgroundId =
+              current.find((item) => item.typeOf === "BACKGROUND")?.id || 0;
+
+            const dynamicArmorId =
+              current.find((item) => item.typeOf === "ARMOR")?.id || 0;
+
+            const dynamicEyewearId =
+              current.find((item) => item.typeOf === "EYEWEAR")?.id || 0;
+
+            const dynamicFaceArmorId =
+              current.find((item) => item.typeOf === "FACE_ARMOR")?.id || 0;
+
+            const dynamicHeadId =
+              current.find((item) => item.typeOf === "HEAD")?.id || 0;
+
+            const dynamicMiscId =
+              current.find((item) => item.typeOf === "MISC")?.id || 0;
+
+            const dynamicWeaponId =
+              current.find((item) => item.typeOf === "WEAPON")?.id || 0;
+
+            const previewURL = `${baseURL}?tokenId=${tokenId}&dynamicBackgroundId=${dynamicBackgroundId}&dynamicArmorId=${dynamicArmorId}&dynamicEyewearId=${dynamicEyewearId}&dynamicFaceArmorId=${dynamicFaceArmorId}&dynamicHeadId=${dynamicHeadId}&dynamicMiscId=${dynamicMiscId}&dynamicWeaponId=${dynamicWeaponId}&is2D=${
+              isShowingPixel ? "0" : "1"
+            }`;
+
+            const data = await fetch(previewURL).then((res) => res.json());
+
+            // Download image
+            if (data.preview) {
+              const file = last(data.preview.split("/"));
+              const ext = file.slice(file.length - 3);
+              const image = await fetch(data.preview);
+              const imageBlog = await image.blob();
+              const imageURL = URL.createObjectURL(imageBlog);
+              const link = document.createElement("a");
+              link.href = imageURL;
+              link.download = `BrawlerBearzPreview_${new Date().getTime()}.${ext}`;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }
+          }}
+        >
           <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
             <span className="text-2xl text-white">
               <DownloadIcon />
@@ -1559,19 +1662,34 @@ const WardrobeHeader = ({
           </div>
           <h2 className="hidden pl-2 text-white text-sm">Download</h2>
         </button>
-        <button
-          className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
-          onClick={() => {
-            onRedo();
-          }}
-        >
-          <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
-            <span className="text-2xl text-white">
-              <RedoIcon />
-            </span>
-          </div>
-          <h2 className="hidden pl-2 text-white text-sm">Reset</h2>
-        </button>
+        {onReset && (
+          <button
+            title="Reset"
+            className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+            onClick={onReset}
+          >
+            <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
+              <span className="text-2xl text-white">
+                <RefreshIcon />
+              </span>
+            </div>
+            <h2 className="hidden pl-2 text-white text-sm">Reset</h2>
+          </button>
+        )}
+        {canUndo && (
+          <button
+            title="Undo"
+            className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+            onClick={onUndo}
+          >
+            <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
+              <span className="text-2xl text-white">
+                <UndoIcon />
+              </span>
+            </div>
+            <h2 className="hidden pl-2 text-white text-sm">Undo</h2>
+          </button>
+        )}
       </div>
       {isSynthEnabled && onTogglePixel && (
         <button onClick={onTogglePixel}>
@@ -1632,24 +1750,69 @@ const FullExperience = ({
 }) => {
   const [isShowingMenu, setIsShowingMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [images, setImages] = useState(defaultImages);
+  const [images, setImages] = useState([defaultImages]);
   const [selected, setSelected] = useState(null);
+
+  const onReset = useCallback(() => {
+    setImages([defaultImages]);
+  }, [defaultImages]);
+
+  useEffect(() => {
+    setImages([defaultImages]);
+  }, [isShowingPixel]);
 
   const swapOutImageType = (typeOf, replacement) => {
     setImages((prev) => {
-      const foundIndex = prev.findIndex((item) => item.typeOf === typeOf);
+      const nextImages = [...last(prev)];
+      const foundIndex = nextImages.findIndex((item) => item.typeOf === typeOf);
+      const isRemoving = replacement?.id === 0;
+
+      // Swap it out
       if (foundIndex > -1) {
-        prev.splice(foundIndex, 1, replacement);
-        return [...prev];
-      } else {
-        return [...prev, replacement];
+        if (isRemoving) {
+          // Bring defaults back
+          if (typeOf === LAYERS.HEAD) {
+            // Reapply head
+            const originalHead = defaultImages.find(
+              (d) => d.typeOf === LAYERS.HEAD,
+            );
+            if (originalHead) {
+              replacement = originalHead;
+            }
+          } else if (typeOf === LAYERS.BACKGROUND) {
+            // Reapply background
+            const originalBackground = defaultImages.find(
+              (d) => d.typeOf === LAYERS.BACKGROUND,
+            );
+            if (originalBackground) {
+              replacement = originalBackground;
+            }
+          } else if (typeOf === LAYERS.ARMOR) {
+            // Reapply outfit
+            const originalOutfit = defaultImages.find(
+              (d) => d.typeOf === LAYERS.ARMOR,
+            );
+            if (originalOutfit) {
+              replacement = originalOutfit;
+            }
+          }
+        }
+
+        nextImages.splice(foundIndex, 1, replacement);
+        return [...prev, nextImages?.filter((item) => item.path)];
       }
+
+      // Add new
+      return [
+        ...prev,
+        [...nextImages, replacement]?.filter((item) => item.path),
+      ];
     });
   };
 
-  const onRedo = useCallback(() => {
-    setImages(defaultImages);
-  }, [defaultImages]);
+  const onUndo = useCallback(() => {
+    setImages((prev) => prev.slice(0, prev.length - 1));
+  }, [images]);
 
   const onClose = () => {
     setIsShowingMenu(false);
@@ -1659,19 +1822,18 @@ const FullExperience = ({
     setIsEditing(false);
   };
 
-  useEffect(() => {
-    onRedo();
-  }, [defaultImages]);
-
   return (
     <div className="relative h-full w-full">
       {isEditing ? (
         <WardrobeHeader
-          onRedo={onRedo}
+          tokenId={metadata?.metadata?.tokenId}
+          onReset={onReset}
+          onUndo={onUndo}
           onClose={onCloseEditor}
           isSynthEnabled={isSynthEnabled}
           isShowingPixel={isShowingPixel}
           onTogglePixel={onTogglePixel}
+          images={images}
         />
       ) : (
         <Header
@@ -1684,7 +1846,7 @@ const FullExperience = ({
         />
       )}
       <ImageRenderer
-        images={images}
+        images={last(images)}
         isEditing={isEditing}
         isShowingPixel={isShowingPixel}
         selected={selected}
