@@ -11,7 +11,7 @@ const root = ReactDOM.createRoot(
 
 const InteractiveNFT = React.lazy(() => import("./App"));
 
-const version = "v1.2.0";
+const version = "v1.2.1";
 
 const Loading = () => {
   return (

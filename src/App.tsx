@@ -1945,7 +1945,7 @@ const Experience = ({
   isSandboxed,
   isSimulated = false,
 }) => {
-  const [isShowingPixel, setIsShowingPixel] = useState(false);
+  const [isShowingPixel, setIsShowingPixel] = useState(true);
 
   const { images, isSynthEnabled } = generateRenderingOrder({
     dna: metadata?.metadata?.dna,
