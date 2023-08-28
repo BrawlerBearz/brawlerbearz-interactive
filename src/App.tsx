@@ -1329,6 +1329,7 @@ const ActionMenu = ({
 
 const LAYERS = {
   BACKGROUND: "BACKGROUND",
+  WEAPON: "WEAPON",
   HEAD: "HEAD",
   ARMOR: "ARMOR",
   FACE_ARMOR: "FACE_ARMOR",
