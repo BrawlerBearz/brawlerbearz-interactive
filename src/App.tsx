@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import classnames from "classnames";
 import { useParams } from "react-router-dom";
+import { LazyLoadImage } from 'react-lazy-load-image-component';
 import {
   MdOpenInNew as ExternalIcon,
   MdWarning as WarnIcon,
@@ -1461,9 +1462,10 @@ const ImageRenderer = ({
         })}
       >
         {applyRenderingRules(images.slice(1)).map(({ path }, index) => (
-          <img
+          <LazyLoadImage
             key={`${path}_${index}`}
             src={path || ""}
+            effect="opacity"
             className="h-full w-full absolute top-0 left-0"
             style={{ zIndex: images.length + index }}
             alt="Layered image"
@@ -1500,7 +1502,7 @@ const ImageRenderer = ({
                   ) > -1;
                 return (
                   <div
-                    key={itemId}
+                    key={`${isShowingPixel ? 'pixel_' : '2d_'}${itemId}`}
                     className={classnames(
                       "relative flex-shrink-0 relative rounded-md overflow-hidden h-[90px] w-[90px] hover:border-accent hover:border-[3px] duration-100 ease-in-out",
                       {
@@ -1510,13 +1512,6 @@ const ImageRenderer = ({
                   >
                     {selected !== LAYERS.BACKGROUND && (
                       <div className="h-full w-full bg-main bg-opacity-50 z-[1] pointer-events-none absolute top-0 left-0" />
-                      //   <img
-                      //   src={images?.[0]?.path || `${process.env.PUBLIC_URL}/placeholders/None.${
-                      //       isShowingPixel ? "gif" : "png"
-                      //   }`}
-                      //   className="h-full w-full object-contain z-[1] pointer-events-none absolute top-0 left-0"
-                      //   alt={`Background placeholder: ${itemId}`}
-                      // />
                     )}
                     {isNone ? (
                       <div
@@ -1537,8 +1532,10 @@ const ImageRenderer = ({
                       </div>
                     ) : (
                       <>
-                        <img
+                        <LazyLoadImage
                           src={path}
+                          height={85}
+                          width={85}
                           className="absolute top-0 left-0 h-full w-full object-contain z-[2]"
                           alt={`Item: ${itemId}`}
                           role="button"
