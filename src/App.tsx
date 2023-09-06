@@ -1980,6 +1980,12 @@ const Experience = ({
     setIsShowingPixel((value) => !value);
   };
 
+  useEffect(() => {
+    if(isSynthEnabled){
+      setIsShowingPixel(false)
+    }
+  }, [isSynthEnabled]);
+
   return (
     <>
       <div className="h-screen w-screen bg-dark font-primary">
