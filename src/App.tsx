@@ -980,7 +980,7 @@ const ActionMenu = ({
                   <p className="text-[10px]">No equipped items</p>
                 </p>
               )}
-              {isConnected && actionsLive && (
+              {actionsLive && (
                 <button
                   className="relative flex items-center justify-center w-[250px] cursor-pointer"
                   type="button"
@@ -1344,42 +1344,73 @@ const LAYERS = {
   MISC: "MISC",
 };
 
-const selectedToItemIds = {
-  gif: {
-    BACKGROUND: [
-      0, 7, 8, 19, 21, 22, 23, 40, 67, 70, 74, 77, 81, 92, 93, 101, 102, 103,
-      120, 142, 152, 153, 154, 155, 166, 169, 184, 200, 210, 212, 221, 226, 242,
-      252, 255,
-    ],
-    HEAD: [
-      0, 9, 32, 41, 42, 49, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108,
-      113, 115, 119, 121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157,
-      158, 164, 165, 191, 193, 194, 196, 198, 205, 208, 215, 216, 236, 237, 244,
-      253, 258,
-    ],
-    ARMOR: [
-      0, 1, 4, 34, 35, 37, 38, 43, 44, 48, 52, 54, 57, 61, 63, 71, 75, 76, 84,
-      87, 95, 96, 97, 105, 106, 107, 109, 110, 111, 112, 116, 117, 122, 123,
-      127, 128, 129, 130, 141, 144, 146, 147, 148, 150, 151, 170, 178, 180, 186,
-      190, 193, 194, 196, 198, 205, 209, 214, 219, 224, 228, 229, 232, 233, 239, 243, 245, 248, 249,
-      250, 251, 257, 259,
-    ],
-    FACE_ARMOR: [0, 15, 91, 171, 172, 187, 188, 195, 206, 230, 235, 238],
-    EYEWEAR: [
-      0, 5, 39, 47, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167,
-      181, 199, 218, 241, 247, 256,
-    ],
-    MISC: [
-      0, 10, 11, 12, 13, 14, 20, 24, 51, 59, 69, 78, 79, 89, 125, 137, 160, 168,
-      182, 183, 201, 202, 203, 207, 220, 225,
-    ],
-    WEAPON: [
-      0, 2, 3, 6, 16, 17, 18,  25, 26, 27, 28, 29, 30, 31, 33, 36, 45, 46,
-      50, 56, 65, 86, 90, 94, 139, 159, 163, 173, 174, 175, 176, 177, 189, 192, 204,
-      213, 217, 222, 223, 227, 231, 234, 240, 246, 254,
-    ],
-  },
-  png: {
+const selectedToItemIds = (currentImages, isShowingPixel) => {
+  console.log(currentImages);
+  if(isShowingPixel){
+    return {
+      BACKGROUND: [
+        0, 7, 8, 19, 21, 22, 23, 40, 67, 70, 74, 77, 81, 92, 93, 101, 102, 103,
+        120, 142, 152, 153, 154, 155, 166, 169, 184, 200, 210, 212, 221, 226, 242,
+        252, 255, 265, 266, 267, 268
+      ],
+      HEAD: [
+        0, 9, 32, 41, 42, 49, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108,
+        113, 115, 119, 121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157,
+        158, 164, 165, 191, 193, 194, 196, 198, 205, 208, 215, 216, 236, 237, 244,
+        253, 258, 260, 261
+      ],
+      ARMOR: [
+        0, 1, 4, 34, 35, 37, 38, 43, 44, 48, 52, 54, 57, 61, 63, 71, 75, 76, 84,
+        87, 95, 96, 97, 105, 106, 107, 109, 110, 111, 112, 116, 117, 122, 123,
+        127, 128, 129, 130, 141, 144, 146, 147, 148, 150, 151, 170, 178, 180, 186,
+        190, 193, 194, 196, 198, 205, 209, 214, 219, 224, 228, 229, 232, 233, 239, 243, 245, 248, 249,
+        250, 251, 257, 259, 262, 263, 269
+      ],
+      FACE_ARMOR: [0, 15, 91, 171, 172, 187, 188, 195, 206, 230, 235, 238],
+      EYEWEAR: [
+        0, 5, 39, 47, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167,
+        181, 199, 218, 241, 247, 256, 264
+      ],
+      MISC: [
+        0, 10, 11, 12, 13, 14, 20, 24, 51, 59, 69, 78, 79, 89, 125, 137, 160, 168,
+        182, 183, 201, 202, 203, 207, 220, 225,
+      ],
+      WEAPON: [
+        0, 2, 3, 6, 16, 17, 18,  25, 26, 27, 28, 29, 30, 31, 33, 36, 45, 46,
+        50, 56, 65, 86, 90, 94, 139, 159, 163, 173, 174, 175, 176, 177, 189, 192, 204,
+        213, 217, 222, 223, 227, 231, 234, 240, 246, 254,
+      ],
+    }
+  }
+
+  const { path } = currentImages.find(item => item.typeOf === STATIC_LAYERS.SKIN) || {}
+  const skinPng = last(path?.split('/'))?.replace('.png', '');
+
+  const skinToSpecialTrait = {
+    'Black Bear': 4002,
+    'Brown': 4003,
+    'Brown Panda': 4004,
+    'Chocolate Striped': 4005,
+    'Green Chalk': 4006,
+    'Grey': 4007,
+    'Grey Tiger': 4008,
+    'Mash': 4009,
+    'Metal': 4010,
+    'Negative': 4011,
+    'Negative Tiger': 4012,
+    'Orange': 4013,
+    'Panda': 4014,
+    'Plasma': 4015,
+    'Polar Bear': 4016,
+    'Ripper': 4017,
+    'Sun Breaker': 4018,
+    'Tan': 4019,
+    'Tan Tiger': 4020,
+    'Tiger': 4021,
+    'Toxic': 4022,
+  }
+
+  return {
     BACKGROUND: [
       0, 7, 8, 19, 21, 22, 23, 40, 67, 70, 74, 77, 81, 92, 93, 101, 102, 103,
       120, 142, 152, 153, 154, 155, 166, 169, 184, 200, 210,
@@ -1401,14 +1432,14 @@ const selectedToItemIds = {
       181, 199,
     ],
     MISC: [
-      0, 10, 11, 12, 13, 14, 20, 24, 50, 51, 59, 69, 78, 79, 89, 125, 137, 160, 168,
+      0, skinToSpecialTrait[skinPng], 4000, 4001, 10, 11, 12, 13, 14, 20, 24, 50, 51, 59, 69, 78, 79, 89, 125, 137, 160, 168,
       182, 183, 189, 201, 202, 203, 207,
     ],
     WEAPON: [
       0, 2, 3, 6, 16, 17, 18,  25, 26, 27, 28, 29, 30, 31, 33, 36, 45, 46,
-       56, 65, 86, 90, 94, 139, 159, 163, 173, 174, 175, 176, 177, 192, 204,
+      56, 65, 86, 90, 94, 139, 159, 163, 173, 174, 175, 176, 177, 192, 204,
     ],
-  },
+  }
 };
 
 const hasFaceArmorAndHead = (selected, images) =>
@@ -1437,8 +1468,8 @@ const applyRenderingRules = (images) => {
     STATIC_LAYERS.MOUTH,
       LAYERS.FACE_ARMOR,
       LAYERS.HEAD,
-
-      LAYERS.MISC
+      LAYERS.MISC,
+      LAYERS.SPECIAL
   ];
 
   return orderBy(normalizedImages, image => layerOrder.indexOf(image.typeOf), 'asc');
@@ -1507,7 +1538,7 @@ const ImageRenderer = ({
       >
         {selected ? (
           <div className="flex flex-row items-center space-x-4 min-w-full h-full text-xs overflow-x-auto pb-4">
-            {selectedToItemIds[isShowingPixel ? "gif" : "png"][selected].map(
+            {selectedToItemIds(images, isShowingPixel)[selected].map(
               (itemId) => {
                 const wontShow = isInvalidWithAnotherLayer(selected, images);
                 const hasConflict = hasConflictWithAnotherLayer(
@@ -1590,7 +1621,7 @@ const ImageRenderer = ({
         ) : null}
       </div>
       <div className="absolute bottom-0 left-0 w-full h-[80px] bg-dark z-[2]">
-        <div className="flex flex-row items-center lg:justify-center space-x-2 min-w-full h-full text-xs overflow-x-auto">
+        <div className="flex flex-row items-center space-x-2 min-w-full h-full text-xs overflow-x-auto">
           {Object.keys(LAYERS).map((item) => (
             <button
               key={item}
