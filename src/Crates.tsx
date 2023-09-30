@@ -262,11 +262,11 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
   );
 
   const [winner, { stop: stopWinner, sound: winnerSound }] = useSound(
-      winnerEffect,
-      {
-        volume: 1,
-        interrupt: true,
-      },
+    winnerEffect,
+    {
+      volume: 1,
+      interrupt: true,
+    },
   );
 
   const params = useParams();
@@ -293,8 +293,8 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
   });
 
   const onRefresh = async (address) => {
-    setCrates(await getUserCrates(address, CRATE_TOKEN_IDS))
-  }
+    setCrates(await getUserCrates(address, CRATE_TOKEN_IDS));
+  };
 
   useEffect(() => {
     (async function () {
@@ -355,7 +355,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
       slideSound,
       winner,
       stopWinner,
-      winnerSound
+      winnerSound,
     },
     data: {
       crates,
@@ -875,7 +875,6 @@ const SummaryView = ({ status, sounds, setStatus, onClose }) => {
     setTimeout(() => {
       sounds?.winner();
     }, 100);
-
   }, []);
 
   return (
