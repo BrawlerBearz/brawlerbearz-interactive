@@ -23,8 +23,6 @@ const polygonClient = createPublicClient({
 });
 
 const XP_BASIS = 2000;
-const BASE_MAX_RATIO = 115;
-const BASE_MIN_RATIO = 50;
 const COEFFICIENT = 50;
 
 export const BEARZ_SHOP_IMAGE_URI =
@@ -184,14 +182,7 @@ export const getStatsByTokenId = async (
 
     const [state] = stateBatch as any;
 
-    const {
-      syncXP: pendingXP,
-      quest,
-      isQuesting,
-      isTraining,
-      questMetadata,
-      training,
-    } = state;
+    const { syncXP: pendingXP } = state;
 
     const xp = Number(pendingXP || 0);
 

@@ -10,8 +10,9 @@ const root = ReactDOM.createRoot(
 );
 
 const InteractiveNFT = React.lazy(() => import("./App"));
+const InteractiveCrates = React.lazy(() => import("./Crates"));
 
-const version = "v1.2.1";
+const version = "v1.3.0";
 
 const Loading = () => {
   return (
@@ -30,6 +31,9 @@ root.render(
     <HashRouter>
       <React.Suspense fallback={<Loading />}>
         <Routes>
+          <Route path="crates" element={<InteractiveCrates />}>
+            <Route path=":txHash" element={<InteractiveCrates />} />
+          </Route>
           <Route path=":tokenId" element={<InteractiveNFT />} />
           <Route index element={<Loading />} />
         </Routes>
