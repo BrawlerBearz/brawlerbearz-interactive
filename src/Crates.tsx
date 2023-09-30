@@ -3,12 +3,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
 import useSound from "use-sound";
+import classnames from "classnames";
 import {
   WagmiConfig,
   createConfig,
   useAccount,
   useWalletClient,
   useWaitForTransaction,
+  useContractRead,
 } from "wagmi";
 import {
   ConnectKitProvider,
@@ -52,6 +54,7 @@ import lootEffect from "./interactive/sounds/loot.wav";
 import rollEffect from "./interactive/sounds/roll.wav";
 import revealEffect from "./interactive/sounds/reveal.wav";
 import slideEffect from "./interactive/sounds/slide.wav";
+import winnerEffect from "./interactive/sounds/winner.wav";
 
 import {
   bearzShopABI,
@@ -68,6 +71,24 @@ const placeholderTypes = {
   LEGENDARY: legendary,
   ULTRA: ultra,
 };
+
+const crateRarities = {
+  290: {
+    "1": 0.05069493050694931,
+    "2": 0.0928907109289071,
+    "3": 0.11818818118188182,
+    "4": 0.19968003199680032,
+    "5": 0.2425757424257574,
+    "6": 0.0974902509749025,
+    "7": 0.09659034096590341,
+    "8": 0.0476952304769523,
+    "9": 0.05419458054194581,
+  },
+};
+
+const ITEM_WIDTH = 80;
+
+const SPIN_DURATION = 11;
 
 const useSimulatedAccount = (simulatedAddress) => {
   return {
@@ -194,7 +215,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
   const [thud, { stop: stopThud, sound: thudSound }] = useSound(
     thudSoundEffect,
     {
-      volume: 1,
+      volume: 0.8,
     },
   );
 
@@ -220,7 +241,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
   });
 
   const [roll, { stop: stopRoll, sound: rollSound }] = useSound(rollEffect, {
-    volume: 0.3,
+    volume: 0.2,
     interrupt: true,
   });
 
@@ -240,13 +261,22 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
     },
   );
 
+  const [winner, { stop: stopWinner, sound: winnerSound }] = useSound(
+      winnerEffect,
+      {
+        volume: 1,
+        interrupt: true,
+      },
+  );
+
   const params = useParams();
   const navigate = useNavigate();
-
   const [isLoadingBiconomy, setIsLoadingBiconomy] = useState(true);
   const [crates, setCrates] = useState(null);
   const [txHash, setTxHash] = useState(params?.txHash);
   const [isOpening, setOpening] = useState(false);
+  const [isApproving, setApproving] = useState(false);
+  const [openingContext, setOpeningContext] = useState(null);
 
   const account = !isSimulated
     ? useAccount()
@@ -254,6 +284,17 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
 
   const { isLoading } = useSimpleAccountOwner();
   const signer = useEthersSigner();
+
+  const { data: isApproved, refetch } = useContractRead({
+    address: bearzShopContractAddress,
+    abi: bearzShopABI,
+    functionName: "isApprovedForAll",
+    args: [account?.address, bearzSupplyCratesContractAddress],
+  });
+
+  const onRefresh = async (address) => {
+    setCrates(await getUserCrates(address, CRATE_TOKEN_IDS))
+  }
 
   useEffect(() => {
     (async function () {
@@ -265,7 +306,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
           strictMode: true,
         });
 
-        setCrates(await getUserCrates(account?.address, CRATE_TOKEN_IDS));
+        await onRefresh(account?.address);
 
         biconomy
           .onEvent(biconomy.READY, async () => {
@@ -286,6 +327,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
   return {
     ...account,
     isLoadingBiconomy,
+    isApproving,
     sounds: {
       landing,
       stopLanding,
@@ -311,16 +353,59 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
       slide,
       stopSlide,
       slideSound,
+      winner,
+      stopWinner,
+      winnerSound
     },
     data: {
       crates,
       txHash,
       isOpening,
+      isApproved,
+      openingContext,
     },
     actions: {
-      onExitTxHash: () => {
+      onRefresh: onRefresh.bind(null, account?.address),
+      onExitTxHash: async () => {
         setTxHash(null);
         navigate("/crates");
+        await onRefresh(account?.address);
+      },
+      onApproveCrate: async () => {
+        try {
+          const feeData = await signer.provider.getFeeData();
+
+          const contract = new Contract(
+            bearzShopContractAddress,
+            bearzShopABI,
+            signer,
+          );
+
+          const gasLimit = await contract.estimateGas.setApprovalForAll(
+            bearzSupplyCratesContractAddress,
+            true,
+          );
+
+          setApproving(true);
+
+          const tx = await contract.setApprovalForAll(
+            bearzSupplyCratesContractAddress,
+            true,
+            {
+              gasLimit: gasLimit.mul(100).div(80),
+              maxFeePerGas: feeData.maxFeePerGas,
+              maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+            },
+          );
+
+          await tx.wait();
+        } catch (e) {
+          console.log(e);
+          toast.error("There was an error. Please try again!");
+        } finally {
+          setApproving(false);
+          refetch();
+        }
       },
       onOpenCrate: async ({ crateTokenId, openAmount }) => {
         try {
@@ -340,6 +425,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
           );
 
           setOpening(true);
+          setOpeningContext(`Check wallet for transaction...`);
 
           const tx = await contract.open(crateTokenId, openAmount, {
             gasLimit: gasLimit.mul(100).div(80),
@@ -348,6 +434,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
           });
 
           setTxHash(tx.hash);
+          setOpeningContext(`Burning ${openAmount} crate(s)...`);
 
           navigate(`/crates/${tx.hash}`);
         } catch (e) {
@@ -355,6 +442,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
           toast.error("There was an error. Please try again!");
         } finally {
           setOpening(false);
+          setOpeningContext(null);
         }
       },
     },
@@ -455,23 +543,6 @@ const ReadyAndOpen = ({ sounds, status, setStatus }) => {
     </div>
   );
 };
-
-const crateRarities = {
-  290: {
-    "1": 0.05069493050694931,
-    "2": 0.0928907109289071,
-    "3": 0.11818818118188182,
-    "4": 0.19968003199680032,
-    "5": 0.2425757424257574,
-    "6": 0.0974902509749025,
-    "7": 0.09659034096590341,
-    "8": 0.0476952304769523,
-    "9": 0.05419458054194581,
-  },
-};
-
-const ITEM_WIDTH = 80;
-const SPIN_DURATION = 11;
 
 const Reels = ({ status, sounds, setStatus, onClose }) => {
   const [isMounted, setIsMounted] = useState(false);
@@ -691,7 +762,10 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
             </button>
             <button
               onClick={() =>
-                setStatus({ event: DROPPED_STATUS.REVEALED_ALL, context: null })
+                setStatus((prev) => ({
+                  ...prev,
+                  event: DROPPED_STATUS.REVEALED_ALL,
+                }))
               }
               className="relative flex items-center justify-center w-[200px] cursor-pointer"
             >
@@ -709,7 +783,10 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
           <>
             <button
               onClick={() =>
-                setStatus({ event: DROPPED_STATUS.REVEALED_ALL, context: null })
+                setStatus((prev) => ({
+                  ...prev,
+                  event: DROPPED_STATUS.REVEALED_ALL,
+                }))
               }
               className="relative flex items-center justify-center w-[200px] cursor-pointer"
             >
@@ -788,35 +865,51 @@ const WaitingForCrate = ({ onClose }) => (
 );
 
 const SummaryView = ({ status, sounds, setStatus, onClose }) => {
-  console.log(status);
   const { context } = status;
+
+  useEffect(() => {
+    // Kill all other sounds
+    sounds?.stopRoll();
+
+    // Run winner sound
+    setTimeout(() => {
+      sounds?.winner();
+    }, 100);
+
+  }, []);
+
   return (
     <div className="flex flex-col space-y-2 items-center justify-between w-full h-full">
       <header className="flex flex-col items-center justify-center h-[100px] flex-shrink-0 space-y-2">
         <h1 className="text-xl text-accent">Drop Summary</h1>
-        <p className="text-sm">You were dropped {context?.droppedItems?.length} item(s)</p>
+        <p className="text-sm">
+          You were dropped {context?.droppedItems?.length} item(s)
+        </p>
       </header>
       <div className="flex flex-wrap flex-row items-center justify-center gap-6 h-full overflow-auto p-6">
-        {context?.droppedItems?.map(item => (
-            <div className="flex flex-col space-y-2 w-[225px]">
-              <img src={`https://allofthethings.s3.amazonaws.com/brawlerbearzshop/${item?.tokenId}.png`} className="w-full" />
-              <span className="hidden text-xs text-center">{item?.name}</span>
-            </div>
+        {context?.droppedItems?.map((item) => (
+          <div className="flex flex-col space-y-2 w-[225px]">
+            <img
+              src={`https://allofthethings.s3.amazonaws.com/brawlerbearzshop/${item?.tokenId}.png`}
+              className="w-full"
+            />
+            <span className="hidden text-xs text-center">{item?.name}</span>
+          </div>
         ))}
       </div>
       <footer className="flex flex-row items-center justify-center h-[80px] flex-shrink-0">
         <button
-            onClick={onClose}
-            className="relative flex items-center justify-center w-[250px] cursor-pointer"
+          onClick={onClose}
+          className="relative flex items-center justify-center w-[250px] cursor-pointer"
         >
           <img
-              className="object-cover h-full w-full"
-              src={buttonBackground}
-              alt="button"
+            className="object-cover h-full w-full"
+            src={buttonBackground}
+            alt="button"
           />
           <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-          Close
-        </span>
+            Close
+          </span>
         </button>
       </footer>
     </div>
@@ -916,64 +1009,64 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
 
   return (
     <div className="fixed top-0 left-0 z-[99999] h-full w-full bg-[#08111b] items-center justify-center">
-      <SummaryView
-          sounds={sounds}
-          status={status}
-          setStatus={setStatus}
-          onClose={onClose}
-      />
-      {/*{(() => {*/}
-      {/*  switch (status.event) {*/}
-      {/*    case DROPPED_STATUS.WAITING:*/}
-      {/*      return <WaitingForCrate sounds={sounds} onClose={onClose} />;*/}
-      {/*    case DROPPED_STATUS.READY:*/}
-      {/*    case DROPPED_STATUS.OPENING:*/}
-      {/*      return (*/}
-      {/*        <ReadyAndOpen*/}
-      {/*          sounds={sounds}*/}
-      {/*          status={status}*/}
-      {/*          setStatus={setStatus}*/}
-      {/*        />*/}
-      {/*      );*/}
-      {/*    case DROPPED_STATUS.REELS:*/}
-      {/*    case DROPPED_STATUS.SPIN_REELS:*/}
-      {/*      return (*/}
-      {/*        <Reels*/}
-      {/*          sounds={sounds}*/}
-      {/*          status={status}*/}
-      {/*          setStatus={setStatus}*/}
-      {/*          onClose={onClose}*/}
-      {/*        />*/}
-      {/*      );*/}
-      {/*    case DROPPED_STATUS.REVEALED_ALL:*/}
-      {/*      return (*/}
-      {/*        <SummaryView*/}
-      {/*          sounds={sounds}*/}
-      {/*          status={status}*/}
-      {/*          setStatus={setStatus}*/}
-      {/*          onClose={onClose}*/}
-      {/*        />*/}
-      {/*      );*/}
-      {/*  }*/}
-      {/*})()}*/}
+      {(() => {
+        switch (status.event) {
+          case DROPPED_STATUS.WAITING:
+            return <WaitingForCrate sounds={sounds} onClose={onClose} />;
+          case DROPPED_STATUS.READY:
+          case DROPPED_STATUS.OPENING:
+            return (
+              <ReadyAndOpen
+                sounds={sounds}
+                status={status}
+                setStatus={setStatus}
+              />
+            );
+          case DROPPED_STATUS.REELS:
+          case DROPPED_STATUS.SPIN_REELS:
+            return (
+              <Reels
+                sounds={sounds}
+                status={status}
+                setStatus={setStatus}
+                onClose={onClose}
+              />
+            );
+          case DROPPED_STATUS.REVEALED_ALL:
+            return (
+              <SummaryView
+                sounds={sounds}
+                status={status}
+                setStatus={setStatus}
+                onClose={onClose}
+              />
+            );
+        }
+      })()}
     </div>
   );
 };
 
 const CratesView = ({ isSimulated }) => {
-  const { address, data, isLoadingBiconomy, actions, sounds } = useSupplyCrates(
-    {
+  const { isConnected } = useAccount();
+
+  const { data, isLoadingBiconomy, actions, sounds, isApproving } =
+    useSupplyCrates({
       isSimulated,
       overrideAddress: null,
-    },
-  );
+    });
 
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col relative h-full w-full text-white items-center">
+    <div
+      className={classnames("flex flex-col relative text-white items-center", {
+        "justify-center h-screen w-screen": !isConnected,
+        "h-full w-full": isConnected,
+      })}
+    >
       {!isSimulated && (
-        <div className="flex flex-row flex-shrink-0 w-full justify-center items-center h-[80px]">
+        <div className="flex flex-row flex-shrink-0 w-full justify-center items-center h-[65px]">
           <ConnectKitButton.Custom>
             {({ isConnected, show, truncatedAddress, ensName }) => {
               return !isConnected ? (
@@ -1002,46 +1095,109 @@ const CratesView = ({ isSimulated }) => {
           </ConnectKitButton.Custom>
         </div>
       )}
-      {isLoadingBiconomy ? (
-        <p>Loading gas station network...</p>
-      ) : (
-        <div className="flex flex-col space-y-4">
-          {data?.isOpening ? (
-            <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1] bg-[#]">
-              <img className="w-[200px]" src={logoImage} alt="logo" />
-              <div className="flex flex-col space-y-1 text-center text-white py-4">
-                <h1 className="text-sm">
-                  Check your wallet for transaction...
-                </h1>
+      {isConnected &&
+        (isLoadingBiconomy ? (
+          <div className="flex flex-col items-center justify-center space-y-4">
+            <img className="w-[200px]" src={logoImage} alt="logo" />
+            <p className="text-sm opacity-50">Loading crates experience...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col h-screen w-screen space-y-4">
+            {data?.isOpening ? (
+              <div className="font-primary flex flex-col items-center h-full w-full z-[1]">
+                <img className="w-[200px]" src={logoImage} alt="logo" />
+                <div className="flex flex-col space-y-1 text-center text-white py-4">
+                  <h1 className="text-sm">
+                    {data?.openingContext ||
+                      "Check your wallet for transaction..."}
+                  </h1>
+                </div>
               </div>
-            </div>
-          ) : data?.txHash ? (
-            <DroppedView
-              crates={data?.crates}
-              txHash={data?.txHash}
-              sounds={sounds}
-              onClose={() => {
-                actions?.onExitTxHash();
-                navigate("/crates");
-              }}
-            />
-          ) : (
-            <div className="flex flex-col space-y-4">
-              <span>
-                Balance: {String(data?.crates?.[290]?.balance || 0)} crates
-              </span>
-              <button
-                onClick={() => {
-                  sounds?.start();
-                  actions?.onOpenCrate({ crateTokenId: 290, openAmount: 1 });
+            ) : data?.txHash ? (
+              <DroppedView
+                crates={data?.crates}
+                txHash={data?.txHash}
+                sounds={sounds}
+                onClose={() => {
+                  actions?.onExitTxHash();
+                  navigate("/crates");
                 }}
-              >
-                Open crate
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+              />
+            ) : data?.crates ? (
+              <div className="flex flex-col items-center justify-center space-y-10">
+                <h1 className="text-lg">Your Supply Crates</h1>
+                {!data?.isApproved && (
+                  <div className="flex flex-col items-center space-y-4 max-w-xl text-center px-2 border-b-[2px] border-white border-opacity-20 py-10">
+                    <p className="text-sm text-warn">
+                      Note: You need to approve burning supply crate cards.
+                    </p>
+                    <span className="text-xs text-white opacity-50">
+                      This is a 1-time operation to allow the contract to burn
+                      crate cards on your behalf.
+                    </span>
+                    <button
+                      onClick={() => {
+                        actions?.onApproveCrate();
+                      }}
+                      className="relative flex items-center justify-center w-[280px] cursor-pointer z-[1] mt-6"
+                    >
+                      <img
+                        className="object-cover h-full w-full"
+                        src={buttonBackground}
+                        alt="button"
+                      />
+                      <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                        {isApproving ? "Approving..." : "Approve"}
+                      </span>
+                    </button>
+                  </div>
+                )}
+                <div className="flex flex-col flex-wrap gap-4">
+                  {Object.keys(data?.crates || {}).map((tokenId) => {
+                    const crate = data?.crates[tokenId];
+                    return (
+                      <div
+                        key={tokenId}
+                        className="relative flex flex-col items-center justify-center w-[225px]"
+                      >
+                        <div className="relative flex w-full h-full">
+                          <img
+                            src={`https://allofthethings.s3.amazonaws.com/brawlerbearzshop/${tokenId}.png`}
+                            className="w-full z-[2]"
+                          />
+                          <div className="absolute flex items-center justify-center border-white border-[3px] top-[-22px] right-[-22px] h-[45px] w-[45px] bg-[#887d8d] shadow-xl rounded-full text-white text-xs z-[2]">
+                            <span>x{String(crate?.balance || 0)}</span>
+                          </div>
+                        </div>
+                        {data?.isApproved && (
+                          <button
+                            onClick={() => {
+                              sounds?.start();
+                              actions?.onOpenCrate({
+                                crateTokenId: tokenId,
+                                openAmount: 1,
+                              });
+                            }}
+                            className="relative flex items-center justify-center w-[225px] cursor-pointer z-[1] mt-6"
+                          >
+                            <img
+                              className="object-cover h-full w-full"
+                              src={buttonBackground}
+                              alt="button"
+                            />
+                            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                              Redeem
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ))}
     </div>
   );
 };
@@ -1066,11 +1222,11 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
   return (
     <>
       <div className="h-screen w-screen bg-dark font-primary">
-        <div className="hidden tablet:flex max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
+        <div className="hidden tablet:flex max-w-screen relative mx-auto max-h-screen overflow-hidden">
           <FullExperience isSimulated={isSimulated} />
         </div>
         {isSandboxed ? (
-          <div className="flex tablet:hidden max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
+          <div className="flex tablet:hidden max-w-screen relative mx-auto max-h-screen overflow-hidden">
             <FullExperience isSimulated={isSimulated} />
           </div>
         ) : (
