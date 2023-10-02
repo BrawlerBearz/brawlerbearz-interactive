@@ -1,48 +1,46 @@
 import React from "react";
-import {ToastContainer} from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import ConnectButton from "./components/ConnectButton";
 import SandboxWrapper from "./components/SandboxWrapper";
-import {useAccount} from "wagmi";
-import {useSimpleAccountOwner} from "./lib/useSimpleAccountOwner";
+import { useAccount } from "wagmi";
+import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 
 const useSimulatedAccount = () => {
-    return {
-        address: null,
-        isConnected: true,
-        isDisconnected: false,
-        status: "connected",
-    };
+  return {
+    address: null,
+    isConnected: true,
+    isDisconnected: false,
+    status: "connected",
+  };
 };
 
 const useNFTWrapped = ({ isSimulated }) => {
-    const account = !isSimulated
-        ? useAccount()
-        : useSimulatedAccount();
+  const account = !isSimulated ? useAccount() : useSimulatedAccount();
 
-    if (isSimulated) {
-        return account;
-    }
+  if (isSimulated) {
+    return account;
+  }
 
-    const { isLoading, owner: signer } = useSimpleAccountOwner();
+  const { isLoading, owner: signer } = useSimpleAccountOwner();
 
-    if (isLoading || !signer?.getAddress()) {
-        return account;
-    }
+  if (isLoading || !signer?.getAddress()) {
+    return account;
+  }
 
-    return {
-        ...account,
-    };
+  return {
+    ...account,
+  };
 };
 
 const Experience = ({ isSimulated = false }) => {
+  const { address, isConnected } = useNFTWrapped({
+    isSimulated,
+  });
 
-    const { address, isConnected } = useNFTWrapped({
-        isSimulated,
-    });
-
-    console.log({
-        address, isConnected
-    });
+  console.log({
+    address,
+    isConnected,
+  });
 
   return (
     <>

@@ -25,8 +25,7 @@ const polygonClient = createPublicClient({
 const XP_BASIS = 2000;
 const COEFFICIENT = 50;
 
-export const BEARZ_SHOP_IMAGE_URI =
-  "https://allofthethings.s3.amazonaws.com/brawlerbearzshop/";
+export const BEARZ_SHOP_IMAGE_URI = `${process.env.PUBLIC_URL}/cards/`;
 
 const itemKeyToStatKey = {
   atk: "str",

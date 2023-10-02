@@ -629,7 +629,7 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
       context?.droppedItems?.map((item) => ({
         ...item,
         isRevealed: false,
-        imageSrc: `https://allofthethings.s3.amazonaws.com/brawlerbearzshop/${item?.tokenId}.png`,
+        imageSrc: `${process.env.PUBLIC_URL}/cards/${item?.tokenId}.png`,
       })),
     );
 
@@ -888,7 +888,7 @@ const SummaryView = ({ status, sounds, setStatus, onClose }) => {
         {context?.droppedItems?.map((item) => (
           <div className="flex flex-col space-y-2 w-[225px]">
             <img
-              src={`https://allofthethings.s3.amazonaws.com/brawlerbearzshop/${item?.tokenId}.png`}
+              src={`${process.env.PUBLIC_URL}/cards/${item?.tokenId}.png`}
               className="w-full"
             />
             <span className="hidden text-xs text-center">{item?.name}</span>
@@ -981,7 +981,7 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
                     placeholderSrc:
                       placeholderTypes?.[metadata.rarity] ||
                       placeholderTypes.COMMON,
-                    imageSrc: `https://allofthethings.s3.amazonaws.com/brawlerbearzshop/${tokenId}.png`,
+                    imageSrc: `${process.env.PUBLIC_URL}/cards/${tokenId}.png`,
                     percent: rarities[String(tokenId)],
                     ...metadata,
                   };
@@ -1128,7 +1128,7 @@ const CratesView = ({ isSimulated }) => {
                       >
                         <div className="relative flex w-full h-full">
                           <img
-                            src={`https://allofthethings.s3.amazonaws.com/brawlerbearzshop/${tokenId}.png`}
+                            src={`${process.env.PUBLIC_URL}/cards/${tokenId}.png`}
                             className="w-full z-[2]"
                           />
                           <div className="absolute flex items-center justify-center border-white border-[3px] top-[-22px] right-[-22px] h-[45px] w-[45px] bg-[#887d8d] shadow-xl rounded-full text-white text-xs z-[2]">

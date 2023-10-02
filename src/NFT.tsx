@@ -33,11 +33,9 @@ import {
   WagmiConfig,
   createConfig,
   useAccount,
-  useBalance,
   useContractReads,
   useContractRead,
 } from "wagmi";
-import { Wallet, providers, ethers } from "ethers";
 import {
   getWalletClient,
   getPublicClient,
@@ -48,37 +46,24 @@ import {
   ConnectKitButton,
   getDefaultConfig,
 } from "connectkit";
-import { IBundler, Bundler } from "@biconomy/bundler";
+import { Bundler } from "@biconomy/bundler";
 import {
   BiconomySmartAccount,
-  BiconomySmartAccountConfig,
   DEFAULT_ENTRYPOINT_ADDRESS,
 } from "@biconomy/account";
-import {
-  IPaymaster,
-  BiconomyPaymaster,
-  PaymasterMode,
-} from "@biconomy/paymaster";
+import { BiconomyPaymaster, PaymasterMode } from "@biconomy/paymaster";
 import { ChainId } from "@biconomy/core-types";
 import { mainnet, polygon } from "viem/chains";
 import {
-  toHex,
   encodeFunctionData,
   createPublicClient,
   http,
-  createWalletClient,
-  custom,
   formatEther,
 } from "viem";
 import { generateRenderingOrder } from "./lib/renderer";
 import { BEARZ_SHOP_IMAGE_URI, getStatsByTokenId } from "./lib/blockchain";
+import { shortenAddress, formatNumber } from "./lib/formatting";
 import {
-  shortenAddress,
-  getAttributeValue,
-  formatNumber,
-} from "./lib/formatting";
-import {
-  ALCHEMY_KEY,
   WALLETCONNECT_PROJECT_ID,
   CONNECT_KIT_THEME,
   L2_ALCHEMY_KEY,
