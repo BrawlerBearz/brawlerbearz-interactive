@@ -1,7 +1,7 @@
 @font-face {
   font-family: "PressStart2P";
-  src: url("../public/fonts/PressStart2P-Regular.ttf") format("truetype");
-  font-weight: 500;
+  src: url("../public/fonts/Retroville NC.ttf") format("truetype");
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
@@ -12,6 +12,7 @@
 
 html {
   background-color: #08111b;
+  font-family: "PressStart2P", sans-serif;
 }
 
 ::-webkit-scrollbar {

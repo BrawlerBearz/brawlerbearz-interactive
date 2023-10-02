@@ -12,11 +12,7 @@ import {
   useWaitForTransaction,
   useContractRead,
 } from "wagmi";
-import {
-  ConnectKitProvider,
-  ConnectKitButton,
-  getDefaultConfig,
-} from "connectkit";
+import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { mainnet } from "viem/chains";
 import { Biconomy } from "@biconomy/mexa";
 import {
@@ -28,6 +24,7 @@ import {
 } from "viem";
 import { keyBy, shuffle } from "lodash";
 import { providers, Contract } from "ethers";
+import ConnectButton from "./components/ConnectButton";
 import {
   ALCHEMY_KEY,
   WALLETCONNECT_PROJECT_ID,
@@ -63,6 +60,8 @@ import {
   bearzSupplyCratesABI,
 } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
+import Loading from "./components/Loading";
+import SandboxWrapper from "./components/SandboxWrapper";
 
 const placeholderTypes = {
   COMMON: common,
@@ -1064,42 +1063,10 @@ const CratesView = ({ isSimulated }) => {
         "h-full w-full": isConnected,
       })}
     >
-      {!isSimulated && (
-        <div className="flex flex-row flex-shrink-0 w-full justify-center items-center h-[65px]">
-          <ConnectKitButton.Custom>
-            {({ isConnected, show, truncatedAddress, ensName }) => {
-              return !isConnected ? (
-                <button
-                  onClick={show}
-                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                >
-                  <img
-                    className="object-cover h-full w-full"
-                    src={buttonBackground}
-                    alt="button"
-                  />
-                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                    Connect
-                  </span>
-                </button>
-              ) : (
-                <button
-                  className="hover:underline text-[12px] text-accent text-left"
-                  onClick={show}
-                >
-                  Connected to {ensName ?? truncatedAddress}
-                </button>
-              );
-            }}
-          </ConnectKitButton.Custom>
-        </div>
-      )}
+      {!isSimulated && <ConnectButton />}
       {isConnected &&
         (isLoadingBiconomy ? (
-          <div className="flex flex-col items-center justify-center space-y-4">
-            <img className="w-[200px]" src={logoImage} alt="logo" />
-            <p className="text-sm opacity-50">Loading crates experience...</p>
-          </div>
+          <Loading />
         ) : (
           <div className="flex flex-col h-screen w-screen space-y-4">
             {data?.isOpening ? (
@@ -1126,8 +1093,8 @@ const CratesView = ({ isSimulated }) => {
               <div className="flex flex-col items-center justify-center space-y-10">
                 <h1 className="text-lg">Your Supply Crates</h1>
                 {!data?.isApproved && (
-                  <div className="flex flex-col items-center space-y-4 max-w-xl text-center px-2 border-b-[2px] border-white border-opacity-20 py-10">
-                    <p className="text-sm text-warn">
+                  <div className="flex flex-col items-center space-y-4 max-w-xl text-center px-2 border-b-[2px] border-white border-opacity-20 pb-10">
+                    <p className="text-xs text-warn">
                       Note: You need to approve burning supply crate cards.
                     </p>
                     <span className="text-xs text-white opacity-50">
@@ -1247,42 +1214,15 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
   );
 };
 
-const NFTViewer = ({ isSandboxed }) => {
-  return isSandboxed ? (
-    <Experience isSandboxed={isSandboxed} isSimulated />
-  ) : (
-    <WagmiConfig
-      config={createConfig(
-        getDefaultConfig({
-          autoConnect: true,
-          alchemyId: ALCHEMY_KEY,
-          walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
-          appName: "Brawler Bearz: Interactive Experience",
-          appDescription: "A mini-dapp for managing your brawler bear",
-          chains: [mainnet],
-        }),
-      )}
-    >
-      <ConnectKitProvider
-        customTheme={CONNECT_KIT_THEME}
-        options={{
-          embedGoogleFonts: true,
-          walletConnectName: "Other Wallets",
-          hideNoWalletCTA: true,
-        }}
-      >
-        <Experience isSandboxed={isSandboxed} isSimulated={false} />
-      </ConnectKitProvider>
-    </WagmiConfig>
-  );
-};
-
-const InteractiveCrates = () => {
-  const isSandboxed =
-    window.location !== window.parent.location ||
-    window.self !== window.top ||
-    window.frameElement;
-  return <NFTViewer isSandboxed={isSandboxed} />;
-};
+const InteractiveCrates = () => (
+  <SandboxWrapper
+    isSandboxed={
+      window.location !== window.parent.location ||
+      window.self !== window.top ||
+      window.frameElement
+    }
+    Component={Experience}
+  />
+);
 
 export default InteractiveCrates;

@@ -496,28 +496,28 @@ const SelectedQuestView = ({ quest }) => {
 
   return (
     <div className="flex flex-col flex-shrink-0 w-full space-y-4">
-      <h3 className="text-sm text-accent">{quest?.name}</h3>
-      <p className="text-xs opacity-90 pb-4">{quest?.description}</p>
+      <h3 className="text-lg text-accent">{quest?.name}</h3>
+      <p className="opacity-90 pb-4">{quest?.description}</p>
       <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
         <div className="grid grid-cols-1 tablet:grid-cols-2 gap-2">
           <div className="flex flex-col">
-            <h3 className="text-xs opacity-50">Duration</h3>
-            <span className="text-xs">
+            <h3 className="text-sm opacity-50">Duration</h3>
+            <span className="text-sm">
               {Number(quest.duration) / 86400} day(s)
             </span>
           </div>
           <div className="flex flex-col">
-            <h3 className="text-xs opacity-50">Cooldown</h3>
-            <span className="text-xs">
+            <h3 className="text-sm opacity-50">Cooldown</h3>
+            <span className="text-sm">
               {Number(quest.cooldownPeriod) / 86400} day(s)
             </span>
           </div>
         </div>
-        <h3 className="text-xs opacity-50 pt-4">Item(s)</h3>
+        <h3 className="text-sm opacity-50 pt-4">Item(s)</h3>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full w-full">
             <img className="w-[100px]" src={logoImage} alt="logo" />
-            <span className="text-white opacity-50 text-xs">Loading...</span>
+            <span className="text-white opacity-50 text-sm">Loading...</span>
           </div>
         ) : (
           <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
@@ -596,7 +596,7 @@ const QuestingView = ({ address, name, onBack }) => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full w-full">
             <img className="w-[100px]" src={logoImage} alt="logo" />
-            <span className="text-white opacity-50 text-xs">Loading...</span>
+            <span className="text-white opacity-50 text-sm">Loading...</span>
           </div>
         ) : (
           <div className="flex flex-col space-y-4 w-full">
@@ -604,7 +604,7 @@ const QuestingView = ({ address, name, onBack }) => {
               <SelectedQuestView quest={selectedQuest} />
             ) : (
               <div className="flex flex-col flex-shrink-0 w-full space-y-4">
-                <h3 className="hidden text-xs opacity-50">Recent Quests</h3>
+                <h3 className="hidden text-sm opacity-50">Recent Quests</h3>
                 {quests?.length > 0 ? (
                   <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-2">
                     {quests.map((quest) => {
@@ -620,7 +620,7 @@ const QuestingView = ({ address, name, onBack }) => {
                         >
                           <div className="flex flex-col flex-grow-1 space-y-2 truncate">
                             <h3
-                              className="text-xs text-accent"
+                              className="text-base text-accent"
                               role="button"
                               onClick={() => {
                                 setSelectedQuest(quest);
@@ -628,10 +628,10 @@ const QuestingView = ({ address, name, onBack }) => {
                             >
                               {quest?.name}
                             </h3>
-                            <p className="text-[10px] opacity-90 truncate">
+                            <p className="text-xs opacity-90 truncate">
                               {quest?.description}
                             </p>
-                            <span className="text-[10px] opacity-50">
+                            <span className="text-xs opacity-50">
                               {isActive ? "Ends in " : "Ended "}
                               {formatDistanceToNow(
                                 new Date(fromUnixTime(quest?.activeUntil)),
@@ -655,7 +655,7 @@ const QuestingView = ({ address, name, onBack }) => {
                   </div>
                 ) : (
                   <p>
-                    <p className="text-[10px]">No recent quests</p>
+                    <p className="text-xs">No recent quests</p>
                   </p>
                 )}
               </div>
@@ -783,7 +783,7 @@ const ActionMenu = ({
               </span>
               <span
                 title={`${formatNumber(xp)} XP`}
-                className="text-xs text-accent"
+                className="text-sm text-accent"
               >
                 {formatNumber(xp)} XP
               </span>
@@ -806,7 +806,7 @@ const ActionMenu = ({
           <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50 my-4" />
           <div className="flex flex-col tablet:overflow-auto px-3 tablet:px-6 pb-6">
             <div className="flex flex-col flex-shrink-0 w-full space-y-2">
-              <h3 className="hidden text-xs opacity-50">Manage Brawler</h3>
+              <h3 className="hidden text-sm opacity-50">Manage Brawler</h3>
               {!isSimulated && (
                 <div className="flex flex-col flex-shrink-0 w-full justify-center items-center">
                   <ConnectKitButton.Custom>
@@ -837,14 +837,13 @@ const ActionMenu = ({
                   </ConnectKitButton.Custom>
                 </div>
               )}
-
               {isConnected && !isOwnerOfNFT && (
                 <div className="flex flex-wrap w-full">
                   <div className="flex flex-row w-full items-center justify-center text-center text-warn py-1 space-x-2">
                     <span className="text-base">
                       <WarnIcon />
                     </span>
-                    <span className="text-[10px] leading-[16px] relative top-[1px]">
+                    <span className="text-xs leading-[16px] relative top-[1px]">
                       {" "}
                       You do not own this NFT to perform actions
                     </span>
@@ -854,7 +853,7 @@ const ActionMenu = ({
             </div>
             <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
               <div className="flex flex-row items-center justify-between">
-                <h3 className="text-xs opacity-50">
+                <h3 className="text-sm opacity-50">
                   {isViewingBaseStats ? "Base Stats" : "Stats"}
                 </h3>
                 <button
@@ -871,8 +870,8 @@ const ActionMenu = ({
               </div>
               <div className="grid grid-cols-4 gap-4">
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">STR</span>
-                  <span className="text-xs md:text-lg">
+                  <span className="text-sm opacity-50 text-accent3">STR</span>
+                  <span className="text-sm md:text-lg">
                     {formatNumber(
                       isViewingBaseStats
                         ? calculated?.baseline.str
@@ -888,8 +887,8 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">END</span>
-                  <span className="text-xs md:text-lg">
+                  <span className="text-sm opacity-50 text-accent3">END</span>
+                  <span className="text-sm md:text-lg">
                     {formatNumber(
                       isViewingBaseStats
                         ? calculated?.baseline.end
@@ -905,8 +904,8 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">INT</span>
-                  <span className="text-xs md:text-lg">
+                  <span className="text-sm opacity-50 text-accent3">INT</span>
+                  <span className="text-sm md:text-lg">
                     {formatNumber(
                       isViewingBaseStats
                         ? calculated?.baseline.int
@@ -922,8 +921,8 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">LCK</span>
-                  <span className="text-xs md:text-lg">
+                  <span className="text-sm opacity-50 text-accent3">LCK</span>
+                  <span className="text-sm md:text-lg">
                     {formatNumber(
                       isViewingBaseStats
                         ? calculated?.baseline.lck
@@ -944,14 +943,14 @@ const ActionMenu = ({
                   <span className="text-base">
                     <InfoIcon />
                   </span>
-                  <span className="text-[10px] leading-[16px] relative top-[1px]">
+                  <span className="text-sm leading-[16px] relative top-[1px]">
                     This bearz stats are not fully synced to Ethereum
                   </span>
                 </div>
               )}
             </div>
             <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <h3 className="text-xs opacity-50">Equipped Item(s)</h3>
+              <h3 className="text-sm opacity-50">Equipped Item(s)</h3>
               {items.length > 0 ? (
                 <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
                   {items.map((item) => (
@@ -977,7 +976,7 @@ const ActionMenu = ({
                 </div>
               ) : (
                 <p>
-                  <p className="text-[10px]">No equipped items</p>
+                  <p className="text-sm">No equipped items</p>
                 </p>
               )}
               {actionsLive && (
@@ -1000,14 +999,14 @@ const ActionMenu = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 w-full items-center gap-4">
               <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
                 <div className="flex flex-row items-center justify-between">
-                  <h3 className="text-xs opacity-50">Training</h3>
+                  <h3 className="text-sm opacity-50">Training</h3>
                 </div>
                 {!activity?.training?.isTraining &&
                 actionsLive &&
                 isConnected &&
                 isOwnerOfNFT ? (
                   <>
-                    <p className="text-[10px]">Not training</p>
+                    <p className="text-sm">Not training</p>
                     <button
                       className="relative flex items-center justify-center w-[250px] cursor-pointer"
                       type="button"
@@ -1033,7 +1032,7 @@ const ActionMenu = ({
                       XP:{" "}
                       {formatNumber(Number(activity?.training?.training?.xp))}
                     </h3>
-                    <p className="text-[10px]">
+                    <p className="text-sm">
                       Training for{" "}
                       {formatDistanceToNow(
                         new Date(
@@ -1066,16 +1065,16 @@ const ActionMenu = ({
               </div>
               <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
                 <div className="flex flex-row items-center justify-between">
-                  <h3 className="text-xs opacity-50">Questing</h3>
+                  <h3 className="text-sm opacity-50">Questing</h3>
                 </div>
                 {!activity?.questing?.isQuesting ? (
-                  <p className="text-[10px]">Not on a quest</p>
+                  <p className="text-sm">Not on a quest</p>
                 ) : (
                   <div className="flex flex-col space-y-2">
                     <h3 className="text-sm text-accent">
                       {activity?.questing?.currentQuest?.name}
                     </h3>
-                    <p className="text-[10px]">
+                    <p className="text-sm">
                       Started:{" "}
                       {format(
                         new Date(
@@ -1084,7 +1083,7 @@ const ActionMenu = ({
                         "yyyy-MM-dd hh:mm aaaa",
                       )}
                     </p>
-                    <p className="text-[10px]">
+                    <p className="text-sm">
                       Ends:{" "}
                       {format(
                         new Date(
@@ -1116,7 +1115,7 @@ const ActionMenu = ({
               </div>
             </div>
             <div className="hidden flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <h3 className="text-xs opacity-50">Game</h3>
+              <h3 className="text-sm opacity-50">Game</h3>
               {isConnected && actionsLive && (
                 <button
                   className="relative flex items-center justify-center w-[250px] cursor-pointer"
@@ -1137,7 +1136,7 @@ const ActionMenu = ({
               )}
             </div>
             {isSimulated && (
-              <p className="text-[10px] pt-6 pb-2">
+              <p className="text-sm pt-6 pb-2">
                 Note: We have detected you are in an environment that cannot
                 connect a wallet. The experience will run in a <u>simulated</u>{" "}
                 mode. You can make changes but no real transactions will take
@@ -1158,15 +1157,15 @@ const ActionMenu = ({
         >
           <div className="flex flex-col w-full items-center space-y-4 py-4">
             <div className="flex flex-col flex-shrink-0 w-full space-y-4">
-              <h3 className="text-xs opacity-50">Stats</h3>
+              <h3 className="text-sm opacity-50">Stats</h3>
               <div className="grid grid-cols-4 gap-4">
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">STR</span>
+                  <span className="text-sm opacity-50 text-accent3">STR</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.atk)}%
                   </span>
                   {viewContext?.boost?.str > 0 ? (
-                    <span className="text-xs text-accent">
+                    <span className="text-sm text-accent">
                       +{formatNumber(viewContext?.boost?.str)}
                     </span>
                   ) : (
@@ -1174,12 +1173,12 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">END</span>
+                  <span className="text-sm opacity-50 text-accent3">END</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.def)}%
                   </span>
                   {viewContext?.boost?.end > 0 ? (
-                    <span className="text-xs text-accent">
+                    <span className="text-sm text-accent">
                       +{formatNumber(viewContext?.boost?.end)}
                     </span>
                   ) : (
@@ -1187,12 +1186,12 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">INT</span>
+                  <span className="text-sm opacity-50 text-accent3">INT</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.intel)}%
                   </span>
                   {viewContext?.boost?.int > 0 ? (
-                    <span className="text-xs text-accent">
+                    <span className="text-sm text-accent">
                       +{formatNumber(viewContext?.boost?.int)}
                     </span>
                   ) : (
@@ -1200,12 +1199,12 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-xs opacity-50 text-accent3">LCK</span>
+                  <span className="text-sm opacity-50 text-accent3">LCK</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.luck)}%
                   </span>
                   {viewContext?.boost?.lck > 0 ? (
-                    <span className="text-xs text-accent">
+                    <span className="text-sm text-accent">
                       +{formatNumber(viewContext?.boost?.lck)}
                     </span>
                   ) : (
@@ -1223,7 +1222,7 @@ const ActionMenu = ({
             </div>
             {viewContext?.openseaUrl && (
               <a
-                className="relative flex text-xs text-left py-4 opacity-50 hover:opacity-100 hover:underline"
+                className="relative flex text-sm text-left py-4 opacity-50 hover:opacity-100 hover:underline"
                 href={viewContext?.openseaUrl}
                 target="_blank"
                 rel="noreferrer"
@@ -1575,7 +1574,7 @@ const ImageRenderer = ({
         )}
       >
         {selected ? (
-          <div className="flex flex-row items-center space-x-4 min-w-full h-full text-xs overflow-x-auto pb-4">
+          <div className="flex flex-row items-center space-x-4 min-w-full h-full text-sm overflow-x-auto pb-4">
             {selectedToItemIds(images, isShowingPixel)[selected].map(
               (itemId) => {
                 const wontShow = isInvalidWithAnotherLayer(selected, images);
@@ -1619,7 +1618,7 @@ const ImageRenderer = ({
                           });
                         }}
                       >
-                        <span className="text-white text-[10px] opacity-50">
+                        <span className="text-white text-sm opacity-50">
                           None
                         </span>
                       </div>
@@ -1659,7 +1658,7 @@ const ImageRenderer = ({
         ) : null}
       </div>
       <div className="absolute bottom-0 left-0 w-full h-[80px] bg-dark z-[2]">
-        <div className="flex flex-row items-center space-x-2 min-w-full h-full text-xs overflow-x-auto">
+        <div className="flex flex-row items-center space-x-2 min-w-full h-full text-sm overflow-x-auto">
           {Object.keys(LAYERS).map((item) => (
             <button
               key={item}
