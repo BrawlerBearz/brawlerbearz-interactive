@@ -1121,7 +1121,7 @@ const ActionMenu = ({
               )}
             </div>
             {isSimulated && (
-              <p className="text-sm pt-6 pb-2">
+              <p className="text-sm text-warn pt-6 pb-2">
                 Note: We have detected you are in an environment that cannot
                 connect a wallet. The experience will run in a <u>simulated</u>{" "}
                 mode. You can make changes but no real transactions will take

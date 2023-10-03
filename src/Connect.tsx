@@ -10,12 +10,12 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
   return (
     <>
       <div className="flex flex-col h-screen w-screen bg-dark items-center font-primary space-y-4">
-        {!isSimulated && <ConnectButton />}
+        {!isSimulated && <ConnectButton showMenu={false} />}
         <div className="flex flex-col space-y-2 items-center">
           <img className="w-[180px] my-3" src={logoImage} alt="logo" />
           <Link
             to="/bearz"
-            className="relative flex items-center justify-center w-[250px] cursor-pointer text-white"
+            className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
           >
             <img
               className="object-cover h-full w-full"
@@ -28,7 +28,7 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
           </Link>
           <Link
             to="/crates"
-            className="relative flex items-center justify-center w-[250px] cursor-pointer text-white"
+            className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
           >
             <img
               className="object-cover h-full w-full"
@@ -36,7 +36,22 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
               alt="button"
             />
             <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-              Crates
+              Supply Crates
+            </span>
+          </Link>
+          <Link
+            to="https://bearzaar.brawlerbearz.club/"
+            target="_blank"
+            rel="noreferrer"
+            className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
+          >
+            <img
+              className="object-cover h-full w-full"
+              src={buttonBackground}
+              alt="button"
+            />
+            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+              Bearzaar
             </span>
           </Link>
         </div>

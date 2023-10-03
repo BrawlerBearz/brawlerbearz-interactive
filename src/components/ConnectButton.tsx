@@ -4,39 +4,38 @@ import { Link } from "react-router-dom";
 import buttonBackground from "../interactive/button.png";
 import pawIcon from "../interactive/pawicon_white.png";
 
-const ConnectButton = () => {
+const ConnectButton = ({ showMenu = true }) => {
   return (
-    <div className="flex flex-row flex-shrink-0 w-full justify-between items-center h-[65px] px-10 text-white">
-      <Link to="/" className="flex flex-row items-center space-x-4">
-        <img
-          className="object-contain h-[35px] w-[35px]"
-          src={pawIcon}
-          alt="Menu icon"
-        />
-        <span>Menu</span>
-      </Link>
+    <div className="flex flex-row flex-shrink-0 w-full justify-between items-center h-[65px] px-4 sm:px-10 text-white z-[2]">
+      {showMenu ? (
+        <Link to="/" className="flex flex-row items-center space-x-4">
+          <img
+            className="object-contain h-[25px] w-[25px] sm:h-[35px] sm:w-[35px]"
+            src={pawIcon}
+            alt="Menu icon"
+          />
+          <span className="hidden sm:flex">Menu</span>
+        </Link>
+      ) : (
+        <div />
+      )}
+
       <ConnectKitButton.Custom>
         {({ isConnected, show, truncatedAddress, ensName }) => {
           return !isConnected ? (
             <button
               onClick={show}
-              className="relative flex items-center justify-center w-[250px] cursor-pointer"
+              className="relative flex items-center justify-center cursor-pointer px-2 py-2"
             >
-              <img
-                className="object-cover h-full w-full"
-                src={buttonBackground}
-                alt="button"
-              />
-              <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                Connect
-              </span>
+              Connect Wallet
             </button>
           ) : (
             <button
-              className="hover:underline text-[12px] text-accent text-left"
+              className="flex flex-row items-center hover:underline text-[12px] text-accent text-left"
               onClick={show}
             >
-              Connected to {ensName ?? truncatedAddress}
+              <span className="hidden sm:flex pr-1">Connected to</span>
+              {ensName ?? truncatedAddress}
             </button>
           );
         }}

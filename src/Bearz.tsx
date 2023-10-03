@@ -4,6 +4,7 @@ import ConnectButton from "./components/ConnectButton";
 import SandboxWrapper from "./components/SandboxWrapper";
 import { useAccount } from "wagmi";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
+import logoImage from "./interactive/logo.gif";
 
 const useSimulatedAccount = () => {
   return {
@@ -45,8 +46,24 @@ const Experience = ({ isSimulated = false }) => {
   return (
     <>
       <div className="flex flex-col h-screen w-screen bg-dark items-center font-primary space-y-4 text-white">
-        {!isSimulated && <ConnectButton />}
-        <div className="flex flex-col space-y-2 items-center">Coming soon</div>
+        {!isSimulated && (
+          <div className="flex flex-col h-full w-full">
+            <ConnectButton />
+            {!isConnected && (
+              <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
+                <img className="w-[180px]" src={logoImage} alt="logo" />
+                <div className="flex flex-col space-y-1 text-center text-white py-4">
+                  <h1 className="text-sm">Please connect wallet</h1>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        {isConnected && (
+          <div className="flex flex-col space-y-2 items-center h-full w-full">
+            Coming soon
+          </div>
+        )}
       </div>
       <ToastContainer
         theme="dark"

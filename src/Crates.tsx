@@ -1063,7 +1063,19 @@ const CratesView = ({ isSimulated }) => {
         "h-full w-full": isConnected,
       })}
     >
-      {!isSimulated && <ConnectButton />}
+      {!isSimulated && (
+        <div className="flex flex-col h-full w-full">
+          <ConnectButton />
+          {!isConnected && (
+            <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
+              <img className="w-[180px]" src={logoImage} alt="logo" />
+              <div className="flex flex-col space-y-1 text-center text-white py-4">
+                <h1 className="text-sm">Please connect wallet</h1>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {isConnected &&
         (isLoadingBiconomy ? (
           <Loading />
