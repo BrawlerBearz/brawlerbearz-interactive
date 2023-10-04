@@ -4591,7 +4591,7 @@ export const bearzTokenABI = [
 ];
 
 export const bearzSupplyCratesContractAddress =
-  "0x5CdaBB10FC4418195B125BB38C25E4b2F4dE9a9f";
+  "0x50a0612E2Ca5d9f9Dc4eEe7428788CD41a75C466";
 
 export const bearzSupplyCratesABI = [
   {
@@ -4626,6 +4626,7 @@ export const bearzSupplyCratesABI = [
         name: "requestId",
         type: "uint256",
       },
+      { indexed: true, internalType: "address", name: "to", type: "address" },
       {
         indexed: false,
         internalType: "uint256",
@@ -4638,7 +4639,6 @@ export const bearzSupplyCratesABI = [
         name: "crateTokenId",
         type: "uint256",
       },
-      { indexed: false, internalType: "address", name: "to", type: "address" },
       {
         indexed: false,
         internalType: "uint256[]",
@@ -4684,7 +4684,7 @@ export const bearzSupplyCratesABI = [
         type: "uint256",
       },
       {
-        indexed: false,
+        indexed: true,
         internalType: "uint256",
         name: "crateTokenId",
         type: "uint256",

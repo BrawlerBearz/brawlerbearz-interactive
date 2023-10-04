@@ -152,11 +152,11 @@ const SubView = ({ children, childClassName, title, subtitle, onBack }) => (
     <div className="flex flex-row items-center justify-between w-full px-3 tablet:px-6 py-3 tablet:pt-6">
       <div className="flex flex-col space-y-2">
         <h2 className="text-sm md:text-xl font-bold truncate">{title}</h2>
-        <span className="opacity-50 text-[12px]">{subtitle}</span>
+        <span className="opacity-80 text-[12px]">{subtitle}</span>
       </div>
       <div className="flex flex-col space-y-1 text-right">
         <button
-          className="relative flex items-center justify-center pr-6 tablet:px-10 cursor-pointer text-white opacity-50 hover:opacity-100 duration-300"
+          className="relative flex items-center justify-center pr-6 tablet:px-10 cursor-pointer text-white opacity-80 hover:opacity-100 duration-300"
           type="button"
           onClick={onBack}
         >
@@ -166,7 +166,7 @@ const SubView = ({ children, childClassName, title, subtitle, onBack }) => (
         </button>
       </div>
     </div>
-    <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50" />
+    <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-80" />
     <div
       className={classnames(
         "flex w-full h-full tablet:overflow-auto px-2 tablet:px-4",
@@ -186,7 +186,7 @@ const Popup = ({ children, isOpen, onClose }) => {
           "z-[10000] absolute flex shadow-xl flex-row top-0 left-0 h-full w-full bg-dark duration-300 ease-in-out",
           {
             "bg-opacity-0 pointer-events-none": !isOpen,
-            "bg-opacity-50": isOpen,
+            "bg-opacity-80": isOpen,
           },
         )}
         onClick={onClose}
@@ -486,23 +486,23 @@ const SelectedQuestView = ({ quest }) => {
       <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
         <div className="grid grid-cols-1 tablet:grid-cols-2 gap-2">
           <div className="flex flex-col">
-            <h3 className="text-sm opacity-50">Duration</h3>
+            <h3 className="text-sm opacity-80">Duration</h3>
             <span className="text-sm">
               {Number(quest.duration) / 86400} day(s)
             </span>
           </div>
           <div className="flex flex-col">
-            <h3 className="text-sm opacity-50">Cooldown</h3>
+            <h3 className="text-sm opacity-80">Cooldown</h3>
             <span className="text-sm">
               {Number(quest.cooldownPeriod) / 86400} day(s)
             </span>
           </div>
         </div>
-        <h3 className="text-sm opacity-50 pt-4">Item(s)</h3>
+        <h3 className="text-sm opacity-80 pt-4">Item(s)</h3>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full w-full">
             <img className="w-[100px]" src={logoImage} alt="logo" />
-            <span className="text-white opacity-50 text-sm">Loading...</span>
+            <span className="text-white opacity-80 text-sm">Loading...</span>
           </div>
         ) : (
           <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
@@ -541,7 +541,7 @@ const SelectedQuestView = ({ quest }) => {
                       className="flex flex-col items-center bg-main border border-[1px] border-white rounded-md justify-center space-y-2 p-4 text-center flex flex-col flex-shrink-0 w-[100px] h-[140px] gap-2"
                     >
                       <SkullIcon className="relative h-[60px] w-[60px] object-contain" />
-                      <span className="text-[10px] opacity-50">Nothing</span>
+                      <span className="text-[10px] opacity-80">Nothing</span>
                     </div>
                   )}
                   <span className="text-[10px] text-center">{dropRarity}%</span>
@@ -581,7 +581,7 @@ const QuestingView = ({ address, name, onBack }) => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center h-full w-full">
             <img className="w-[100px]" src={logoImage} alt="logo" />
-            <span className="text-white opacity-50 text-sm">Loading...</span>
+            <span className="text-white opacity-80 text-sm">Loading...</span>
           </div>
         ) : (
           <div className="flex flex-col space-y-4 w-full">
@@ -589,7 +589,7 @@ const QuestingView = ({ address, name, onBack }) => {
               <SelectedQuestView quest={selectedQuest} />
             ) : (
               <div className="flex flex-col flex-shrink-0 w-full space-y-4">
-                <h3 className="hidden text-sm opacity-50">Recent Quests</h3>
+                <h3 className="hidden text-sm opacity-80">Recent Quests</h3>
                 {quests?.length > 0 ? (
                   <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-2">
                     {quests.map((quest) => {
@@ -616,7 +616,7 @@ const QuestingView = ({ address, name, onBack }) => {
                             <p className="text-xs opacity-90 truncate">
                               {quest?.description}
                             </p>
-                            <span className="text-xs opacity-50">
+                            <span className="text-xs opacity-80">
                               {isActive ? "Ends in " : "Ended "}
                               {formatDistanceToNow(
                                 new Date(fromUnixTime(quest?.activeUntil)),
@@ -710,7 +710,7 @@ const ActionMenu = ({
                   />
                 )}
                 <a
-                  className="opacity-50 hover:opacity-100 text-[20px] cursor-pointer"
+                  className="opacity-80 hover:opacity-100 text-[20px] cursor-pointer"
                   href={image}
                   download
                 >
@@ -718,7 +718,7 @@ const ActionMenu = ({
                 </a>
                 <button
                   className={classnames(
-                    "opacity-50 hover:opacity-100 text-[20px] cursor-pointer ",
+                    "opacity-80 hover:opacity-100 text-[20px] cursor-pointer ",
                     {
                       "animate-spin": isRefreshing,
                     },
@@ -740,7 +740,7 @@ const ActionMenu = ({
                 </button>
                 {isSimulated && (
                   <a
-                    className="opacity-50 hover:opacity-100 text-[20px] cursor-pointer"
+                    className="opacity-80 hover:opacity-100 text-[20px] cursor-pointer"
                     href={`https://brawlerbearz.eth.limo/#/${tokenId}`}
                     target="_blank"
                     rel="noreferrer"
@@ -751,7 +751,7 @@ const ActionMenu = ({
                 )}
               </h2>
               <a
-                className="inline-flex opacity-50 text-[12px] hover:underline text-accent3"
+                className="inline-flex opacity-80 text-[12px] hover:underline text-accent3"
                 href={`https://etherscan.io/address/${ownerOf}`}
                 target="_blank"
                 rel="noreferrer"
@@ -788,10 +788,10 @@ const ActionMenu = ({
               </div>
             </div>
           </div>
-          <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-50 my-4" />
+          <div className="flex flex-shrink-0 w-full px-3 tablet:px-6 h-[1px] bg-white bg-opacity-80 my-4" />
           <div className="flex flex-col tablet:overflow-auto px-3 tablet:px-6 pb-6">
             <div className="flex flex-col flex-shrink-0 w-full space-y-2">
-              <h3 className="hidden text-sm opacity-50">Manage Brawler</h3>
+              <h3 className="hidden text-sm opacity-80">Manage Brawler</h3>
               {!isSimulated && (
                 <div className="flex flex-col flex-shrink-0 w-full justify-center items-center">
                   <ConnectKitButton.Custom>
@@ -838,11 +838,11 @@ const ActionMenu = ({
             </div>
             <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
               <div className="flex flex-row items-center justify-between">
-                <h3 className="text-sm opacity-50">
+                <h3 className="text-sm opacity-80">
                   {isViewingBaseStats ? "Base Stats" : "Stats"}
                 </h3>
                 <button
-                  className="text-xl text-white opacity-50 hover:opacity-100"
+                  className="text-xl text-white opacity-80 hover:opacity-100"
                   onClick={() => {
                     setViewingBaseStats((value) => !value);
                   }}
@@ -855,7 +855,7 @@ const ActionMenu = ({
               </div>
               <div className="grid grid-cols-4 gap-4">
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-sm opacity-50 text-accent3">STR</span>
+                  <span className="text-sm opacity-80 text-accent3">STR</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(
                       isViewingBaseStats
@@ -872,7 +872,7 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-sm opacity-50 text-accent3">END</span>
+                  <span className="text-sm opacity-80 text-accent3">END</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(
                       isViewingBaseStats
@@ -889,7 +889,7 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-sm opacity-50 text-accent3">INT</span>
+                  <span className="text-sm opacity-80 text-accent3">INT</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(
                       isViewingBaseStats
@@ -906,7 +906,7 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-sm opacity-50 text-accent3">LCK</span>
+                  <span className="text-sm opacity-80 text-accent3">LCK</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(
                       isViewingBaseStats
@@ -935,7 +935,7 @@ const ActionMenu = ({
               )}
             </div>
             <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <h3 className="text-sm opacity-50">Equipped Item(s)</h3>
+              <h3 className="text-sm opacity-80">Equipped Item(s)</h3>
               {items.length > 0 ? (
                 <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
                   {items.map((item) => (
@@ -984,7 +984,7 @@ const ActionMenu = ({
             <div className="grid grid-cols-1 lg:grid-cols-2 w-full items-center gap-4">
               <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
                 <div className="flex flex-row items-center justify-between">
-                  <h3 className="text-sm opacity-50">Training</h3>
+                  <h3 className="text-sm opacity-80">Training</h3>
                 </div>
                 {!activity?.training?.isTraining &&
                 actionsLive &&
@@ -1050,7 +1050,7 @@ const ActionMenu = ({
               </div>
               <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
                 <div className="flex flex-row items-center justify-between">
-                  <h3 className="text-sm opacity-50">Questing</h3>
+                  <h3 className="text-sm opacity-80">Questing</h3>
                 </div>
                 {!activity?.questing?.isQuesting ? (
                   <p className="text-sm">Not on a quest</p>
@@ -1100,7 +1100,7 @@ const ActionMenu = ({
               </div>
             </div>
             <div className="hidden flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <h3 className="text-sm opacity-50">Game</h3>
+              <h3 className="text-sm opacity-80">Game</h3>
               {isConnected && actionsLive && (
                 <button
                   className="relative flex items-center justify-center w-[250px] cursor-pointer"
@@ -1142,10 +1142,10 @@ const ActionMenu = ({
         >
           <div className="flex flex-col w-full items-center space-y-4 py-4">
             <div className="flex flex-col flex-shrink-0 w-full space-y-4">
-              <h3 className="text-sm opacity-50">Stats</h3>
+              <h3 className="text-sm opacity-80">Stats</h3>
               <div className="grid grid-cols-4 gap-4">
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-sm opacity-50 text-accent3">STR</span>
+                  <span className="text-sm opacity-80 text-accent3">STR</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.atk)}%
                   </span>
@@ -1158,7 +1158,7 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-sm opacity-50 text-accent3">END</span>
+                  <span className="text-sm opacity-80 text-accent3">END</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.def)}%
                   </span>
@@ -1171,7 +1171,7 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-sm opacity-50 text-accent3">INT</span>
+                  <span className="text-sm opacity-80 text-accent3">INT</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.intel)}%
                   </span>
@@ -1184,7 +1184,7 @@ const ActionMenu = ({
                   )}
                 </div>
                 <div className="flex flex-col items-center justify-center space-y-1">
-                  <span className="text-sm opacity-50 text-accent3">LCK</span>
+                  <span className="text-sm opacity-80 text-accent3">LCK</span>
                   <span className="text-sm md:text-lg">
                     {formatNumber(viewContext?.luck)}%
                   </span>
@@ -1207,7 +1207,7 @@ const ActionMenu = ({
             </div>
             {viewContext?.openseaUrl && (
               <a
-                className="relative flex text-sm text-left py-4 opacity-50 hover:opacity-100 hover:underline"
+                className="relative flex text-sm text-left py-4 opacity-80 hover:opacity-100 hover:underline"
                 href={viewContext?.openseaUrl}
                 target="_blank"
                 rel="noreferrer"
@@ -1233,7 +1233,7 @@ const ActionMenu = ({
             setViewState(null);
           }}
         >
-          <div className="flex flex-col w-full items-center space-y-4 py-10 opacity-50">
+          <div className="flex flex-col w-full items-center space-y-4 py-10 opacity-80">
             Coming Soon
           </div>
         </SubView>
@@ -1588,7 +1588,7 @@ const ImageRenderer = ({
                     )}
                   >
                     {selected !== LAYERS.BACKGROUND && (
-                      <div className="h-full w-full bg-main bg-opacity-50 z-[1] pointer-events-none absolute top-0 left-0" />
+                      <div className="h-full w-full bg-main bg-opacity-80 z-[1] pointer-events-none absolute top-0 left-0" />
                     )}
                     {isNone ? (
                       <div
@@ -1603,7 +1603,7 @@ const ImageRenderer = ({
                           });
                         }}
                       >
-                        <span className="text-white text-sm opacity-50">
+                        <span className="text-white text-sm opacity-80">
                           None
                         </span>
                       </div>
@@ -1651,7 +1651,7 @@ const ImageRenderer = ({
                 "flex flex-shrink-0 items-center px-4 h-full duration-300",
                 {
                   "opacity-100 text-accent": item === selected,
-                  "opacity-50 hover:opacity-80 text-white": item !== selected,
+                  "opacity-80 hover:opacity-80 text-white": item !== selected,
                 },
               )}
               onClick={() => {
@@ -1703,7 +1703,7 @@ const WardrobeHeader = ({
       <div className="flex flex-row items-center space-x-2">
         <button
           onClick={onClose}
-          className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+          className="flex flex-row space-x-2 items-center justify-center opacity-80 hover:opacity-80 duration-300"
         >
           <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
             <span className="text-2xl text-white">
@@ -1716,7 +1716,7 @@ const WardrobeHeader = ({
           onClick={() => {
             setInPictureMode(true);
           }}
-          className="hidden flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+          className="hidden flex flex-row space-x-2 items-center justify-center opacity-80 hover:opacity-80 duration-300"
         >
           <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
             <span className="text-2xl text-white">
@@ -1726,7 +1726,7 @@ const WardrobeHeader = ({
           <h2 className="hidden pl-2 text-white text-sm">Take Picture</h2>
         </button>
         <button
-          className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+          className="flex flex-row space-x-2 items-center justify-center opacity-80 hover:opacity-80 duration-300"
           onClick={async () => {
             const baseURL = process.env.REACT_APP_PREVIEW_URL;
 
@@ -1785,7 +1785,7 @@ const WardrobeHeader = ({
         {onReset && (
           <button
             title="Reset"
-            className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+            className="flex flex-row space-x-2 items-center justify-center opacity-80 hover:opacity-80 duration-300"
             onClick={onReset}
           >
             <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
@@ -1799,7 +1799,7 @@ const WardrobeHeader = ({
         {canUndo && (
           <button
             title="Undo"
-            className="flex flex-row space-x-2 items-center justify-center opacity-50 hover:opacity-80 duration-300"
+            className="flex flex-row space-x-2 items-center justify-center opacity-80 hover:opacity-80 duration-300"
             onClick={onUndo}
           >
             <div className="flex items-center justify-center h-[40px] w-[40px] bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl">
@@ -1835,7 +1835,7 @@ const Header = ({
       {onToggleMenu ? (
         <button
           onClick={onToggleMenu}
-          className="h-[40px] w-[40px] opacity-50 hover:opacity-80 bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl duration-300"
+          className="h-[40px] w-[40px] opacity-80 hover:opacity-80 bg-opacity-30 bg-white rounded-full overflow-hidden hover:shadow-xl duration-300"
         >
           <img
             src={pawButton}

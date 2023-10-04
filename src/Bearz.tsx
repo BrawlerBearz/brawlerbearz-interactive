@@ -11,13 +11,12 @@ import {
 import ConnectButton from "./components/ConnectButton";
 import SandboxWrapper from "./components/SandboxWrapper";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
-import logoImage from "./interactive/logo.gif";
 import { bearzContractAddress } from "./lib/contracts";
 import { ALCHEMY_KEY } from "./lib/constants";
 import { getStatsByTokenId } from "./lib/blockchain";
 import { formatNumber } from "./lib/formatting";
-
 import Loading from "./components/Loading";
+import PleaseConnectWallet from "./components/PleaseConnectWallet";
 
 const useSimulatedAccount = () => {
   return {
@@ -137,12 +136,7 @@ const Experience = ({ isSimulated = false }) => {
           <div className="flex flex-col h-full w-full">
             <ConnectButton />
             {!isConnected ? (
-              <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
-                <img className="w-[180px]" src={logoImage} alt="logo" />
-                <div className="flex flex-col space-y-1 text-center text-white py-4">
-                  <h1 className="text-sm">Please connect wallet</h1>
-                </div>
-              </div>
+              <PleaseConnectWallet />
             ) : (
               <div className="flex flex-col w-full h-full items-center space-y-10">
                 <h1 className="text-lg">Your Brawler Bearz ({data.length})</h1>

@@ -9,11 +9,13 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
 
-const version = "v1.4.0";
+const version = "v1.5.0";
 
 const NFT = React.lazy(() => import("./NFT"));
 const Crates = React.lazy(() => import("./Crates"));
+const CratesHistory = React.lazy(() => import("./CratesHistory"));
 const Bearz = React.lazy(() => import("./Bearz"));
+const ManageBearz = React.lazy(() => import("./ManageBearz"));
 const Connect = React.lazy(() => import("./Connect"));
 
 const Loading = () => {
@@ -22,7 +24,7 @@ const Loading = () => {
       <img className="w-[180px]" src={logoImage} alt="logo" />
       <div className="flex flex-col space-y-1 text-center text-white py-4">
         <h1 className="text-sm">Interactive Experience</h1>
-        <span className="text-xs opacity-50">{version}</span>
+        <span className="text-xs opacity-80">{version}</span>
       </div>
     </div>
   );
@@ -34,6 +36,8 @@ root.render(
       <React.Suspense fallback={<Loading />}>
         <Routes>
           <Route path="bearz" element={<Bearz />} />
+            <Route path="manage" element={<ManageBearz />} />
+          <Route path="crates/history" element={<CratesHistory />} />
           <Route path="crates" element={<Crates />}>
             <Route path=":txHash" element={<Crates />} />
           </Route>

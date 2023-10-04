@@ -1,20 +1,18 @@
 // @ts-nocheck
 import React, { useCallback, useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import useSound from "use-sound";
 import classnames from "classnames";
 import {
-  WagmiConfig,
-  createConfig,
   useAccount,
   useWalletClient,
   useWaitForTransaction,
   useContractRead,
 } from "wagmi";
-import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { mainnet } from "viem/chains";
 import { Biconomy } from "@biconomy/mexa";
+import { MdHistory as HistoryIcon } from "react-icons/md";
 import {
   createPublicClient,
   http,
@@ -25,11 +23,7 @@ import {
 import { keyBy, shuffle } from "lodash";
 import { providers, Contract } from "ethers";
 import ConnectButton from "./components/ConnectButton";
-import {
-  ALCHEMY_KEY,
-  WALLETCONNECT_PROJECT_ID,
-  CONNECT_KIT_THEME,
-} from "./lib/constants";
+import { ALCHEMY_KEY } from "./lib/constants";
 import logoImage from "./interactive/logo.gif";
 import buttonBackground from "./interactive/button.png";
 import opening_part1 from "./interactive/crates/v2/opening_part1_slower.gif";
@@ -62,6 +56,7 @@ import {
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import Loading from "./components/Loading";
 import SandboxWrapper from "./components/SandboxWrapper";
+import PleaseConnectWallet from "./components/PleaseConnectWallet";
 
 const placeholderTypes = {
   COMMON: common,
@@ -805,25 +800,9 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
                 Skip
               </span>
             </button>
-            <button
-              onClick={onHandleNext}
-              className="relative flex items-center justify-center w-[200px] cursor-pointer"
-              disabled={spinState?.duration !== 0}
-            >
-              <img
-                className="object-cover h-full w-full"
-                src={buttonBackground}
-                alt="button"
-              />
-              <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                Next
-              </span>
-            </button>
-            {!revealedState?.[activeIndex]?.isRevealed && (
+            {revealedState?.length > 1 && (
               <button
-                onClick={() => {
-                  onHandleSpin(activeIndex);
-                }}
+                onClick={onHandleNext}
                 className="relative flex items-center justify-center w-[200px] cursor-pointer"
                 disabled={spinState?.duration !== 0}
               >
@@ -833,10 +812,29 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
                   alt="button"
                 />
                 <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                  Spin
+                  Next
                 </span>
               </button>
             )}
+            {spinState?.duration === 0 &&
+              !revealedState?.[activeIndex]?.isRevealed && (
+                <button
+                  onClick={() => {
+                    onHandleSpin(activeIndex);
+                  }}
+                  className="relative flex items-center justify-center w-[200px] cursor-pointer"
+                  disabled={spinState?.duration !== 0}
+                >
+                  <img
+                    className="object-cover h-full w-full"
+                    src={buttonBackground}
+                    alt="button"
+                  />
+                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                    Spin
+                  </span>
+                </button>
+              )}
           </>
         )}
       </div>
@@ -1053,6 +1051,7 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
 };
 
 const CratesView = ({ isSimulated }) => {
+  const [amountToOpen, setAmountToOpen] = useState(1);
   const { isConnected } = useAccount();
 
   const { data, isLoadingBiconomy, actions, sounds, isApproving } =
@@ -1062,11 +1061,6 @@ const CratesView = ({ isSimulated }) => {
     });
 
   const navigate = useNavigate();
-
-  console.log({
-    data,
-    isLoadingBiconomy,
-  });
 
   return (
     <div
@@ -1078,14 +1072,7 @@ const CratesView = ({ isSimulated }) => {
       {!isSimulated && (
         <div className="flex flex-col h-full w-full">
           <ConnectButton />
-          {!isConnected && (
-            <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
-              <img className="w-[180px]" src={logoImage} alt="logo" />
-              <div className="flex flex-col space-y-1 text-center text-white py-4">
-                <h1 className="text-sm">Please connect wallet</h1>
-              </div>
-            </div>
-          )}
+          {!isConnected && <PleaseConnectWallet />}
         </div>
       )}
       {isConnected &&
@@ -1115,13 +1102,21 @@ const CratesView = ({ isSimulated }) => {
               />
             ) : data?.crates ? (
               <div className="flex flex-col items-center justify-center space-y-10">
-                <h1 className="text-lg">Your Supply Crates</h1>
+                <div className="flex flex-row items-center space-x-4">
+                  <h1 className="text-lg">Your Supply Crates</h1>
+                  <Link
+                    to="/crates/history"
+                    className="bg-main p-1 rounded-full text-2xl shadow-xl"
+                  >
+                    <HistoryIcon />
+                  </Link>
+                </div>
                 {!data?.isApproved && (
                   <div className="flex flex-col items-center space-y-4 max-w-xl text-center px-2 border-b-[2px] border-white border-opacity-20 pb-10">
                     <p className="text-xs text-warn">
                       Note: You need to approve burning supply crate cards.
                     </p>
-                    <span className="text-xs text-white opacity-50">
+                    <span className="text-xs text-white opacity-80">
                       This is a 1-time operation to allow the contract to burn
                       crate cards on your behalf.
                     </span>
@@ -1160,25 +1155,42 @@ const CratesView = ({ isSimulated }) => {
                           </div>
                         </div>
                         {data?.isApproved && (
-                          <button
-                            onClick={() => {
-                              sounds?.start();
-                              actions?.onOpenCrate({
-                                crateTokenId: tokenId,
-                                openAmount: 1,
-                              });
-                            }}
-                            className="relative flex items-center justify-center w-[225px] cursor-pointer z-[1] mt-6"
-                          >
-                            <img
-                              className="object-cover h-full w-full"
-                              src={buttonBackground}
-                              alt="button"
-                            />
-                            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                              Redeem
-                            </span>
-                          </button>
+                          <div className="flex flex-col space-y-1">
+                            <select
+                              className="flex text-right w-[225px] h-[42px] rounded-full bg-main border-dark border-[1px] text-white cursor-pointer z-[1] mt-3"
+                              value={amountToOpen}
+                              onChange={(e) => {
+                                setAmountToOpen(e.target.value);
+                              }}
+                            >
+                              {new Array(Number(crate?.balance))
+                                .fill(0)
+                                .map((i, index) => (
+                                  <option key={index} value={index + 1}>
+                                    {index + 1}
+                                  </option>
+                                ))}
+                            </select>
+                            <button
+                              onClick={() => {
+                                sounds?.start();
+                                actions?.onOpenCrate({
+                                  crateTokenId: tokenId,
+                                  openAmount: amountToOpen,
+                                });
+                              }}
+                              className="relative flex items-center justify-center w-[225px] cursor-pointer z-[1] mt-6"
+                            >
+                              <img
+                                className="object-cover h-full w-full"
+                                src={buttonBackground}
+                                alt="button"
+                              />
+                              <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                                Burn & Open
+                              </span>
+                            </button>
+                          </div>
                         )}
                       </div>
                     );

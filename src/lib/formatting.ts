@@ -4,6 +4,12 @@ export const shortenAddress = (address) =>
     address.length,
   )}`;
 
+export const shortenTxAddress = (address) =>
+  `${address.slice(0, 12)}...${address.slice(
+    address.length - 12,
+    address.length,
+  )}`;
+
 export const getAttributeValue = (attributes, trait) => {
   const normalizedTrait = trait?.toLowerCase();
   return attributes.find((attr) => {
