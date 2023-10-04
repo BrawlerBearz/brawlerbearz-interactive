@@ -434,7 +434,7 @@ export const getStatsByTokenId = async (
         hp,
       },
       activity: {
-        isStaked: attributeLookup?.["Is Locked"]?.value === 'TRUE',
+        isStaked: attributeLookup?.["Is Locked"]?.value === "TRUE",
         questing: {
           isQuesting: state?.isQuesting,
           currentQuest: state?.questMetadata,
