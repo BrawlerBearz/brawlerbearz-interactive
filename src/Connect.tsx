@@ -10,9 +10,10 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
   return (
     <>
       <div className="flex flex-col h-screen w-screen bg-dark items-center font-primary space-y-4">
-        {!isSimulated && <ConnectButton showMenu={false} />}
-        <div className="flex flex-col space-y-2 items-center">
+        <div className="flex flex-col space-y-2 items-center py-10">
           <img className="w-[180px] my-3" src={logoImage} alt="logo" />
+          <h1 className="text-sm text-white">Interactive Experience</h1>
+          {!isSimulated && <ConnectButton showMenu={false} />}
           <Link
             to="/bearz"
             className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"

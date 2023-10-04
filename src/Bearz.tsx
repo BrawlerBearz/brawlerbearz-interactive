@@ -5,6 +5,7 @@ import SandboxWrapper from "./components/SandboxWrapper";
 import { useAccount } from "wagmi";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import logoImage from "./interactive/logo.gif";
+import buttonBackground from "./interactive/button.png";
 
 const useSimulatedAccount = () => {
   return {
@@ -45,23 +46,25 @@ const Experience = ({ isSimulated = false }) => {
 
   return (
     <>
-      <div className="flex flex-col h-screen w-screen bg-dark items-center font-primary space-y-4 text-white">
+      <div className="flex flex-col h-screen w-screen bg-dark font-primary space-y-4 text-white">
         {!isSimulated && (
           <div className="flex flex-col h-full w-full">
             <ConnectButton />
-            {!isConnected && (
+            {!isConnected ? (
               <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
                 <img className="w-[180px]" src={logoImage} alt="logo" />
                 <div className="flex flex-col space-y-1 text-center text-white py-4">
                   <h1 className="text-sm">Please connect wallet</h1>
                 </div>
               </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center space-y-10">
+                  <h1 className="text-lg">Your Brawler Bearz</h1>
+                  <div className="flex flex-col flex-wrap gap-4">
+                    qweqw
+                  </div>
+                </div>
             )}
-          </div>
-        )}
-        {isConnected && (
-          <div className="flex flex-col space-y-2 items-center h-full w-full">
-            Coming soon
           </div>
         )}
       </div>

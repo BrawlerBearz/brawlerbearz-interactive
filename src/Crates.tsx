@@ -314,6 +314,8 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
             console.log(error);
             toast.error(message);
           });
+      } else {
+        setIsLoadingBiconomy(false);
       }
 
       if (account?.address) {
