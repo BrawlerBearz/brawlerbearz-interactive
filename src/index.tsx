@@ -16,6 +16,7 @@ const Crates = React.lazy(() => import("./Crates"));
 const CratesHistory = React.lazy(() => import("./CratesHistory"));
 const Bearz = React.lazy(() => import("./Bearz"));
 const ManageBearz = React.lazy(() => import("./ManageBearz"));
+const Crafting = React.lazy(() => import("./Crafting"));
 const Connect = React.lazy(() => import("./Connect"));
 
 const Loading = () => {
@@ -37,6 +38,7 @@ root.render(
         <Routes>
           <Route path="bearz" element={<Bearz />} />
           <Route path="manage" element={<ManageBearz />} />
+          <Route path="crafting" element={<Crafting />} />
           <Route path="crates/history" element={<CratesHistory />} />
           <Route path="crates" element={<Crates />}>
             <Route path=":txHash" element={<Crates />} />

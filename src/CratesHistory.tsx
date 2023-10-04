@@ -101,7 +101,7 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
             {!isConnected ? (
               <PleaseConnectWallet />
             ) : (
-              <div className="flex flex-col w-full h-full items-center space-y-10">
+              <div className="flex flex-col w-full h-full items-center space-y-10 px-6 sm:px-10">
                 <div className="flex flex-row items-center space-x-4">
                   <Link
                     to="/crates"
@@ -110,7 +110,7 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
                     <BackIcon />
                   </Link>
                   <h1 className="text-lg">
-                    Supply Crates History ({data?.length || 0})
+                    Crates History ({data?.length || 0})
                   </h1>
                 </div>
                 <p className="text-sm opacity-80">
@@ -140,7 +140,10 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
                             <p className="text-sm">
                               Dropped {itemIds.length} item(s)
                             </p>
-                            <Link to={`/crates/${tx.transactionHash}`} className="text-sm text-accent3 hover:underline">
+                            <Link
+                              to={`/crates/${tx.transactionHash}`}
+                              className="text-sm text-accent3 hover:underline"
+                            >
                               {shortenTxAddress(tx.transactionHash)}
                             </Link>
                           </div>
