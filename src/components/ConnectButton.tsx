@@ -28,7 +28,7 @@ const ConnectButton = ({ showMenu = true }) => {
             </button>
           ) : (
             <button
-              className="w-full flex flex-row items-center justify-end hover:underline text-xs text-accent text-center"
+              className="flex flex-row items-center justify-end hover:underline text-xs text-accent text-center"
               onClick={show}
             >
               <span className="hidden sm:flex pr-1">Connected to</span>
