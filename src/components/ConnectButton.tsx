@@ -16,22 +16,19 @@ const ConnectButton = ({ showMenu = true }) => {
           />
           <span className="hidden sm:flex">Menu</span>
         </Link>
-      ) : (
-        <div />
-      )}
-
+      ) : null}
       <ConnectKitButton.Custom>
         {({ isConnected, show, truncatedAddress, ensName }) => {
           return !isConnected ? (
             <button
               onClick={show}
-              className="relative flex items-center justify-center cursor-pointer px-2 py-2"
+              className="w-full max-w-[200px] relative flex items-center justify-center cursor-pointer px-2 py-2 text-center text-accent animate-pulse"
             >
               Connect Wallet
             </button>
           ) : (
             <button
-              className="flex flex-row items-center hover:underline text-[12px] text-accent text-left"
+              className="w-full flex flex-row items-center justify-end hover:underline text-xs text-accent text-center"
               onClick={show}
             >
               <span className="hidden sm:flex pr-1">Connected to</span>

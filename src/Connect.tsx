@@ -5,6 +5,7 @@ import buttonBackground from "./interactive/button.png";
 import logoImage from "./interactive/logo.gif";
 import ConnectButton from "./components/ConnectButton";
 import SandboxWrapper from "./components/SandboxWrapper";
+import {ConnectKitButton} from "connectkit";
 
 const Experience = ({ isSandboxed, isSimulated = false }) => {
   return (
@@ -13,7 +14,29 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
         <div className="flex flex-col space-y-2 items-center py-10">
           <img className="w-[180px] my-3" src={logoImage} alt="logo" />
           <h1 className="text-sm text-white">Interactive Experience</h1>
-          {!isSimulated && <ConnectButton showMenu={false} />}
+          {!isSimulated && (
+              <ConnectKitButton.Custom>
+                {({ isConnected, show, truncatedAddress, ensName }) => {
+                  return !isConnected ? (
+                      <button
+                          onClick={show}
+                          className="w-full max-w-[200px] relative flex items-center justify-center cursor-pointer px-2 py-2 text-center text-accent animate-pulse"
+                      >
+                        Connect Wallet
+                      </button>
+                  ) : (
+                      <button
+                          className="w-full flex flex-row items-center justify-center hover:underline text-xs text-accent text-center"
+                          onClick={show}
+                      >
+                        <span className="hidden sm:flex pr-1">Connected to</span>
+                        {ensName ?? truncatedAddress}
+                      </button>
+                  );
+                }}
+              </ConnectKitButton.Custom>
+          )}
+          <div className="py-6" />
           <Link
             to="/bearz"
             className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"

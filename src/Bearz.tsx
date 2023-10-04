@@ -61,7 +61,7 @@ const Experience = ({ isSimulated = false }) => {
                 <div className="flex flex-col items-center justify-center space-y-10">
                   <h1 className="text-lg">Your Brawler Bearz</h1>
                   <div className="flex flex-col flex-wrap gap-4">
-                    qweqw
+                    Coming soon...
                   </div>
                 </div>
             )}
