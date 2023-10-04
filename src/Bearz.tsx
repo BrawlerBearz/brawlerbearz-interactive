@@ -209,20 +209,6 @@ const Experience = ({ isSimulated = false }) => {
                               <h2 className="relative top-[2px] text-sm truncate">
                                 {metadata.name}
                               </h2>
-                              <div className="relative flex flex-row w-full">
-                                <div className="flex border border-1 border-accent bg-dark2 h-[12px] rounded-full w-[120px] overflow-hidden">
-                                  <div
-                                      title={`Next Level: ${formatNumber(nextXpLevel)} XP`}
-                                      className="z-[1] bg-accent h-full rounded-full duration-300"
-                                      style={{
-                                        width: `${(xp / nextXpLevel) * 100}%`,
-                                      }}
-                                  />
-                                </div>
-                                <span className="hidden text-[8px] text-accent relative top-[2px] left-[2px] h-[12px]">
-                  {level + 1}
-                </span>
-                              </div>
                             </div>
                             <div className="flex flex-row w-full justify-between text-xs">
                               <div className="flex flex-col space-y-1 text-center">
@@ -241,6 +227,23 @@ const Experience = ({ isSimulated = false }) => {
                                 <span className="text-accent2">LCK</span>
                                 <span>{lck || 0}</span>
                               </div>
+                            </div>
+                            <div className="flex flex-col space-y-1 text-center">
+                            <span className="relative text-accent text-xs text-right">{formatNumber(xp)} XP</span>
+                            <div className="relative flex flex-row w-full">
+                              <div className="flex border border-1 border-accent bg-dark2 h-[12px] rounded-full w-full overflow-hidden">
+                                <div
+                                    title={`Next Level: ${formatNumber(nextXpLevel)} XP`}
+                                    className="z-[1] bg-accent h-full rounded-full duration-300"
+                                    style={{
+                                      width: `${(xp / nextXpLevel) * 100}%`,
+                                    }}
+                                />
+                              </div>
+                              <span className="hidden text-[8px] text-accent relative top-[2px] left-[2px] h-[12px]">
+                  {level + 1}
+                </span>
+                            </div>
                             </div>
                           </div>
                         </div>
