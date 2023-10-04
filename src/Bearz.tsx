@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
+import classnames from "classnames";
+import { Link } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { useAccount } from "wagmi";
-import { groupBy } from "lodash";
-import numeral from "numeral";
 import { MdLock as LockIcon } from "react-icons/md";
 import {
   GiStrongMan as TrainingIcon,
@@ -14,10 +14,9 @@ import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import logoImage from "./interactive/logo.gif";
 import { bearzContractAddress } from "./lib/contracts";
 import { ALCHEMY_KEY } from "./lib/constants";
-import classnames from "classnames";
 import { getStatsByTokenId } from "./lib/blockchain";
 import { formatNumber } from "./lib/formatting";
-import { Link } from "react-router-dom";
+
 import Loading from "./components/Loading";
 
 const useSimulatedAccount = () => {
