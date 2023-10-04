@@ -297,15 +297,14 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
 
   useEffect(() => {
     (async function () {
-      if (account?.address && signer?.provider && !biconomy) {
+
+      if ((account?.address && signer?.provider && !biconomy) || (biconomy && biconomy?.status !== biconomy?.READY)) {
         biconomy = new Biconomy(new providers.Web3Provider(window.ethereum), {
           apiKey: "DZgKduUcK.58f69cf0-6070-482c-85a6-17c5e2f24d83",
-          debug: true,
+          debug: false,
           contractAddresses: [bearzSupplyCratesContractAddress],
           strictMode: true,
         });
-
-        await onRefresh(account?.address);
 
         biconomy
           .onEvent(biconomy.READY, async () => {
@@ -315,6 +314,10 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
             console.log(error);
             toast.error(message);
           });
+      }
+
+      if (account?.address) {
+        await onRefresh(account?.address);
       }
     })();
   }, [account?.address, signer?.provider]);
@@ -1055,6 +1058,11 @@ const CratesView = ({ isSimulated }) => {
     });
 
   const navigate = useNavigate();
+
+  console.log({
+    data,
+    isLoadingBiconomy,
+  });
 
   return (
     <div
