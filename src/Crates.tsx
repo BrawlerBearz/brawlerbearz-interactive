@@ -297,8 +297,10 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
 
   useEffect(() => {
     (async function () {
-
-      if ((account?.address && signer?.provider && !biconomy) || (biconomy && biconomy?.status !== biconomy?.READY)) {
+      if (
+        (account?.address && signer?.provider && !biconomy) ||
+        (biconomy && biconomy?.status !== biconomy?.READY)
+      ) {
         biconomy = new Biconomy(new providers.Web3Provider(window.ethereum), {
           apiKey: "DZgKduUcK.58f69cf0-6070-482c-85a6-17c5e2f24d83",
           debug: false,

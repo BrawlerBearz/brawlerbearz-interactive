@@ -12,20 +12,8 @@ import {
 import { L2_ALCHEMY_KEY, ALCHEMY_KEY } from "./constants";
 import { getAttributeValue } from "./formatting";
 
-const ethClient = createPublicClient({
-  chain: mainnet,
-  transport: http(`https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`),
-});
-
-const polygonClient = createPublicClient({
-  chain: polygon,
-  transport: http(`https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`),
-});
-
 const XP_BASIS = 2000;
 const COEFFICIENT = 50;
-
-export const BEARZ_SHOP_IMAGE_URI = `${process.env.PUBLIC_URL}/cards/`;
 
 const itemKeyToStatKey = {
   atk: "str",
@@ -33,6 +21,18 @@ const itemKeyToStatKey = {
   luck: "lck",
   intel: "int",
 };
+
+export const ethClient = createPublicClient({
+  chain: mainnet,
+  transport: http(`https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`),
+});
+
+export const polygonClient = createPublicClient({
+  chain: polygon,
+  transport: http(`https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`),
+});
+
+export const BEARZ_SHOP_IMAGE_URI = `${process.env.PUBLIC_URL}/cards/`;
 
 const getMetadataByTokenId = async (tokenId) => {
   const [base64Encoding, ownerOf] = await Promise.all([
@@ -434,6 +434,7 @@ export const getStatsByTokenId = async (
         hp,
       },
       activity: {
+        isStaked: attributeLookup?.["Is Locked"]?.value === 'TRUE',
         questing: {
           isQuesting: state?.isQuesting,
           currentQuest: state?.questMetadata,

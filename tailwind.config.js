@@ -38,6 +38,12 @@ module.exports = {
         laptop: "1024px",
         desktop: "1280px",
       },
+      boxShadow: {
+        pixel:
+          "-3px 0 0 0 #142b42, 3px 0 0 0 #142b42, 0 -3px 0 0 #142b42, 0 3px 0 0 #142b42",
+        pixelAccent:
+          "-3px 0 0 0 #77cf49, 3px 0 0 0 #77cf49, 0 -3px 0 0 #77cf49, 0 3px 0 0 #77cf49",
+      },
     },
   },
   plugins: [],
