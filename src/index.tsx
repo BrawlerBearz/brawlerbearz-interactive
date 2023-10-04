@@ -36,7 +36,7 @@ root.render(
       <React.Suspense fallback={<Loading />}>
         <Routes>
           <Route path="bearz" element={<Bearz />} />
-            <Route path="manage" element={<ManageBearz />} />
+          <Route path="manage" element={<ManageBearz />} />
           <Route path="crates/history" element={<CratesHistory />} />
           <Route path="crates" element={<Crates />}>
             <Route path=":txHash" element={<Crates />} />

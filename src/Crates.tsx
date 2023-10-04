@@ -850,7 +850,10 @@ const WaitingForCrate = ({ onClose }) => (
         className="h-[245px] w-[179px]"
         alt="burning card"
       />
-      <p className="text-accent text-sm">Redeeming supply crate...</p>
+      <p className="text-accent text-sm">Redeeming supply crate(s)...</p>
+      <p className="text-warn text-sm max-w-xl text-center">
+        Note: Multiple crates will drop all items in one opening!
+      </p>
       <button
         onClick={onClose}
         className="relative flex items-center justify-center w-[250px] cursor-pointer"
@@ -1015,7 +1018,7 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
       {(() => {
         switch (status.event) {
           case DROPPED_STATUS.WAITING:
-            return <WaitingForCrate sounds={sounds} onClose={onClose} />;
+            return <WaitingForCrate onClose={onClose} />;
           case DROPPED_STATUS.READY:
           case DROPPED_STATUS.OPENING:
             return (

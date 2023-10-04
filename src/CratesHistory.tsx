@@ -4,8 +4,11 @@ import { ToastContainer } from "react-toastify";
 import { useAccount } from "wagmi";
 import { Link } from "react-router-dom";
 import { MdArrowBack as BackIcon } from "react-icons/md";
-import {bearzSupplyCratesABI, bearzSupplyCratesContractAddress} from "./lib/contracts";
-import {createPublicClient, decodeEventLog, http, parseAbiItem} from "viem";
+import {
+  bearzSupplyCratesABI,
+  bearzSupplyCratesContractAddress,
+} from "./lib/contracts";
+import { createPublicClient, decodeEventLog, http, parseAbiItem } from "viem";
 import { mainnet } from "viem/chains";
 import { ALCHEMY_KEY } from "./lib/constants";
 import ConnectButton from "./components/ConnectButton";
@@ -42,7 +45,7 @@ const useCratesHistory = (address) => {
     const logs = await publicClient.getFilterLogs({ filter });
 
     logs.reverse();
-    
+
     setState((prev) => ({
       ...prev,
       data: logs,
@@ -127,22 +130,22 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
                         });
                         const { itemIds } = topic?.args || {};
                         return (
-                            <Link
-                                key={tx.transactionHash}
-                                to={`/crates/${tx.transactionHash}`}
-                                className="flex flex-col space-y-1"
-                            >
-                              <h2 className="text-accent">
-                                Blocknumber: {String(tx.blockNumber)}
-                              </h2>
-                              <p className="text-sm">
-                                Dropped {itemIds.length} item(s)
-                              </p>
-                              <p className="text-sm">
-                                {shortenTxAddress(tx.transactionHash)}
-                              </p>
-                            </Link>
-                        )
+                          <Link
+                            key={tx.transactionHash}
+                            to={`/crates/${tx.transactionHash}`}
+                            className="flex flex-col space-y-1"
+                          >
+                            <h2 className="text-accent">
+                              Blocknumber: {String(tx.blockNumber)}
+                            </h2>
+                            <p className="text-sm">
+                              Dropped {itemIds.length} item(s)
+                            </p>
+                            <p className="text-sm">
+                              {shortenTxAddress(tx.transactionHash)}
+                            </p>
+                          </Link>
+                        );
                       })
                     ) : (
                       <p className="opacity-80">No supply crates history</p>

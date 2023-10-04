@@ -51,13 +51,13 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
             </span>
           </Link>
           <Link
-              to="/manage"
-              className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
+            to="/manage"
+            className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
           >
             <img
-                className="object-cover h-full w-full"
-                src={buttonBackground}
-                alt="button"
+              className="object-cover h-full w-full"
+              src={buttonBackground}
+              alt="button"
             />
             <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
               Manage Bearz
