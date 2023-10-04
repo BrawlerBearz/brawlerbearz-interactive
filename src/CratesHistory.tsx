@@ -119,7 +119,7 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
                 {isLoading ? (
                   <Loading />
                 ) : (
-                  <div className="flex flex-col justify-center gap-10 px-6 md:px-10 pb-20">
+                  <div className="flex flex-col justify-center gap-8 pb-20">
                     {data.length > 0 ? (
                       data.map((tx) => {
                         const topic = decodeEventLog({
@@ -130,9 +130,8 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
                         });
                         const { itemIds } = topic?.args || {};
                         return (
-                          <Link
+                          <div
                             key={tx.transactionHash}
-                            to={`/crates/${tx.transactionHash}`}
                             className="flex flex-col space-y-1"
                           >
                             <h2 className="text-accent">
@@ -141,10 +140,10 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
                             <p className="text-sm">
                               Dropped {itemIds.length} item(s)
                             </p>
-                            <p className="text-sm">
+                            <Link to={`/crates/${tx.transactionHash}`} className="text-sm text-accent3 hover:underline">
                               {shortenTxAddress(tx.transactionHash)}
-                            </p>
-                          </Link>
+                            </Link>
+                          </div>
                         );
                       })
                     ) : (
