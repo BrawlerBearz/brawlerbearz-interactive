@@ -1020,15 +1020,17 @@ const ActionMenu = ({
                       {formatNumber(Number(activity?.training?.training?.xp))}
                     </h3>
                     {activity?.training?.training?.startAt !== 0n ? (
-                        <p className="text-sm">
-                          Training for{" "}
-                          {formatDistanceToNow(
-                              new Date(
-                                  fromUnixTime(activity?.training?.training?.startAt),
-                              ),
-                          )}
-                        </p>
-                    ) : <p className="text-sm text-accent">In Training</p>}
+                      <p className="text-sm">
+                        Training for{" "}
+                        {formatDistanceToNow(
+                          new Date(
+                            fromUnixTime(activity?.training?.training?.startAt),
+                          ),
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-accent">In Training</p>
+                    )}
                     {isConnected && isOwnerOfNFT && actionsLive && (
                       <button
                         className="relative flex items-center justify-center w-[250px] cursor-pointer pt-2"

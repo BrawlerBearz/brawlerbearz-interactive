@@ -62,7 +62,7 @@ html {
   --toastify-toast-background: #0a121a;
   --toastify-toast-min-height: 64px;
   --toastify-toast-max-height: 800px;
-  --toastify-font-family: "Press Start 2P", cursive;
+  --toastify-font-family: "PressStart2P", sans-serif;
   --toastify-z-index: 9999;
 
   --toastify-text-color-light: #757575;
