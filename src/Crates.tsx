@@ -1112,6 +1112,11 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
             }),
           ]);
 
+          console.log({
+            crateItemIds,
+            crateMetadata, itemIds, droppedMetadata
+          })
+
           const rarities = crateRarities[crateTokenId] || {};
           const deterministicLodash = seedLodash(randomness);
 
