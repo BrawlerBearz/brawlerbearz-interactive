@@ -725,7 +725,7 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
 
     let landingPosition = spinByDistance + position * card;
 
-    const offset = Math.floor(Math.random() * ITEM_WIDTH) - (ITEM_WIDTH / 3);
+    const offset = Math.floor(Math.random() * (ITEM_WIDTH * .8)) - (ITEM_WIDTH / 2);
     landingPosition += offset;
 
     const object = {
