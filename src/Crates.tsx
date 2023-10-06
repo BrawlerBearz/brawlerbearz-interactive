@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import useSound from "use-sound";
-import { useMeasure } from '@react-hookz/web';
 import classnames from "classnames";
 import {
   useAccount,
@@ -24,7 +23,8 @@ import {
   parseAbiParameters,
   decodeEventLog,
 } from "viem";
-import { keyBy, shuffle } from "lodash";
+import { keyBy, shuffle, runInContext } from "lodash";
+import seedrandom from 'seedrandom'
 import { providers, Contract } from "ethers";
 import ConnectButton from "./components/ConnectButton";
 import { ALCHEMY_KEY } from "./lib/constants";
@@ -62,9 +62,7 @@ import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import Loading from "./components/Loading";
 import SandboxWrapper from "./components/SandboxWrapper";
 import PleaseConnectWallet from "./components/PleaseConnectWallet";
-import pawIcon from "./interactive/pawicon_white.png";
 import { BEARZ_SHOP_IMAGE_URI } from "./lib/blockchain";
-import { FaSkull as SkullIcon } from "react-icons/fa";
 
 const placeholderTypes = {
   CONSUMABLE: consumable,
@@ -152,6 +150,20 @@ const crateEstimates = {
 const ITEM_WIDTH = 80;
 
 const SPIN_DURATION = 11;
+
+const seedLodash = (seed: number | string) => {
+  // take a snapshot of the current Math.random() fn
+  const orig = Math.random
+  // replace Math.random with the seeded random
+  seedrandom(seed, { global: true })
+  // runInContext() creates a new lodash instance using the seeded Math.random()
+  // the context is a snapshot of the state of the global javascript environment, i.e. Math.random() updated to the seedrandom instance
+  const lodash = runInContext()
+  // restore the original Math.random() fn
+  Math.random = orig
+  // return the lodash instance with the seeded Math.random()
+  return lodash
+}
 
 const useSimulatedAccount = (simulatedAddress) => {
   return {
@@ -668,7 +680,6 @@ const ReadyAndOpen = ({ sounds, status, setStatus }) => {
 };
 
 const Reels = ({ status, sounds, setStatus, onClose }) => {
-  const [measurements, ref] = useMeasure();
   const [isMounted, setIsMounted] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [revealedState, setRevealedState] = useState([]);
@@ -708,17 +719,17 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
       order.indexOf(selectedTokenId) -
       Math.floor(shuffledCrateItems.length / 2);
 
-    const rows = 10; // Pass by sets
+    const rows = 12; // Pass by sets
     const card = ITEM_WIDTH; // 8px spacing + base item width
     const spinByDistance = rows * order.length * card;
 
     let landingPosition = spinByDistance + position * card;
 
-    const offset = Math.floor(Math.random() * ITEM_WIDTH - (ITEM_WIDTH / 2));
+    const offset = Math.floor(Math.random() * ITEM_WIDTH) - (ITEM_WIDTH / 3);
     landingPosition += offset;
 
     const object = {
-      x: Math.floor(Math.random() * 40) / 100,
+      x: Math.floor(Math.random() * 50) / 100,
       y: Math.floor(Math.random() * 20) / 100,
     };
 
@@ -766,12 +777,8 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
 
   const isDone = revealedState.every((item) => item.isRevealed);
 
-  const maxVisibleItems = measurements?.width / ITEM_WIDTH;
-
-  console.log(maxVisibleItems);
-
   return (
-    <div ref={ref} className="relative flex flex-col space-y-2 items-center justify-center h-full w-full">
+    <div className="relative flex flex-col space-y-2 items-center justify-center h-full w-full">
       <div
         className="relative flex flex-row w-full h-[250px] z-[1] items-center justify-center space-y-10"
         style={{
@@ -857,7 +864,7 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
                   }px, 0px, 0px)`,
                 }}
             >
-              {new Array(29).fill(0).map((item, index) => {
+              {new Array(20).fill(0).map((item, index) => {
                 return shuffledCrateItems.map((item, crateIndex) => (
                     <div
                         key={`${index}_${crateIndex}`}
@@ -1106,6 +1113,7 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
           ]);
 
           const rarities = crateRarities[crateTokenId] || {};
+          const deterministicLodash = seedLodash(randomness);
 
           setTimeout(() => {
             setStatus({
@@ -1124,10 +1132,10 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
                     ...metadata,
                   };
                 }),
-                droppedItems: itemIds.map((tokenId, index) => ({
+                droppedItems: deterministicLodash.shuffle(itemIds.map((tokenId, index) => ({
                   tokenId: Number(tokenId),
                   ...(droppedMetadata?.[index] || {}),
-                })),
+                }))),
                 randomness,
               },
             });
