@@ -34,16 +34,16 @@ const useCratesHistory = (address) => {
     const filter = await publicClient.createEventFilter({
       address: bearzSupplyCratesContractAddress,
       event: parseAbiItem(
-        "event CrateItemsDropped(uint256 indexed,address indexed,uint256,uint256,uint256[])",
+        "event CrateItemsDropped(uint256 indexed requestId,address indexed from,uint256 randomness,uint256 crateTokenId,uint256[] itemIds)",
       ),
       fromBlock: 18187304n,
       args: {
-        address: addr,
+        from: addr,
       },
     });
 
     const logs = await publicClient.getFilterLogs({ filter });
-
+    
     logs.reverse();
 
     setState((prev) => ({
