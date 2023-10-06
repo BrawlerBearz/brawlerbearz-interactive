@@ -796,7 +796,7 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
               style={{
                 left: "calc(50% - 88px)",
                 zIndex: revealedState.length - index,
-                top: -15 * (index + 1),
+                top: -25 - (3 * (index + 1)),
                 transform: "scale(1)",
                 ...(activeIndex === index
                   ? {
@@ -1411,30 +1411,30 @@ const CratesView = ({ isSimulated }) => {
                         <div className="flex flex-col items-center space-y-3 my-4">
                           {data?.isApproved && (
                               <div className="flex flex-row items-center justify-center space-x-2">
-                                <select
-                                    className="flex text-right h-[36px] px-2 rounded-full bg-main border-dark border-[1px] text-white cursor-pointer z-[1]"
-                                    value={amountToOpen}
-                                    onChange={(e) => {
-                                      setAmountToOpen(e.target.value);
-                                    }}
-                                >
-                                  {new Array(Number(crate?.balance))
-                                      .fill(0)
-                                      .map((i, index) => (
-                                          <option key={index} value={index + 1}>
-                                            {index + 1}
-                                          </option>
-                                      ))}
-                                </select>
+                                {/*<select*/}
+                                {/*    className="flex text-right h-[36px] px-2 rounded-full bg-main border-dark border-[1px] text-white cursor-pointer z-[1]"*/}
+                                {/*    value={amountToOpen}*/}
+                                {/*    onChange={(e) => {*/}
+                                {/*      setAmountToOpen(e.target.value);*/}
+                                {/*    }}*/}
+                                {/*>*/}
+                                {/*  {new Array(Number(crate?.balance))*/}
+                                {/*      .fill(0)*/}
+                                {/*      .map((i, index) => (*/}
+                                {/*          <option key={index} value={index + 1}>*/}
+                                {/*            {index + 1}*/}
+                                {/*          </option>*/}
+                                {/*      ))}*/}
+                                {/*</select>*/}
                                 <button
                                     onClick={async () => {
                                       sounds?.start();
                                       await actions?.onOpenCrate({
                                         crateTokenId: tokenId,
-                                        openAmount: amountToOpen,
+                                        openAmount: 1,
                                       });
                                     }}
-                                    className="relative flex items-center justify-center w-[calc(100%-60px] cursor-pointer z-[1]"
+                                    className="relative flex items-center justify-center w-full cursor-pointer z-[1]"
                                 >
                                   <img
                                       className="object-cover h-full w-full"
@@ -1442,7 +1442,7 @@ const CratesView = ({ isSimulated }) => {
                                       alt="button"
                                   />
                                   <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                                Open
+                                Burn & Open
                               </span>
                                 </button>
                               </div>
