@@ -59,7 +59,7 @@ const Experience = ({ isSimulated = false }) => {
                   <Loading />
                 ) : (
                   <div className="flex flex-row justify-center flex-wrap gap-4 px-6 md:px-10 pb-20">
-                    <span className="opacity-80">
+                    <span className="opacity-80 text-center">
                       Item management, crafting, and more coming soon...
                     </span>
                   </div>

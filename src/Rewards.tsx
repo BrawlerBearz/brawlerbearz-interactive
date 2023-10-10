@@ -113,7 +113,7 @@ const Experience = ({ isSimulated = false }) => {
                 <h1 className="text-xl mb-4">My Rewards</h1>
                 <div className="flex flex-col space-y-4 text-sm">
                   <div className="flex flex-row items-center space-x-2">
-                    <span>My Balance:</span>
+                    <span className="hidden md:flex">My Balance:</span>
                     <span>
                       {balance
                         ? parseFloat(formatEther(balance)).toFixed(6)

@@ -218,11 +218,11 @@ const ConsumablesView = ({ isSimulated }) => {
     <div
       className={classnames("flex flex-col relative text-white items-center", {
         "justify-center h-screen w-screen": !isConnected,
-        "h-full w-full": isConnected,
+        "h-full w-full overflow-x-hidden": isConnected,
       })}
     >
       {!isSimulated && (
-        <div className="flex flex-col h-full w-full">
+        <div className="flex flex-col w-full">
           <Header />
           {!isConnected && <PleaseConnectWallet />}
         </div>
