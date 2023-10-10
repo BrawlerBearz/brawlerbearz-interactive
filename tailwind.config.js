@@ -34,7 +34,7 @@ module.exports = {
         primary: ["PressStart2P", "sans-serif"],
       },
       screens: {
-        tablet: "340px",
+        tablet: "499px",
         laptop: "1024px",
         desktop: "1280px",
       },

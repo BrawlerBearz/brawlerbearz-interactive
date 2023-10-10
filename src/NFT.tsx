@@ -21,7 +21,6 @@ import {
   GiClothes as WardrobeIcon,
   GiJourney as QuestIcon,
   GiBattleAxe as BattleIcon,
-  GiWorld as WorldIcon,
 } from "react-icons/gi";
 import {
   FaSkull as SkullIcon,
@@ -29,13 +28,7 @@ import {
   FaExchangeAlt as ToggleIcon,
 } from "react-icons/fa";
 import { orderBy, last } from "lodash";
-import {
-  WagmiConfig,
-  createConfig,
-  useAccount,
-  useContractReads,
-  useContractRead,
-} from "wagmi";
+import { WagmiConfig, createConfig, useAccount, useContractRead } from "wagmi";
 import {
   getWalletClient,
   getPublicClient,
@@ -46,20 +39,11 @@ import {
   ConnectKitButton,
   getDefaultConfig,
 } from "connectkit";
-import { Bundler } from "@biconomy/bundler";
-import {
-  BiconomySmartAccount,
-  DEFAULT_ENTRYPOINT_ADDRESS,
-} from "@biconomy/account";
-import { BiconomyPaymaster, PaymasterMode } from "@biconomy/paymaster";
+import { BiconomySmartAccount } from "@biconomy/account";
+import { PaymasterMode } from "@biconomy/paymaster";
 import { ChainId } from "@biconomy/core-types";
 import { mainnet, polygon } from "viem/chains";
-import {
-  encodeFunctionData,
-  createPublicClient,
-  http,
-  formatEther,
-} from "viem";
+import { encodeFunctionData, createPublicClient, http } from "viem";
 import { generateRenderingOrder } from "./lib/renderer";
 import { BEARZ_SHOP_IMAGE_URI, getStatsByTokenId } from "./lib/blockchain";
 import { shortenAddress, formatNumber } from "./lib/formatting";
@@ -73,23 +57,18 @@ import buttonBackground from "./interactive/button.png";
 import twoDButton from "./interactive/toggle2d.png";
 import pixelButton from "./interactive/togglepixel.png";
 import logoImage from "./interactive/logo.gif";
-import neocityMap from "./interactive/map/neocity.png";
-import neocityShop from "./interactive/map/shop.png";
 import {
   bearzConsumableABI,
   bearzConsumableContractAddress,
-  bearzQuestABI,
-  bearzQuestContractAddress,
   bearzShopABI,
   bearzShopContractAddress,
   bearzStakeChildABI,
   bearzStakeChildContractAddress,
-  bearzTokenABI,
-  bearzTokenContractAddress,
 } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import { biconomyConfiguration } from "./lib/biconomy";
 import { consumableTypeToItemId } from "./lib/consumables";
+import useQuests from "./hooks/useQuests";
 
 const LoadingScreen = ({ children, tokenId }) => {
   const [progress, setProgress] = useState(25);
@@ -144,7 +123,6 @@ const LoadingScreen = ({ children, tokenId }) => {
 };
 
 const VIEWS = {
-  NEOCITY: "NEOCITY",
   WARDROBE: "WARDROBE",
   QUESTING: "QUESTING",
   BATTLE: "BATTLE",
@@ -536,46 +514,6 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
   };
 };
 
-const useQuests = ({ address }) => {
-  const { data, isLoading } = useContractReads({
-    contracts: [
-      {
-        address: bearzStakeChildContractAddress,
-        abi: bearzStakeChildABI,
-        chainId: polygon.id,
-        functionName: "getAllQuests",
-      },
-      {
-        address: bearzQuestContractAddress,
-        abi: bearzQuestABI,
-        chainId: polygon.id,
-        functionName: "getClaimableRewards",
-        args: [address],
-      },
-      {
-        address: bearzTokenContractAddress,
-        abi: bearzTokenABI,
-        chainId: polygon.id,
-        functionName: "balanceOf",
-        args: [address],
-      },
-    ],
-  });
-
-  return [
-    {
-      isLoading,
-      quests: orderBy(
-        data?.[0]?.result,
-        (quest) => fromUnixTime(quest?.activeUntil),
-        "desc",
-      ),
-      rewards: data?.[1]?.result,
-      balance: formatEther(data?.[2]?.result ?? 0n),
-    },
-  ];
-};
-
 const SelectedQuestView = ({ quest }) => {
   const { data: items, isLoading } = useContractRead({
     address: bearzShopContractAddress,
@@ -662,7 +600,7 @@ const SelectedQuestView = ({ quest }) => {
 };
 
 const QuestingView = ({ address, name, onBack }) => {
-  const [{ isLoading, quests, rewards, balance }] = useQuests({ address });
+  const [{ isLoading, quests }] = useQuests({ address });
   const [selectedQuest, setSelectedQuest] = useState(null);
   return (
     <SubView
@@ -1259,27 +1197,6 @@ const ActionMenu = ({
                 </p>
               )}
             </div>
-            <div className="hidden flex flex-col flex-shrink-0 w-full my-4 space-y-4">
-              <h3 className="text-sm opacity-80">Game</h3>
-              {isConnected && actionsLive && (
-                <button
-                  className="relative flex items-center justify-center w-[250px] cursor-pointer"
-                  type="button"
-                  onClick={() => {
-                    setViewState(VIEWS.NEOCITY);
-                  }}
-                >
-                  <img
-                    className="object-cover h-full w-full"
-                    src={buttonBackground}
-                    alt="button"
-                  />
-                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                    Neo City
-                  </span>
-                </button>
-              )}
-            </div>
             {isSimulated && (
               <p className="text-sm text-warn pt-6 pb-2">
                 Note: We have detected you are in an environment that cannot
@@ -1404,50 +1321,6 @@ const ActionMenu = ({
           name={name}
           onBack={() => setViewState(null)}
         />
-      )}
-      {viewState === VIEWS.NEOCITY && (
-        <SubView
-          title={
-            <div className="flex flex-row items-center space-x-3">
-              <span className="text-2xl">
-                <WorldIcon />
-              </span>
-              <span>Neo City</span>
-            </div>
-          }
-          subtitle={name}
-          onBack={() => {
-            setViewState(null);
-          }}
-          childClassName="!p-0"
-        >
-          <div className="flex flex-col items-center justify-center z-[1] mx-auto h-full w-full">
-            <div className="relative flex flex-col items-center justify-center w-full mx-auto aspect-square overflow-hidden">
-              <img
-                className="absolute top-0 left-0 w-full"
-                src={neocityMap}
-                alt="neo city map"
-              />
-              {/* Shop */}
-              <button
-                onClick={() => {
-                  window.alert("test");
-                }}
-              >
-                <div className="absolute top-[275px] left-[384px] w-[180px] h-[96px] z-[2] scale-[58%] cursor-pointer shadow-xs hover:shadow-hl">
-                  <div className="shadow-xs hover:shadow-inhl">
-                    <div className="absolute top-[123px] left-[89px] bg-accent h-[9px] w-[9px] animate-ping duration-500" />
-                    <img
-                      className="w-full h-full"
-                      src={neocityShop}
-                      alt="neo city shop"
-                    />
-                  </div>
-                </div>
-              </button>
-            </div>
-          </div>
-        </SubView>
       )}
       {viewState === VIEWS.BATTLE && (
         <SubView
@@ -1682,6 +1555,7 @@ const ImageRenderer = ({
   selected,
   onChange,
   onSelect,
+  isMobile,
 }) => {
   return isEditing ? (
     <div className="relative h-full w-full">
@@ -1697,10 +1571,12 @@ const ImageRenderer = ({
         alt="Background image"
       />
       <div
-        className={classnames("absolute top-0 left-0 z-[1]", {
-          "w-[calc(100%-80px)] h-[calc(100%-80px)] z-[1] ml-[40px]": !selected,
+        className={classnames("absolute left-0 z-[1]", {
+          "top-0": !isMobile,
+          "!ml-0 !w-full !bottom-[210px] h-[100vw]": isMobile && selected,
+          "w-[calc(100%-80px)] h-[calc(100%-80px)] z-[1] ml-[40px]": !isMobile && !selected,
           "w-[calc(100%-200px)] h-[calc(100%-200px)] z-[1] ml-[100px]":
-            selected,
+            !isMobile && selected,
         })}
       >
         {applyRenderingRules(images.slice(1)).map(({ path }, index) => (
@@ -1813,7 +1689,7 @@ const ImageRenderer = ({
             <button
               key={item}
               className={classnames(
-                "flex flex-shrink-0 items-center px-4 h-full duration-300",
+                "flex flex-shrink-0 items-center px-4 h-full duration-300 text-xs tablet:text-sm",
                 {
                   "opacity-100 text-accent": item === selected,
                   "opacity-80 hover:opacity-80 text-white": item !== selected,
@@ -2032,11 +1908,12 @@ const FullExperience = ({
   onTogglePixel,
   isSimulated,
   onRefresh,
+  isMobile,
 }) => {
   const [isShowingMenu, setIsShowingMenu] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [images, setImages] = useState([defaultImages]);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(LAYERS.BACKGROUND);
 
   const onReset = useCallback(() => {
     setImages([defaultImages]);
@@ -2107,6 +1984,30 @@ const FullExperience = ({
     setIsEditing(false);
   };
 
+  const imageRenderer = (
+    <ImageRenderer
+      images={last(images)}
+      isEditing={isEditing}
+      isShowingPixel={isShowingPixel}
+      selected={selected}
+      onSelect={setSelected}
+      onChange={swapOutImageType}
+      isMobile={isMobile}
+    />
+  );
+
+  const actionMenu = (
+    <ActionMenu
+      metadata={metadata}
+      isSimulated={isSimulated}
+      onRefresh={onRefresh}
+      onWardrobeExperience={() => {
+        onClose();
+        setIsEditing(true);
+      }}
+    />
+  );
+
   return (
     <div className="relative h-full w-full">
       {isEditing ? (
@@ -2122,61 +2023,35 @@ const FullExperience = ({
         />
       ) : (
         <Header
-          onToggleMenu={() => {
-            setIsShowingMenu((value) => !value);
-          }}
           isSynthEnabled={isSynthEnabled}
           isShowingPixel={isShowingPixel}
           onTogglePixel={onTogglePixel}
+          {...(isMobile
+            ? {}
+            : {
+                onToggleMenu: () => {
+                  setIsShowingMenu((value) => !value);
+                },
+              })}
         />
       )}
-      <ImageRenderer
-        images={last(images)}
-        isEditing={isEditing}
-        isShowingPixel={isShowingPixel}
-        selected={selected}
-        onSelect={setSelected}
-        onChange={swapOutImageType}
-      />
-      <Popup isOpen={isShowingMenu} onClose={onClose}>
-        <ActionMenu
-          metadata={metadata}
-          isSimulated={isSimulated}
-          onRefresh={onRefresh}
-          onWardrobeExperience={() => {
-            onClose();
-            setIsEditing(true);
-          }}
-        />
-      </Popup>
-    </div>
-  );
-};
-
-const MobileFullExperience = ({
-  metadata,
-  images,
-  isSynthEnabled,
-  isShowingPixel,
-  onTogglePixel,
-  isSimulated,
-  onRefresh,
-}) => {
-  return (
-    <div className="relative h-full w-full">
-      <Header
-        isSynthEnabled={isSynthEnabled}
-        isShowingPixel={isShowingPixel}
-        onTogglePixel={onTogglePixel}
-      />
-      <div className="aspect-square">
-        <ImageRenderer images={images} />
-      </div>
-      <ActionMenu
-        metadata={metadata}
-        isSimulated={isSimulated}
-        onRefresh={onRefresh}
-      />
+      {!isEditing ? (
+        !isMobile ? (
+          <>
+            {imageRenderer}
+            <Popup isOpen={isShowingMenu} onClose={onClose}>
+              {actionMenu}
+            </Popup>
+          </>
+        ) : (
+          <>
+            <div className="aspect-square">{imageRenderer}</div>
+            {actionMenu}
+          </>
+        )
+      ) : (
+        <div className="h-full w-full">{imageRenderer}</div>
+      )}
     </div>
   );
 };
@@ -2209,22 +2084,30 @@ const Experience = ({
     }
   }, [isSynthEnabled]);
 
+  const baseExperience = (
+    <FullExperience
+      metadata={metadata}
+      isSimulated={isSimulated}
+      isShowingPixel={isShowingPixel}
+      images={images}
+      isSynthEnabled={isSynthEnabled}
+      onTogglePixel={onTogglePixel}
+      onRefresh={onRefresh}
+    />
+  );
+
   return (
     <>
       <div className="h-screen w-screen bg-dark font-primary">
         <div className="hidden tablet:flex max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
-          <FullExperience
-            metadata={metadata}
-            isSimulated={isSimulated}
-            isShowingPixel={isShowingPixel}
-            images={images}
-            isSynthEnabled={isSynthEnabled}
-            onTogglePixel={onTogglePixel}
-            onRefresh={onRefresh}
-          />
+          {baseExperience}
         </div>
         {isSandboxed ? (
           <div className="flex tablet:hidden max-w-screen relative mx-auto aspect-square max-h-screen overflow-hidden">
+            {baseExperience}
+          </div>
+        ) : (
+          <div className="flex tablet:hidden relative h-full w-full overflow-auto">
             <FullExperience
               metadata={metadata}
               isSimulated={isSimulated}
@@ -2233,18 +2116,7 @@ const Experience = ({
               isSynthEnabled={isSynthEnabled}
               onTogglePixel={onTogglePixel}
               onRefresh={onRefresh}
-            />
-          </div>
-        ) : (
-          <div className="flex tablet:hidden relative h-full w-full overflow-auto">
-            <MobileFullExperience
-              metadata={metadata}
-              isSimulated={isSimulated}
-              isShowingPixel={isShowingPixel}
-              images={images}
-              isSynthEnabled={isSynthEnabled}
-              onTogglePixel={onTogglePixel}
-              onRefresh={onRefresh}
+              isMobile
             />
           </div>
         )}

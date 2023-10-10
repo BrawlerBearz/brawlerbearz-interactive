@@ -719,7 +719,7 @@ const GridView = ({ data, selected, setSelected }) => {
 
 const ListView = ({ data, selected, setSelected }) => {
   return (
-    <div className="flex flex-row flex-wrap justify-center gap-4 px-6 md:px-10 pt-6 pb-20">
+    <div className="flex flex-row flex-wrap justify-center gap-4 px-3 md:px-10 pt-6 pb-20">
       {data.map((item) => {
         const { metadata, stats, activity } = item;
         const { end, int, lck, level, nextXpLevel, str, xp } = stats || {};
@@ -730,7 +730,7 @@ const ListView = ({ data, selected, setSelected }) => {
           <div
             role="button"
             key={metadata?.tokenId}
-            className="flex flex-row w-[365px] items-center space-x-2 h-[120px]"
+            className="flex flex-row w-full max-w-[365px] items-center space-x-2 h-[120px]"
             onClick={() => {
               setSelected((prev) => ({
                 ...prev,
