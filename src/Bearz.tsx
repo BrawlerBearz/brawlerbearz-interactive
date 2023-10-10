@@ -19,12 +19,8 @@ import {
   GiJourney as QuestIcon,
 } from "react-icons/gi";
 import { keyBy, reduce, orderBy } from "lodash";
-import { BiconomyPaymaster, PaymasterMode } from "@biconomy/paymaster";
-import { Bundler } from "@biconomy/bundler";
-import {
-  BiconomySmartAccount,
-  DEFAULT_ENTRYPOINT_ADDRESS,
-} from "@biconomy/account";
+import { PaymasterMode } from "@biconomy/paymaster";
+import { BiconomySmartAccount } from "@biconomy/account";
 import { ChainId } from "@biconomy/core-types";
 import { createPublicClient, encodeFunctionData, http } from "viem";
 import { mainnet, polygon } from "viem/chains";
@@ -38,19 +34,18 @@ import Header from "./components/Header";
 import SandboxWrapper from "./components/SandboxWrapper";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import {
-  bearzContractAddress,
   bearzStakeABI,
   bearzStakeChildABI,
   bearzStakeChildContractAddress,
   bearzStakeContractAddress,
 } from "./lib/contracts";
-import { ALCHEMY_KEY, L2_ALCHEMY_KEY } from "./lib/constants";
-import { getStatsByTokenId } from "./lib/blockchain";
+import { L2_ALCHEMY_KEY } from "./lib/constants";
 import { formatNumber } from "./lib/formatting";
 import Loading from "./components/Loading";
 import PleaseConnectWallet from "./components/PleaseConnectWallet";
 import shadowImage from "./interactive/shadow.png";
 import { biconomyConfiguration } from "./lib/biconomy";
+import useBearzNFTs from "./hooks/useBearzNFTs";
 
 const useSimulatedAccount = () => {
   return {
@@ -556,83 +551,6 @@ const useNFTWrapped = ({ isSimulated }) => {
   };
 };
 
-const useBearzNFTs = (account) => {
-  const [state, setState] = useState({
-    data: [],
-    isLoading: true,
-    error: null,
-  });
-
-  const toParams = (p) =>
-    Object.keys(p)
-      .map((key) => (p[key] ? key + "=" + p[key] : ""))
-      .filter(Boolean)
-      .join("&");
-
-  const getAllUserNFTs = async (account, address) => {
-    if (!account) return [];
-
-    let nfts = [];
-
-    const params = {
-      owner: account,
-      "contractAddresses[]": [address],
-    };
-
-    if (!params.owner) {
-      return nfts;
-    }
-
-    let { ownedNfts, pageKey } = await fetch(
-      `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}/getNFTs/?${toParams(
-        params,
-      )}`,
-    ).then((res) => res.json());
-
-    nfts = nfts.concat(ownedNfts);
-
-    let currentPage = pageKey;
-
-    // Pagination needed
-    while (currentPage) {
-      const { ownedNfts: partialNfts, pageKey } = await fetch(
-        `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}/getNFTs/?${toParams(
-          {
-            ...params,
-            pageKey: currentPage,
-          },
-        )}`,
-      ).then((res) => res.json());
-      currentPage = pageKey;
-      nfts = nfts.concat(partialNfts);
-    }
-    return nfts;
-  };
-
-  const onRefresh = async (addr) => {
-    const nfts = await getAllUserNFTs(addr, bearzContractAddress);
-    const tokenIds = nfts.map((nft) => parseInt(nft?.id.tokenId, 16));
-    const data = await Promise.all(
-      tokenIds?.map((tokenId) => getStatsByTokenId(tokenId, {})),
-    );
-    setState((prev) => ({
-      ...prev,
-      isLoading: false,
-      error: null,
-      data,
-    }));
-  };
-
-  useEffect(() => {
-    onRefresh(account);
-  }, [account]);
-
-  return {
-    ...state,
-    onRefresh: onRefresh.bind(null, account),
-  };
-};
-
 const canStake = (i) => !i?.activity.isStaked;
 
 const canUnstake = (i) =>
@@ -1125,12 +1043,6 @@ const Experience = ({ isSimulated = false }) => {
     () => hasItemsSelected && selectedValues?.every(canStopTraining),
     [hasItemsSelected, selectedValues],
   );
-
-  console.log({
-    selected,
-    selectedValues,
-    data,
-  });
 
   return (
     <>

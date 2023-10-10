@@ -1114,13 +1114,6 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
             }),
           ]);
 
-          console.log({
-            crateItemIds,
-            crateMetadata,
-            itemIds,
-            droppedMetadata,
-          });
-
           const rarities = crateRarities[crateTokenId] || {};
           const deterministicLodash = seedLodash(randomness);
 
@@ -1429,7 +1422,7 @@ const CratesView = ({ isSimulated }) => {
                           </div>
                         </div>
                         <div className="flex flex-col items-center space-y-3 my-4">
-                          {data?.isApproved && (
+                          {data?.isApproved && crate?.balance > 0n && (
                             <div className="flex flex-row items-center justify-center space-x-2">
                               {/*<select*/}
                               {/*    className="flex text-right h-[36px] px-2 rounded-full bg-main border-dark border-[1px] text-white cursor-pointer z-[1]"*/}

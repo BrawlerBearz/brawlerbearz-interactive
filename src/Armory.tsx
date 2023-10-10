@@ -54,12 +54,14 @@ const Experience = ({ isSimulated = false }) => {
               <PleaseConnectWallet />
             ) : (
               <div className="flex flex-col w-full h-full items-center space-y-10">
-                <h1 className="text-lg">Crafting</h1>
+                <h1 className="text-lg">Armory</h1>
                 {isLoading ? (
                   <Loading />
                 ) : (
                   <div className="flex flex-row justify-center flex-wrap gap-4 px-6 md:px-10 pb-20">
-                    <span className="opacity-80">Coming soon...</span>
+                    <span className="opacity-80">
+                      Item management, crafting, and more coming soon...
+                    </span>
                   </div>
                 )}
               </div>
@@ -80,7 +82,7 @@ const Experience = ({ isSimulated = false }) => {
   );
 };
 
-const Crafting = () => (
+const Armory = () => (
   <SandboxWrapper
     isSandboxed={
       window.location !== window.parent.location ||
@@ -91,4 +93,4 @@ const Crafting = () => (
   />
 );
 
-export default Crafting;
+export default Armory;

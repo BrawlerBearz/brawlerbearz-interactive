@@ -897,9 +897,18 @@ const completed2Ds = [
 
 const SYNTH_ITEM_ID = 211;
 
-export const generateRenderingOrder = ({ dna, isShowingPixel }) => {
+export const generateRenderingOrder = ({
+  consumables,
+  dna,
+  isShowingPixel,
+}) => {
   const fields = dnaToFields(dna);
-  const isSynthEnabled = fields?.miscId === SYNTH_ITEM_ID;
+
+  const isStimulated =
+    consumables?.find((item) => item?.trait_type === "2D Stimulant")?.value ===
+    "ACTIVE";
+
+  const isSynthEnabled = isStimulated || fields?.miscId === SYNTH_ITEM_ID;
   const isRendering2d = isSynthEnabled && !isShowingPixel;
 
   const basePath = isRendering2d

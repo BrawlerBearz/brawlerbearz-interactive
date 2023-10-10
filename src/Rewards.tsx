@@ -87,10 +87,6 @@ const Experience = ({ isSimulated = false }) => {
   const isLoading = false;
   const isLoadingBiconomy = false;
 
-  console.log({
-    balance,
-  });
-
   return (
     <>
       <div
@@ -127,7 +123,9 @@ const Experience = ({ isSimulated = false }) => {
                   </div>
                   <hr />
                   <div className="flex flex-row justify-center flex-wrap gap-4 px-6 md:px-10 pb-20">
-                    <span className="opacity-80">Coming soon...</span>
+                    <span className="opacity-80">
+                      Claim item and credit rewards soon...
+                    </span>
                   </div>
                 </div>
               </div>

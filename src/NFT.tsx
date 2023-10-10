@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import classnames from "classnames";
 import { useParams } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -76,6 +76,8 @@ import logoImage from "./interactive/logo.gif";
 import neocityMap from "./interactive/map/neocity.png";
 import neocityShop from "./interactive/map/shop.png";
 import {
+  bearzConsumableABI,
+  bearzConsumableContractAddress,
   bearzQuestABI,
   bearzQuestContractAddress,
   bearzShopABI,
@@ -294,6 +296,88 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
   return {
     ...account,
     actions: {
+      onDeactivate: async ({ tokenId, itemTokenId }) => {
+        try {
+          const publicClient = getPublicClient({
+            chainId: mainnet.id,
+          });
+
+          const { request } = await publicClient.simulateContract({
+            address: bearzConsumableContractAddress,
+            abi: bearzConsumableABI,
+            functionName: "deactivate",
+            args: [tokenId, itemTokenId],
+            account: {
+              address: signer.getAddress(),
+            },
+          });
+
+          const walletClient = await getWalletClient({
+            chainId: mainnet.id,
+          });
+
+          const hash = await walletClient.writeContract(request);
+
+          await toast.promise(
+            waitForTransaction({
+              hash,
+            }),
+            {
+              pending: "De-activating consumable",
+              success: "Consumable deactivated!",
+              error: "There was an error",
+            },
+          );
+
+          onRefresh();
+
+          return true;
+        } catch (e) {
+          console.log(e);
+          toast.error("There was an error. Please try again!");
+        }
+      },
+      onActivate: async ({ tokenId, itemTokenId }) => {
+        try {
+          const publicClient = getPublicClient({
+            chainId: mainnet.id,
+          });
+
+          const { request } = await publicClient.simulateContract({
+            address: bearzConsumableContractAddress,
+            abi: bearzConsumableABI,
+            functionName: "activate",
+            args: [tokenId, itemTokenId],
+            account: {
+              address: signer.getAddress(),
+            },
+          });
+
+          const walletClient = await getWalletClient({
+            chainId: mainnet.id,
+          });
+
+          const hash = await walletClient.writeContract(request);
+
+          await toast.promise(
+            waitForTransaction({
+              hash,
+            }),
+            {
+              pending: "Activating consumable",
+              success: "Consumable activated!",
+              error: "There was an error",
+            },
+          );
+
+          onRefresh();
+
+          return true;
+        } catch (e) {
+          console.log(e);
+          toast.error("There was an error. Please try again!");
+        }
+      },
       onQuest: async ({ tokenIds, questTypeIds, tokenAmount }) => {
         try {
           const smartAccount = await biconomyAccount.init();
@@ -673,6 +757,10 @@ const QuestingView = ({ address, name, onBack }) => {
   );
 };
 
+const consumableTypeToItemId = {
+  "2D Stimulant": 300,
+};
+
 const ActionMenu = ({
   metadata,
   isSimulated,
@@ -694,7 +782,7 @@ const ActionMenu = ({
     activity,
   } = metadata || {};
 
-  const { name, ownerOf, tokenId, image } = onChainMetadata || {};
+  const { name, ownerOf, tokenId, image, consumables } = onChainMetadata || {};
 
   const { level, xp, nextXpLevel } = stats || {};
 
@@ -1123,6 +1211,56 @@ const ActionMenu = ({
                   </button>
                 )}
               </div>
+            </div>
+            <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
+              <h3 className="text-sm opacity-80">Consumed Item(s)</h3>
+              {consumables.length > 0 ? (
+                <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
+                  {consumables.map((item) => {
+                    const isActive = item?.value === "ACTIVE";
+                    return (
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <span className="text-sm text-accent">
+                          {item?.trait_type}
+                        </span>
+                        <button
+                          className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                          type="button"
+                          title={`Consumable status: ${item?.value}`}
+                          onClick={async () => {
+                            const itemTokenId =
+                              consumableTypeToItemId[item.trait_type];
+                            if (isActive) {
+                              await actions?.onDeactivate({
+                                tokenId,
+                                itemTokenId,
+                              });
+                            } else {
+                              await actions?.onActivate({
+                                tokenId,
+                                itemTokenId,
+                              });
+                            }
+                          }}
+                        >
+                          <img
+                            className="object-cover h-full w-full"
+                            src={buttonBackground}
+                            alt="button"
+                          />
+                          <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                            {isActive ? "Disable" : "Enable"}
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p>
+                  <p className="text-sm">No consumables</p>
+                </p>
+              )}
             </div>
             <div className="hidden flex flex-col flex-shrink-0 w-full my-4 space-y-4">
               <h3 className="text-sm opacity-80">Game</h3>
@@ -2054,10 +2192,15 @@ const Experience = ({
 }) => {
   const [isShowingPixel, setIsShowingPixel] = useState(true);
 
-  const { images, isSynthEnabled } = generateRenderingOrder({
-    dna: metadata?.metadata?.dna,
-    isShowingPixel,
-  });
+  const { images, isSynthEnabled } = useMemo(
+    () =>
+      generateRenderingOrder({
+        consumables: metadata?.metadata?.consumables,
+        dna: metadata?.metadata?.dna,
+        isShowingPixel,
+      }),
+    [JSON.stringify(metadata?.metadata?.consumables), isShowingPixel],
+  );
 
   const onTogglePixel = () => {
     setIsShowingPixel((value) => !value);

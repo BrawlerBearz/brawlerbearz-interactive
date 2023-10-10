@@ -16,7 +16,7 @@ const NFT = React.lazy(() => import("./NFT"));
 const Crates = React.lazy(() => import("./Crates"));
 const CratesHistory = React.lazy(() => import("./CratesHistory"));
 const Bearz = React.lazy(() => import("./Bearz"));
-const Crafting = React.lazy(() => import("./Crafting"));
+const Armory = React.lazy(() => import("./Armory"));
 const Consumables = React.lazy(() => import("./Consumables"));
 const Rewards = React.lazy(() => import("./Rewards"));
 const Connect = React.lazy(() => import("./Connect"));
@@ -45,7 +45,7 @@ const App = () => {
     >
       <Routes>
         <Route path="bearz" element={<Bearz />} />
-        <Route path="crafting" element={<Crafting />} />
+        <Route path="armory" element={<Armory />} />
         <Route path="consumables" element={<Consumables />} />
         <Route path="rewards" element={<Rewards />} />
         <Route path="crates/history" element={<CratesHistory />} />
