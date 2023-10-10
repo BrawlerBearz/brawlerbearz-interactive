@@ -4,12 +4,12 @@ import { ToastContainer } from "react-toastify";
 import { useAccount } from "wagmi";
 import { Link } from "react-router-dom";
 import { MdArrowBack as BackIcon } from "react-icons/md";
+import { createPublicClient, decodeEventLog, http, parseAbiItem } from "viem";
+import { mainnet } from "viem/chains";
 import {
   bearzSupplyCratesABI,
   bearzSupplyCratesContractAddress,
 } from "./lib/contracts";
-import { createPublicClient, decodeEventLog, http, parseAbiItem } from "viem";
-import { mainnet } from "viem/chains";
 import { ALCHEMY_KEY } from "./lib/constants";
 import Header from "./components/Header";
 import Loading from "./components/Loading";

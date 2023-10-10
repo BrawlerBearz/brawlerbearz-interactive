@@ -1,326 +1,43 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react";
-import { ToastContainer, toast } from "react-toastify";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import React, { useMemo, useState } from "react";
+import { ToastContainer } from "react-toastify";
+import { Link } from "react-router-dom";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import classnames from "classnames";
-import { useAccount, useWalletClient, useContractRead } from "wagmi";
-import { mainnet } from "viem/chains";
+import { useAccount } from "wagmi";
 import { MdArrowBack as BackIcon, MdLock as LockIcon } from "react-icons/md";
-import { createPublicClient, http } from "viem";
-import { keyBy } from "lodash";
-import { providers, Contract } from "ethers";
 import Header from "./components/Header";
-import { ALCHEMY_KEY } from "./lib/constants";
 import buttonBackground from "./interactive/button.png";
 import burningCrate from "./interactive/crates/burning.gif";
-import {
-  bearzShopABI,
-  bearzShopContractAddress,
-  bearzQuickSale2Address,
-  bearzQuickSale2ABI,
-  bearzConsumableContractAddress,
-  bearzConsumableABI,
-} from "./lib/contracts";
-import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import SandboxWrapper from "./components/SandboxWrapper";
 import PleaseConnectWallet from "./components/PleaseConnectWallet";
 import { BEARZ_SHOP_IMAGE_URI } from "./lib/blockchain";
 import useBearzNFTs from "./hooks/useBearzNFTs";
 import shadowImage from "./interactive/shadow.png";
-import { formatNumber } from "./lib/formatting";
 import {
   GiJourney as QuestIcon,
   GiStrongMan as TrainingIcon,
 } from "react-icons/gi";
-import { waitForTransaction } from "@wagmi/core";
-import logoImage from "./interactive/logo.gif";
+import { consumableTypeToItemId } from "./lib/consumables";
+import useConsumables from "./hooks/useConsumables";
 
-const useSimulatedAccount = (simulatedAddress) => {
-  return {
-    address: simulatedAddress,
-    isConnected: true,
-    isDisconnected: false,
-    status: "connected",
-  };
-};
+const ListView = ({ data, selected, setSelected, consumableTokenId }) => {
+  const selectable = useMemo(() => {
+    return data?.filter((item) => {
+      const foundIndex = item?.metadata?.consumables?.findIndex(
+        (consumable) =>
+          Number(consumableTypeToItemId[consumable.trait_type]) ===
+          Number(consumableTokenId),
+      );
+      return foundIndex === -1;
+    }, []);
+  }, [consumableTokenId]);
 
-const getUserConsumables = async (address, tokenIds) => {
-  const ethClient = createPublicClient({
-    chain: mainnet,
-    transport: http(`https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`),
-  });
-
-  const [balances, items] = await Promise.all([
-    ethClient.readContract({
-      address: bearzShopContractAddress,
-      abi: bearzShopABI,
-      functionName: "balanceOfBatch",
-      args: [tokenIds.map((_) => address), tokenIds],
-    }),
-    ethClient.readContract({
-      address: bearzShopContractAddress,
-      abi: bearzShopABI,
-      functionName: "getMetadataBatch",
-      args: [tokenIds],
-    }),
-  ]);
-
-  const lookupItems = keyBy(
-    tokenIds.map((tokenId, index) => ({
-      tokenId,
-      item: items[index],
-    })),
-    "tokenId",
-  );
-
-  const lookupBalances = keyBy(
-    tokenIds.map((tokenId, index) => ({
-      tokenId,
-      balance: balances[index],
-    })),
-    "tokenId",
-  );
-
-  return tokenIds.reduce((acc, tokenId) => {
-    acc[tokenId] = {
-      ...lookupItems[tokenId],
-      ...lookupBalances[tokenId],
-    };
-    return acc;
-  }, {});
-};
-
-const CONSUMABLE_TOKEN_IDS = [300];
-
-function walletClientToSigner(walletClient) {
-  const { account, chain, transport } = walletClient;
-  const network = {
-    chainId: chain.id,
-    name: chain.name,
-    ensAddress: chain.contracts?.ensRegistry?.address,
-  };
-  const provider = new providers.Web3Provider(transport, network);
-  return provider.getSigner(account.address);
-}
-
-function useEthersSigner({ chainId }: { chainId?: number } = {}) {
-  const { data: walletClient } = useWalletClient({ chainId });
-  return React.useMemo(
-    () => (walletClient ? walletClientToSigner(walletClient) : undefined),
-    [walletClient],
-  );
-}
-
-const useConsumables = ({ isSimulated, overrideAddress }) => {
-  const navigate = useNavigate();
-
-  const [consumables, setConsumables] = useState(null);
-  const [isApproving, setApproving] = useState(false);
-
-  const [isConsuming, setIsConsuming] = useState(false);
-  const [consumingContext, setConsumingContext] = useState(null);
-
-  const [isBuying, setBuying] = useState(false);
-  const [buyingContext, setBuyingContext] = useState(null);
-
-  const account = !isSimulated
-    ? useAccount()
-    : useSimulatedAccount(overrideAddress);
-
-  const { isLoading } = useSimpleAccountOwner();
-  const signer = useEthersSigner();
-
-  const { data: isApproved, refetch } = useContractRead({
-    address: bearzShopContractAddress,
-    abi: bearzShopABI,
-    functionName: "isApprovedForAll",
-    args: [account?.address, bearzConsumableContractAddress],
-  });
-
-  const onRefresh = async (address) => {
-    setConsumables(await getUserConsumables(address, CONSUMABLE_TOKEN_IDS));
-  };
-
-  useEffect(() => {
-    (async function () {
-      if (account?.address) {
-        await onRefresh(account?.address);
-      }
-    })();
-  }, [account?.address, signer?.provider]);
-
-  if (isSimulated || isLoading || !signer?.provider) {
-    return account;
-  }
-
-  return {
-    ...account,
-    isApproving,
-    data: {
-      consumables,
-      isConsuming,
-      isApproved,
-      consumingContext,
-      isBuying,
-      buyingContext,
-    },
-    actions: {
-      onRefresh: onRefresh.bind(null, account?.address),
-      onApproveConsumable: async () => {
-        try {
-          const feeData = await signer.provider.getFeeData();
-
-          const contract = new Contract(
-            bearzShopContractAddress,
-            bearzShopABI,
-            signer,
-          );
-
-          const gasLimit = await contract.estimateGas.setApprovalForAll(
-            bearzConsumableContractAddress,
-            true,
-          );
-
-          setApproving(true);
-
-          const tx = await contract.setApprovalForAll(
-            bearzConsumableContractAddress,
-            true,
-            {
-              gasLimit: gasLimit.mul(100).div(80),
-              maxFeePerGas: feeData.maxFeePerGas,
-              maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-            },
-          );
-
-          await tx.wait();
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-        } finally {
-          setApproving(false);
-          refetch();
-        }
-      },
-      onBuyConsumables: async ({ amount }) => {
-        try {
-          const feeData = await signer.provider.getFeeData();
-
-          const contract = new Contract(
-            bearzQuickSale2Address,
-            bearzQuickSale2ABI,
-            signer,
-          );
-
-          const ethPrice = await contract.ethPrice();
-
-          const gasLimit = await contract.estimateGas.buy(amount, {
-            value: ethPrice.mul(amount),
-          });
-
-          setBuying(true);
-          setBuyingContext(`Check wallet for transaction...`);
-
-          const tx = await contract.buy(amount, {
-            value: ethPrice.mul(amount),
-            gasLimit,
-            maxFeePerGas: feeData.maxFeePerGas,
-          });
-
-          setBuyingContext(`Buying ${amount} consumable(s)...`);
-
-          await tx.wait();
-
-          navigate(`/consumables`);
-
-          toast.success(`Successfully bought ${amount} consumable(s)!`);
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-        } finally {
-          setBuying(false);
-          setBuyingContext(null);
-        }
-      },
-      onConsume: async ({ tokenId, itemTokenId }) => {
-        try {
-          const feeData = await signer.provider.getFeeData();
-
-          const contract = new Contract(
-            bearzConsumableContractAddress,
-            bearzConsumableABI,
-            signer,
-          );
-
-          const gasLimit = await contract.estimateGas.consume(
-            tokenId,
-            itemTokenId,
-            true,
-          );
-
-          setIsConsuming(true);
-          setConsumingContext(`Check wallet for transaction...`);
-
-          const tx = await contract.consume(tokenId, itemTokenId, true, {
-            gasLimit: gasLimit.mul(100).div(80),
-            maxFeePerGas: feeData.maxFeePerGas,
-            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
-          });
-
-          await toast.promise(tx.wait(), {
-            pending: "Burning consumable(s)...",
-            success: `Successfully applied consumable to ${tokenId}!`,
-            error: "There was an error",
-          });
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-        } finally {
-          setIsConsuming(false);
-          setConsumingContext(null);
-        }
-      },
-    },
-  };
-};
-
-const WaitingForBurn = ({ onClose }) => (
-  <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
-    <div className="flex flex-col text-center text-white py-4 items-center justify-center space-y-4">
-      <img
-        src={burningCrate}
-        className="h-[245px] w-[179px]"
-        alt="burning card"
-      />
-      <p className="text-accent text-sm">Burning consumable(s)...</p>
-      <button
-        onClick={onClose}
-        className="relative flex items-center justify-center w-[250px] cursor-pointer"
-      >
-        <img
-          className="object-cover h-full w-full"
-          src={buttonBackground}
-          alt="button"
-        />
-        <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-          Close
-        </span>
-      </button>
-    </div>
-  </div>
-);
-
-const ListView = ({ data, selected, setSelected }) => {
   return (
-    <div className="flex flex-row flex-wrap justify-center gap-4 px-6 md:px-10 pt-6 pb-20">
-      {data.map((item) => {
+    <div className="flex flex-row flex-wrap justify-center gap-4 px-3 md:px-10 pt-6 pb-20">
+      {selectable.map((item) => {
         const { metadata, stats, activity } = item;
-        const { end, int, lck, level, nextXpLevel, str, xp } = stats || {};
+        const { end, int, lck, str } = stats || {};
         const { isStaked, training, questing } = activity;
         const isSelected = Number(selected) === Number(metadata?.tokenId);
 
@@ -328,78 +45,80 @@ const ListView = ({ data, selected, setSelected }) => {
           <div
             role="button"
             key={metadata?.tokenId}
-            className="flex flex-row w-[365px] items-center space-x-2 h-[120px]"
+            className="flex flex-row w-full max-w-[365px] items-center space-x-2 h-[160px]"
             onClick={() => {
               setSelected(isSelected ? null : metadata?.tokenId);
             }}
           >
             <div
               className={classnames(
-                "cursor-pointer relative flex flex-row w-full h-full bg-dark shadow-pixel hover:shadow-pixelAccent shadow-xs overflow-hidden transition ease-in duration-200",
+                "cursor-pointer relative flex flex-col w-full h-full bg-dark shadow-pixel hover:shadow-pixelAccent shadow-xs overflow-hidden transition ease-in duration-200",
                 {
                   "shadow-pixelAccent": isSelected,
                 },
               )}
             >
-              <div className="relative z-[1]">
-                <LazyLoadImage
-                  alt={metadata.dna}
-                  height={120}
-                  src={metadata.image}
-                  placeholderSrc={shadowImage}
-                  width={120}
-                />
-                <div className="flex w-full absolute top-0 left-0 z-[2]">
-                  <div className="flex items-center justify-center bg-dark2 shadow-pixel text-[10px] text-white px-2">
-                    LVL {level || 0}
-                  </div>
+              <div className="flex flex-row items-center w-full h-[85px] border-main border-b-[2px]">
+                <div className="relative z-[1]">
+                  <LazyLoadImage
+                    alt={metadata.dna}
+                    height={85}
+                    src={metadata.image}
+                    placeholderSrc={shadowImage}
+                    width={85}
+                  />
                 </div>
-                <div className="absolute bottom-0 flex flex-row w-full">
-                  <div className="flex border border-1 border-accent bg-dark2 h-[8px] w-full overflow-hidden">
-                    <div
-                      title={`Next Level: ${formatNumber(nextXpLevel)} XP`}
-                      className="z-[1] bg-accent h-full duration-300"
-                      style={{
-                        width: `${(xp / nextXpLevel) * 100}%`,
-                      }}
-                    />
+                <div className="flex flex-col w-full h-full px-3 py-2">
+                  <div className="flex flex-row items-center justify-between mb-1">
+                    <h2 className="relative text-xs md:text-sm truncate">
+                      {metadata.name}
+                    </h2>
+                    {(isStaked ||
+                      questing?.isQuesting ||
+                      training?.isTraining) && (
+                      <div className="flex flex-row items-center space-x-2 flex-shrink-0 text-accent">
+                        {isStaked && <LockIcon />}
+                        {questing?.isQuesting && <QuestIcon />}
+                        {training?.isTraining && <TrainingIcon />}
+                      </div>
+                    )}
                   </div>
-                  <span className="hidden text-[8px] text-accent relative top-[2px] left-[2px] h-[8px]">
-                    {level + 1}
-                  </span>
+                  <div className="flex flex-row items-center w-full justify-between text-xs space-x-2 md:space-x-3 my-1 mb-4">
+                    <div className="flex flex-col space-y-1 justify-center">
+                      <span className="text-accent2">STR</span>
+                      <span className="text-xs">{str || 0}</span>
+                    </div>
+                    <div className="flex flex-col space-y-1 justify-center">
+                      <span className="text-accent2">END</span>
+                      <span className="text-xs">{end || 0}</span>
+                    </div>
+                    <div className="flex flex-col space-y-1 justify-center">
+                      <span className="text-accent2">INT</span>
+                      <span className="text-xs">{int || 0}</span>
+                    </div>
+                    <div className="flex flex-col space-y-1 justify-center">
+                      <span className="text-accent2">LCK</span>
+                      <span className="text-xs">{lck || 0}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col w-full px-3 py-2">
-                <div className="flex flex-row items-center justify-between mb-1">
-                  <h2 className="relative text-sm truncate">{metadata.name}</h2>
-                  {(isStaked ||
-                    questing?.isQuesting ||
-                    training?.isTraining) && (
-                    <div className="flex flex-row items-center space-x-2 flex-shrink-0 text-accent">
-                      {isStaked && <LockIcon />}
-                      {questing?.isQuesting && <QuestIcon />}
-                      {training?.isTraining && <TrainingIcon />}
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-row items-center w-full justify-between text-xs space-x-3 mb-4">
-                  <div className="flex flex-col space-y-1 justify-center">
-                    <span className="text-accent2">STR</span>
-                    <span className="text-xs">{str || 0}</span>
-                  </div>
-                  <div className="flex flex-col space-y-1 justify-center">
-                    <span className="text-accent2">END</span>
-                    <span className="text-xs">{end || 0}</span>
-                  </div>
-                  <div className="flex flex-col space-y-1 justify-center">
-                    <span className="text-accent2">INT</span>
-                    <span className="text-xs">{int || 0}</span>
-                  </div>
-                  <div className="flex flex-col space-y-1 justify-center">
-                    <span className="text-accent2">LCK</span>
-                    <span className="text-xs">{lck || 0}</span>
-                  </div>
-                </div>
+              <div className="flex flex-row items-center h-[75px] w-full px-2">
+                {metadata?.consumables.length ? (
+                  metadata?.consumables?.map((consumable) => (
+                    <img
+                      className="h-[55px]"
+                      src={`${BEARZ_SHOP_IMAGE_URI}${
+                        consumableTypeToItemId[consumable.trait_type]
+                      }.png`}
+                      alt={consumable.trait_type}
+                    />
+                  ))
+                ) : (
+                  <p className="flex items-center justify-center text-xs opacity-80 w-full">
+                    Nothing consumed yet!
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -409,7 +128,13 @@ const ListView = ({ data, selected, setSelected }) => {
   );
 };
 
-const BearzSelector = ({ address, onClose, onSubmit }) => {
+const BearzSelector = ({
+  address,
+  consumable,
+  onClose,
+  onSubmit,
+  consumableTokenId,
+}) => {
   const [selected, setSelected] = useState(null);
   const { data } = useBearzNFTs(address);
 
@@ -425,13 +150,17 @@ const BearzSelector = ({ address, onClose, onSubmit }) => {
       </div>
       <div className="flex flex-col space-y-3 py-[65px]">
         <div className="flex flex-col flex-shrink-0 items-center justify-center w-full gap-4 px-6 md:px-10">
-          <h1 className="text-white text-2xl text-center">
-            Select bear for consumable
+          <h1 className="text-white text-base md:text-xl text-center">
+            Select bear for <br />{" "}
+            <span className="text-accent">{consumable?.item?.name}</span>
           </h1>
         </div>
-        <div className="flex flex-wrap w-full h-full gap-6 overflow-x-auto pt-[65px]">
-          <ListView data={data} selected={selected} setSelected={setSelected} />
-        </div>
+        <ListView
+          data={data}
+          selected={selected}
+          setSelected={setSelected}
+          consumableTokenId={consumableTokenId}
+        />
         {selected && (
           <div className="flex flex-row items-center justify-center fixed z-[10000] bottom-0 w-full text-base bg-dark2 border-t-[3px] border-accent">
             <div
@@ -477,7 +206,7 @@ const BearzSelector = ({ address, onClose, onSubmit }) => {
 const ConsumablesView = ({ isSimulated }) => {
   const [viewConsumableId, setViewConsumableId] = useState(null);
   const [amountToBuy, setAmountToBuy] = useState(1);
-  const [bearzSelectorId, setBearzSelectorId] = useState(null);
+  const [consumableItemId, setConsumableItemId] = useState(null);
   const { address, isConnected } = useAccount();
 
   const { data, actions, sounds, isApproving } = useConsumables({
@@ -499,21 +228,24 @@ const ConsumablesView = ({ isSimulated }) => {
         </div>
       )}
       {isConnected && (
-        <div className="flex flex-col h-screen w-screen space-y-4">
-          {bearzSelectorId && (
+        <div className="flex flex-col h-full w-full space-y-4">
+          {consumableItemId && (
             <BearzSelector
               address={address}
+              consumable={data?.consumables?.[consumableItemId]}
+              consumableTokenId={consumableItemId}
               onClose={() => {
-                setBearzSelectorId(null);
+                setConsumableItemId(null);
               }}
               onSubmit={async (selectedTokenId) => {
                 const success = await actions?.onConsume({
                   tokenId: selectedTokenId,
-                  itemTokenId: bearzSelectorId,
+                  itemTokenId: consumableItemId,
                 });
 
                 if (success) {
-                  setBearzSelectorId(null);
+                  setConsumableItemId(null);
+                  await actions?.onRefresh();
                 }
               }}
             />
@@ -613,7 +345,7 @@ const ConsumablesView = ({ isSimulated }) => {
             </div>
           )}
           {data?.consumables ? (
-            <div className="flex flex-col items-center justify-center space-y-10">
+            <div className="flex flex-col w-full h-full items-center space-y-10">
               <div className="flex flex-row items-center space-x-4">
                 <h1 className="text-lg">Your Consumables</h1>
               </div>
@@ -664,7 +396,7 @@ const ConsumablesView = ({ isSimulated }) => {
                     return (
                       <div
                         key={tokenId}
-                        className="relative flex flex-col items-center justify-center w-[270px]"
+                        className="relative flex flex-col items-center justify-center w-[240px]"
                       >
                         <div className="relative flex w-full h-full">
                           <img
@@ -680,7 +412,7 @@ const ConsumablesView = ({ isSimulated }) => {
                             <div className="flex flex-row items-center justify-center space-x-2">
                               <button
                                 onClick={() => {
-                                  setBearzSelectorId(tokenId);
+                                  setConsumableItemId(tokenId);
                                 }}
                                 className="relative flex items-center justify-center w-full cursor-pointer z-[1]"
                               >

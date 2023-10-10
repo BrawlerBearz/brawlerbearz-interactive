@@ -89,6 +89,7 @@ import {
 } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import { biconomyConfiguration } from "./lib/biconomy";
+import { consumableTypeToItemId } from "./lib/consumables";
 
 const LoadingScreen = ({ children, tokenId }) => {
   const [progress, setProgress] = useState(25);
@@ -757,10 +758,6 @@ const QuestingView = ({ address, name, onBack }) => {
   );
 };
 
-const consumableTypeToItemId = {
-  "2D Stimulant": 300,
-};
-
 const ActionMenu = ({
   metadata,
   isSimulated,
@@ -1215,16 +1212,16 @@ const ActionMenu = ({
             <div className="flex flex-col flex-shrink-0 w-full my-4 space-y-4">
               <h3 className="text-sm opacity-80">Consumed Item(s)</h3>
               {consumables.length > 0 ? (
-                <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-4">
+                <div className="flex flex-col flex-shrink-0 w-full gap-4">
                   {consumables.map((item) => {
                     const isActive = item?.value === "ACTIVE";
                     return (
-                      <div className="flex flex-col items-center justify-center space-y-2">
+                      <div className="flex flex-row items-center space-x-2">
                         <span className="text-sm text-accent">
                           {item?.trait_type}
                         </span>
                         <button
-                          className="relative flex items-center justify-center w-[250px] cursor-pointer"
+                          className="relative flex items-center justify-center w-[180px] cursor-pointer"
                           type="button"
                           title={`Consumable status: ${item?.value}`}
                           onClick={async () => {
