@@ -86,6 +86,7 @@ import {
   bearzTokenContractAddress,
 } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
+import { biconomyConfiguration } from "./lib/biconomy";
 
 const LoadingScreen = ({ children, tokenId }) => {
   const [progress, setProgress] = useState(25);
@@ -230,22 +231,9 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
     return account;
   }
 
-  const biconomyAccount = new BiconomySmartAccount({
-    signer,
-    chainId: ChainId.POLYGON_MAINNET,
-    rpcUrl: `https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`,
-    paymaster: new BiconomyPaymaster({
-      paymasterUrl:
-        "https://paymaster.biconomy.io/api/v1/137/pQ4YfSfVI.5f85bc99-110a-4594-9629-5f5c5ddacded",
-    }),
-    bundler: new Bundler({
-      bundlerUrl:
-        "https://bundler.biconomy.io/api/v2/137/BB897hJ89.dd7fopYh-iJkl-jI89-af80-6877f74b7Fcg",
-      chainId: ChainId.POLYGON_MAINNET,
-      entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-    }),
-    entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-  });
+  const biconomyAccount = new BiconomySmartAccount(
+    biconomyConfiguration(signer, ChainId.POLYGON_MAINNET),
+  );
 
   const checkSmartWalletAssociation = async ({ smartAccount }) => {
     const polygonClient = createPublicClient({
@@ -374,16 +362,34 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
 
           const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
 
-          await toast.promise(userOpResponse.wait(), {
-            pending: "Calling bear on the intercom...please wait...",
-            success: "Bear left training.",
-            error: "There was an error",
+          const toastId = toast.info(
+            "Calling bear on the intercom...please wait...",
+            { autoClose: false },
+          );
+
+          const receipt = await userOpResponse.wait();
+
+          if (receipt?.success === "false") {
+            toast.update(toastId, {
+              type: toast.TYPE.ERROR,
+              render: "There was an error",
+            });
+            return false;
+          }
+
+          toast.update(toastId, {
+            type: toast.TYPE.SUCCESS,
+            autoClose: 7500,
+            render: "Bear left training.",
           });
 
           onRefresh();
+
+          return true;
         } catch (e) {
           console.log(e);
           toast.error("There was an error. Please try again!");
+          return false;
         }
       },
       onStartTraining: async ({ tokenIds }) => {
@@ -414,16 +420,31 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
 
           const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
 
-          await toast.promise(userOpResponse.wait(), {
-            pending: "Time to train!",
-            success: "Bear is in training.",
-            error: "There was an error",
+          const toastId = toast.info("Time to train...", { autoClose: false });
+
+          const receipt = await userOpResponse.wait();
+
+          if (receipt?.success === "false") {
+            toast.update(toastId, {
+              type: toast.TYPE.ERROR,
+              render: "There was an error attempting to train!",
+            });
+            return false;
+          }
+
+          toast.update(toastId, {
+            type: toast.TYPE.SUCCESS,
+            autoClose: 7500,
+            render: "Bear(s) are in training.",
           });
 
           onRefresh();
+
+          return true;
         } catch (error) {
           console.log(error);
           toast.error("There was an error. Please try again!");
+          return false;
         }
       },
     },
@@ -675,9 +696,9 @@ const ActionMenu = ({
 
   const { name, ownerOf, tokenId, image } = onChainMetadata || {};
 
-  const { level, xp, str, end, int, lck, nextXpLevel } = stats || {};
+  const { level, xp, nextXpLevel } = stats || {};
 
-  const { address, balance, isConnected, actions } = useNFTWrapped({
+  const { address, isConnected, actions } = useNFTWrapped({
     isSimulated,
     overrideAddress: ownerOf,
     onRefresh,
@@ -692,8 +713,6 @@ const ActionMenu = ({
       setIsMounted(true);
     }, 500);
   }, []);
-
-  console.log(activity?.training?.training?.startAt);
 
   return (
     <>
@@ -1359,7 +1378,7 @@ const selectedToItemIds = (currentImages, isShowingPixel) => {
       FACE_ARMOR: [0, 15, 91, 171, 172, 187, 188, 195, 270, 287, 301, 302, 307],
       EYEWEAR: [
         0, 5, 39, 47, 60, 68, 72, 80, 85, 88, 100, 126, 136, 138, 156, 162, 167,
-        181, 199, 218, 241, 247, 256, 264, 323,
+        181, 199, 218, 241, 247, 256, 264, 323, 326, 327, 328, 329,
       ],
       MISC: [
         0, 10, 11, 12, 13, 14, 20, 24, 51, 59, 69, 78, 79, 89, 125, 137, 160,

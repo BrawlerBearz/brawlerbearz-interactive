@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import { useAccount } from "wagmi";
-import ConnectButton from "./components/ConnectButton";
+import Header from "./components/Header";
 import SandboxWrapper from "./components/SandboxWrapper";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import { bearzContractAddress } from "./lib/contracts";
@@ -49,7 +49,7 @@ const Experience = ({ isSimulated = false }) => {
       <div className="flex flex-col h-screen w-screen bg-dark font-primary space-y-4 text-white overflow-x-hidden">
         {!isSimulated && (
           <div className="flex flex-col h-full w-full">
-            <ConnectButton />
+            <Header />
             {!isConnected ? (
               <PleaseConnectWallet />
             ) : (

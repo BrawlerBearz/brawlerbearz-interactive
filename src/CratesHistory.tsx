@@ -11,7 +11,7 @@ import {
 import { createPublicClient, decodeEventLog, http, parseAbiItem } from "viem";
 import { mainnet } from "viem/chains";
 import { ALCHEMY_KEY } from "./lib/constants";
-import ConnectButton from "./components/ConnectButton";
+import Header from "./components/Header";
 import Loading from "./components/Loading";
 import SandboxWrapper from "./components/SandboxWrapper";
 import PleaseConnectWallet from "./components/PleaseConnectWallet";
@@ -43,7 +43,7 @@ const useCratesHistory = (address) => {
     });
 
     const logs = await publicClient.getFilterLogs({ filter });
-    
+
     logs.reverse();
 
     setState((prev) => ({
@@ -97,7 +97,7 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
       <div className="flex flex-col h-screen w-screen bg-dark font-primary space-y-4 text-white overflow-x-hidden">
         {!isSimulated && (
           <div className="flex flex-col h-full w-full">
-            <ConnectButton />
+            <Header />
             {!isConnected ? (
               <PleaseConnectWallet />
             ) : (

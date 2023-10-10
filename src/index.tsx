@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter, Routes, Route } from "react-router-dom";
 import logoImage from "./interactive/logo.gif";
+import { WalletContext } from "./context/WalletContext";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 
@@ -31,21 +32,36 @@ const Loading = () => {
   );
 };
 
+const App = () => {
+  const [wallet, setWallet] = useState(null);
+
+  return (
+    <WalletContext.Provider
+      value={{
+        wallet,
+        setWallet,
+      }}
+    >
+      <Routes>
+        <Route path="bearz" element={<Bearz />} />
+        <Route path="crafting" element={<Crafting />} />
+        <Route path="consumables" element={<Consumables />} />
+        <Route path="crates/history" element={<CratesHistory />} />
+        <Route path="crates" element={<Crates />}>
+          <Route path=":txHash" element={<Crates />} />
+        </Route>
+        <Route path=":tokenId" element={<NFT />} />
+        <Route index element={<Connect />} />
+      </Routes>
+    </WalletContext.Provider>
+  );
+};
+
 root.render(
   <React.StrictMode>
     <HashRouter>
       <React.Suspense fallback={<Loading />}>
-        <Routes>
-          <Route path="bearz" element={<Bearz />} />
-          <Route path="crafting" element={<Crafting />} />
-            <Route path="consumables" element={<Consumables />} />
-          <Route path="crates/history" element={<CratesHistory />} />
-          <Route path="crates" element={<Crates />}>
-            <Route path=":txHash" element={<Crates />} />
-          </Route>
-          <Route path=":tokenId" element={<NFT />} />
-          <Route index element={<Connect />} />
-        </Routes>
+        <App />
       </React.Suspense>
     </HashRouter>
   </React.StrictMode>,

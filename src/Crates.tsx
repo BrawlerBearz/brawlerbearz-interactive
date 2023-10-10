@@ -24,9 +24,9 @@ import {
   decodeEventLog,
 } from "viem";
 import { keyBy, shuffle, runInContext } from "lodash";
-import seedrandom from 'seedrandom'
+import seedrandom from "seedrandom";
 import { providers, Contract } from "ethers";
-import ConnectButton from "./components/ConnectButton";
+import Header from "./components/Header";
 import { ALCHEMY_KEY } from "./lib/constants";
 import logoImage from "./interactive/logo.gif";
 import buttonBackground from "./interactive/button.png";
@@ -56,7 +56,9 @@ import {
   bearzShopABI,
   bearzShopContractAddress,
   bearzSupplyCratesContractAddress,
-  bearzSupplyCratesABI, bearzQuickSaleAddress, bearzQuickSaleABI,
+  bearzSupplyCratesABI,
+  bearzQuickSaleAddress,
+  bearzQuickSaleABI,
 } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import Loading from "./components/Loading";
@@ -153,17 +155,17 @@ const SPIN_DURATION = 11;
 
 const seedLodash = (seed: number | string) => {
   // take a snapshot of the current Math.random() fn
-  const orig = Math.random
+  const orig = Math.random;
   // replace Math.random with the seeded random
-  seedrandom(seed, { global: true })
+  seedrandom(seed, { global: true });
   // runInContext() creates a new lodash instance using the seeded Math.random()
   // the context is a snapshot of the state of the global javascript environment, i.e. Math.random() updated to the seedrandom instance
-  const lodash = runInContext()
+  const lodash = runInContext();
   // restore the original Math.random() fn
-  Math.random = orig
+  Math.random = orig;
   // return the lodash instance with the seeded Math.random()
-  return lodash
-}
+  return lodash;
+};
 
 const useSimulatedAccount = (simulatedAddress) => {
   return {
@@ -451,7 +453,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
       isApproved,
       openingContext,
       isBuying,
-      buyingContext
+      buyingContext,
     },
     actions: {
       onRefresh: onRefresh.bind(null, account?.address),
@@ -501,19 +503,16 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
           const feeData = await signer.provider.getFeeData();
 
           const contract = new Contract(
-              bearzQuickSaleAddress,
-              bearzQuickSaleABI,
-              signer,
+            bearzQuickSaleAddress,
+            bearzQuickSaleABI,
+            signer,
           );
 
           const ethPrice = await contract.ethPrice();
 
-          const gasLimit = await contract.estimateGas.buy(
-              amount,
-              {
-                value: ethPrice.mul(amount)
-              }
-          );
+          const gasLimit = await contract.estimateGas.buy(amount, {
+            value: ethPrice.mul(amount),
+          });
 
           setBuying(true);
           setBuyingContext(`Check wallet for transaction...`);
@@ -528,12 +527,11 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
 
           await tx.wait();
 
-          navigate(`/crates`)
+          navigate(`/crates`);
 
           toast.success(`Successfully bought ${amount} crate(s)!`);
 
           return true;
-
         } catch (e) {
           console.log(e);
           toast.error("There was an error. Please try again!");
@@ -725,7 +723,8 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
 
     let landingPosition = spinByDistance + position * card;
 
-    const offset = Math.floor(Math.random() * (ITEM_WIDTH * .8)) - (ITEM_WIDTH / 2);
+    const offset =
+      Math.floor(Math.random() * (ITEM_WIDTH * 0.8)) - ITEM_WIDTH / 2;
     landingPosition += offset;
 
     const object = {
@@ -803,7 +802,7 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
               style={{
                 left: "calc(50% - 88px)",
                 zIndex: revealedState.length - index,
-                top: -25 - (3 * (index + 1)),
+                top: -25 - 3 * (index + 1),
                 transform: "scale(1)",
                 ...(activeIndex === index
                   ? {
@@ -817,65 +816,68 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
           );
         })}
       </div>
-      <div className="absolute flex items-center justify-center" style={{
-        transition: "opacity 0.75s ease-in",
-        opacity: 0,
-        ...(isMounted
+      <div
+        className="absolute flex items-center justify-center"
+        style={{
+          transition: "opacity 0.75s ease-in",
+          opacity: 0,
+          ...(isMounted
             ? {
-              opacity: 1,
-              transform: "translateY(130px)",
-            }
+                opacity: 1,
+                transform: "translateY(130px)",
+              }
             : {}),
-      }}>
+        }}
+      >
         <div
-            className="relative bg-[#142b42] h-[90px] rounded-md overflow-hidden mx-auto"
-            style={{
-              boxShadow: "inset 0 0 4px #1e151c",
-              width: shuffledCrateItems.length * ITEM_WIDTH,
-            }}
+          className="relative bg-[#142b42] h-[90px] rounded-md overflow-hidden mx-auto"
+          style={{
+            boxShadow: "inset 0 0 4px #1e151c",
+            width: shuffledCrateItems.length * ITEM_WIDTH,
+          }}
         >
           <div className="relative w-full h-full overflow-x-hidden">
             <img
-                src={upArrow}
-                className="absolute bottom-0 left-[50%] w-[36px] h-[24px] z-[2]"
-                style={{
-                  transform: "translate(-50%,0%)",
-                }}
+              src={upArrow}
+              className="absolute bottom-0 left-[50%] w-[36px] h-[24px] z-[2]"
+              style={{
+                transform: "translate(-50%,0%)",
+              }}
             />
             <img
-                src={downArrow}
-                className="absolute top-0 left-[50%] w-[36px] h-[24px] z-[2]"
-                style={{
-                  transform: "translate(-50%,0%)",
-                }}
+              src={downArrow}
+              className="absolute top-0 left-[50%] w-[36px] h-[24px] z-[2]"
+              style={{
+                transform: "translate(-50%,0%)",
+              }}
             />
             <div
-                className="absolute top-0 left-0 flex flex-row h-full whitespace-nowrap"
-                style={{
-                  width: shuffledCrateItems.length * ITEM_WIDTH,
-                  transitionTimingFunction: spinState.x
-                      ? `cubic-bezier(0,${spinState.x},${spinState.y},1)`
-                      : "",
-                  transitionDuration: spinState.duration
-                      ? `${spinState.duration}s`
-                      : "",
-                  transform: `translate3d(${
-                      spinState.landingPosition || 0
-                  }px, 0px, 0px)`,
-                }}
+              className="absolute top-0 left-0 flex flex-row h-full whitespace-nowrap"
+              style={{
+                width: shuffledCrateItems.length * ITEM_WIDTH,
+                transitionTimingFunction: spinState.x
+                  ? `cubic-bezier(0,${spinState.x},${spinState.y},1)`
+                  : "",
+                transitionDuration: spinState.duration
+                  ? `${spinState.duration}s`
+                  : "",
+                transform: `translate3d(${
+                  spinState.landingPosition || 0
+                }px, 0px, 0px)`,
+              }}
             >
               {new Array(20).fill(0).map((item, index) => {
                 return shuffledCrateItems.map((item, crateIndex) => (
-                    <div
-                        key={`${index}_${crateIndex}`}
-                        className="flex flex-shrink-0 w-[80px] h-full p-1"
-                    >
-                      <img
-                          src={item.placeholderSrc}
-                          className="object-contain w-full h-full"
-                          alt={item.rarity}
-                      />
-                    </div>
+                  <div
+                    key={`${index}_${crateIndex}`}
+                    className="flex flex-shrink-0 w-[80px] h-full p-1"
+                  >
+                    <img
+                      src={item.placeholderSrc}
+                      className="object-contain w-full h-full"
+                      alt={item.rarity}
+                    />
+                  </div>
                 ));
               })}
             </div>
@@ -1114,8 +1116,10 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
 
           console.log({
             crateItemIds,
-            crateMetadata, itemIds, droppedMetadata
-          })
+            crateMetadata,
+            itemIds,
+            droppedMetadata,
+          });
 
           const rarities = crateRarities[crateTokenId] || {};
           const deterministicLodash = seedLodash(randomness);
@@ -1137,10 +1141,12 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
                     ...metadata,
                   };
                 }),
-                droppedItems: deterministicLodash.shuffle(itemIds.map((tokenId, index) => ({
-                  tokenId: Number(tokenId),
-                  ...(droppedMetadata?.[index] || {}),
-                }))),
+                droppedItems: deterministicLodash.shuffle(
+                  itemIds.map((tokenId, index) => ({
+                    tokenId: Number(tokenId),
+                    ...(droppedMetadata?.[index] || {}),
+                  })),
+                ),
                 randomness,
               },
             });
@@ -1219,7 +1225,7 @@ const CratesView = ({ isSimulated }) => {
     >
       {!isSimulated && (
         <div className="flex flex-col h-full w-full">
-          <ConnectButton />
+          <Header />
           {!isConnected && <PleaseConnectWallet />}
         </div>
       )}
@@ -1283,11 +1289,10 @@ const CratesView = ({ isSimulated }) => {
                                 amount: amountToBuy,
                               });
 
-                              if(success){
+                              if (success) {
                                 setViewCrateId(null);
                                 actions?.onRefresh();
                               }
-
                             }}
                             className="relative flex items-center justify-center h-[36px] cursor-pointer z-[1]"
                             disabled={data?.isBuying}
@@ -1298,48 +1303,50 @@ const CratesView = ({ isSimulated }) => {
                               alt="button"
                             />
                             <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                              {data?.isBuying ? 'Buying...' : 'Buy'}
+                              {data?.isBuying ? "Buying..." : "Buy"}
                             </span>
                           </button>
                         </div>
                         {data?.buyingContext && (
-                            <p className="text-center text-warn text-sm py-2">{data?.buyingContext}</p>
+                          <p className="text-center text-warn text-sm py-2">
+                            {data?.buyingContext}
+                          </p>
                         )}
                       </div>
                     </div>
                     <div className="flex flex-col space-y-4 items-center justify-center mx-auto overflow-x-hidden">
                       <Link
-                          to={`https://bearzaar.brawlerbearz.club/collections/0xbd24a76f4135f930f5c49f6c30e0e30a61b97537/networks/mainnet/tokens/${viewCrateId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline text-white text-sm text-center"
+                        to={`https://bearzaar.brawlerbearz.club/collections/0xbd24a76f4135f930f5c49f6c30e0e30a61b97537/networks/mainnet/tokens/${viewCrateId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-white text-sm text-center"
                       >
                         Buy with credit card at the Bearzaar
                       </Link>
                       <h3 className="text-center">Drop rate(s)</h3>
                       <div className="flex flex-shrink-0 bg-[#21171f] bg-opacity-80 w-full gap-4 py-6 px-6 md:px-10 overflow-x-auto whitespace-nowrap px-6 md:px-10">
                         {data?.crates?.[viewCrateId]?.config?.itemIds?.map(
-                            (itemId) => {
-                              const rarities = crateRarities?.[viewCrateId];
-                              const dropRarity = (rarities?.[itemId] || 0) * 100;
-                              return (
-                                  <div
-                                      key={itemId}
-                                      className="flex flex-col space-y-2 w-[100px]"
-                                  >
-                                    <div className="flex flex-col flex-shrink-0 w-[100px] gap-2">
-                                      <img
-                                          className="h-full w-full"
-                                          src={`${BEARZ_SHOP_IMAGE_URI}${itemId}.png`}
-                                          alt={itemId}
-                                      />
-                                    </div>
-                                    <span className="text-[10px] text-center">
-                                {dropRarity?.toFixed(2)}%
-                              </span>
-                                  </div>
-                              );
-                            },
+                          (itemId) => {
+                            const rarities = crateRarities?.[viewCrateId];
+                            const dropRarity = (rarities?.[itemId] || 0) * 100;
+                            return (
+                              <div
+                                key={itemId}
+                                className="flex flex-col space-y-2 w-[100px]"
+                              >
+                                <div className="flex flex-col flex-shrink-0 w-[100px] gap-2">
+                                  <img
+                                    className="h-full w-full"
+                                    src={`${BEARZ_SHOP_IMAGE_URI}${itemId}.png`}
+                                    alt={itemId}
+                                  />
+                                </div>
+                                <span className="text-[10px] text-center">
+                                  {dropRarity?.toFixed(2)}%
+                                </span>
+                              </div>
+                            );
+                          },
                         )}
                       </div>
                     </div>
@@ -1414,8 +1421,8 @@ const CratesView = ({ isSimulated }) => {
                       >
                         <div className="relative flex w-full h-full">
                           <img
-                              src={`${process.env.PUBLIC_URL}/cards/${tokenId}.png`}
-                              className="w-full z-[2]"
+                            src={`${process.env.PUBLIC_URL}/cards/${tokenId}.png`}
+                            className="w-full z-[2]"
                           />
                           <div className="absolute flex items-center justify-center border-white border-[3px] top-[-22px] right-[-22px] h-[45px] w-[45px] bg-[#887d8d] shadow-xl rounded-full text-white text-xs z-[2]">
                             <span>x{String(crate?.balance || 0)}</span>
@@ -1423,57 +1430,57 @@ const CratesView = ({ isSimulated }) => {
                         </div>
                         <div className="flex flex-col items-center space-y-3 my-4">
                           {data?.isApproved && (
-                              <div className="flex flex-row items-center justify-center space-x-2">
-                                {/*<select*/}
-                                {/*    className="flex text-right h-[36px] px-2 rounded-full bg-main border-dark border-[1px] text-white cursor-pointer z-[1]"*/}
-                                {/*    value={amountToOpen}*/}
-                                {/*    onChange={(e) => {*/}
-                                {/*      setAmountToOpen(e.target.value);*/}
-                                {/*    }}*/}
-                                {/*>*/}
-                                {/*  {new Array(Number(crate?.balance))*/}
-                                {/*      .fill(0)*/}
-                                {/*      .map((i, index) => (*/}
-                                {/*          <option key={index} value={index + 1}>*/}
-                                {/*            {index + 1}*/}
-                                {/*          </option>*/}
-                                {/*      ))}*/}
-                                {/*</select>*/}
-                                <button
-                                    onClick={async () => {
-                                      sounds?.start();
-                                      await actions?.onOpenCrate({
-                                        crateTokenId: tokenId,
-                                        openAmount: 1,
-                                      });
-                                    }}
-                                    className="relative flex items-center justify-center w-full cursor-pointer z-[1]"
-                                >
-                                  <img
-                                      className="object-cover h-full w-full"
-                                      src={buttonBackground}
-                                      alt="button"
-                                  />
-                                  <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                                Burn & Open
-                              </span>
-                                </button>
-                              </div>
+                            <div className="flex flex-row items-center justify-center space-x-2">
+                              {/*<select*/}
+                              {/*    className="flex text-right h-[36px] px-2 rounded-full bg-main border-dark border-[1px] text-white cursor-pointer z-[1]"*/}
+                              {/*    value={amountToOpen}*/}
+                              {/*    onChange={(e) => {*/}
+                              {/*      setAmountToOpen(e.target.value);*/}
+                              {/*    }}*/}
+                              {/*>*/}
+                              {/*  {new Array(Number(crate?.balance))*/}
+                              {/*      .fill(0)*/}
+                              {/*      .map((i, index) => (*/}
+                              {/*          <option key={index} value={index + 1}>*/}
+                              {/*            {index + 1}*/}
+                              {/*          </option>*/}
+                              {/*      ))}*/}
+                              {/*</select>*/}
+                              <button
+                                onClick={async () => {
+                                  sounds?.start();
+                                  await actions?.onOpenCrate({
+                                    crateTokenId: tokenId,
+                                    openAmount: 1,
+                                  });
+                                }}
+                                className="relative flex items-center justify-center w-full cursor-pointer z-[1]"
+                              >
+                                <img
+                                  className="object-cover h-full w-full"
+                                  src={buttonBackground}
+                                  alt="button"
+                                />
+                                <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                                  Burn & Open
+                                </span>
+                              </button>
+                            </div>
                           )}
                           <button
-                              onClick={() => {
-                                setViewCrateId(tokenId);
-                              }}
-                              className="relative flex items-center justify-center w-full cursor-pointer z-[1]"
+                            onClick={() => {
+                              setViewCrateId(tokenId);
+                            }}
+                            className="relative flex items-center justify-center w-full cursor-pointer z-[1]"
                           >
                             <img
-                                className="object-cover h-full w-full"
-                                src={buttonBackground}
-                                alt="button"
+                              className="object-cover h-full w-full"
+                              src={buttonBackground}
+                              alt="button"
                             />
                             <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-                                View & Buy more
-                              </span>
+                              View & Buy more
+                            </span>
                           </button>
                         </div>
                       </div>

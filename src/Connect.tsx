@@ -1,11 +1,12 @@
+// @ts-nocheck
 import React from "react";
 import { ToastContainer } from "react-toastify";
 import { Link } from "react-router-dom";
+import { ConnectKitButton } from "connectkit";
 import buttonBackground from "./interactive/button.png";
 import logoImage from "./interactive/logo.gif";
-import ConnectButton from "./components/ConnectButton";
+import { CustomConnect } from "./components/Header";
 import SandboxWrapper from "./components/SandboxWrapper";
-import { ConnectKitButton } from "connectkit";
 
 const Experience = ({ isSandboxed, isSimulated = false }) => {
   return (
@@ -16,24 +17,7 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
           <h1 className="text-sm text-white">Interactive Experience</h1>
           {!isSimulated && (
             <ConnectKitButton.Custom>
-              {({ isConnected, show, truncatedAddress, ensName }) => {
-                return !isConnected ? (
-                  <button
-                    onClick={show}
-                    className="w-full max-w-[200px] relative flex items-center justify-center cursor-pointer px-2 py-2 text-center text-accent animate-pulse"
-                  >
-                    Connect Wallet
-                  </button>
-                ) : (
-                  <button
-                    className="w-full flex flex-row items-center justify-center hover:underline text-xs text-accent text-center"
-                    onClick={show}
-                  >
-                    <span className="hidden sm:flex pr-1">Connected to</span>
-                    {ensName ?? truncatedAddress}
-                  </button>
-                );
-              }}
+              {(props) => <CustomConnect {...props} />}
             </ConnectKitButton.Custom>
           )}
           <div className="py-3" />
@@ -64,13 +48,13 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
             </span>
           </Link>
           <Link
-              to="/consumables"
-              className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
+            to="/consumables"
+            className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
           >
             <img
-                className="object-cover h-full w-full"
-                src={buttonBackground}
-                alt="button"
+              className="object-cover h-full w-full"
+              src={buttonBackground}
+              alt="button"
             />
             <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
               Consumables
