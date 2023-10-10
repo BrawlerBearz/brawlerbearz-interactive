@@ -4135,35 +4135,91 @@ export const bearzQuestABI = [
 ];
 
 export const bearzRendererContractAddress =
-  "0x4E8D5C4208DC43d2B046804dAA1D63c6e564E11B";
+  "0x579311D73B69F786E4467d148BF27BC408e2EDFe";
 
 export const bearzRendererABI = [
+  { inputs: [], name: "InvalidItemType", type: "error" },
+  { inputs: [], name: "InvalidLength", type: "error" },
+  { inputs: [], name: "InvalidOwner", type: "error" },
+  { inputs: [], name: "InvalidRecipient", type: "error" },
+  { inputs: [], name: "InvalidString", type: "error" },
+  { inputs: [], name: "InvalidTokenIds", type: "error" },
+  { inputs: [], name: "InvalidValue", type: "error" },
+  { inputs: [], name: "ItemRequiresMoreXP", type: "error" },
   {
+    anonymous: false,
     inputs: [
-      { internalType: "string", name: "_baseURI", type: "string" },
-      { internalType: "string", name: "_animationURI", type: "string" },
+      { indexed: false, internalType: "uint8", name: "version", type: "uint8" },
     ],
-    stateMutability: "nonpayable",
-    type: "constructor",
+    name: "Initialized",
+    type: "event",
   },
   {
     anonymous: false,
     inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "previousAdminRole",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "newAdminRole",
+        type: "bytes32",
+      },
+    ],
+    name: "RoleAdminChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
       {
         indexed: true,
         internalType: "address",
-        name: "previousOwner",
+        name: "account",
         type: "address",
       },
       {
         indexed: true,
         internalType: "address",
-        name: "newOwner",
+        name: "sender",
         type: "address",
       },
     ],
-    name: "OwnershipTransferred",
+    name: "RoleGranted",
     type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleRevoked",
+    type: "event",
+  },
+  {
+    inputs: [],
+    name: "DEFAULT_ADMIN_ROLE",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [],
@@ -4173,9 +4229,51 @@ export const bearzRendererABI = [
     type: "function",
   },
   {
+    inputs: [
+      { internalType: "uint256", name: "_tokenId", type: "uint256" },
+      { internalType: "uint256", name: "_seed", type: "uint256" },
+      {
+        components: [
+          { internalType: "string", name: "name", type: "string" },
+          { internalType: "string", name: "lore", type: "string" },
+          { internalType: "uint256", name: "background", type: "uint256" },
+          { internalType: "uint256", name: "head", type: "uint256" },
+          { internalType: "uint256", name: "weapon", type: "uint256" },
+          { internalType: "uint256", name: "armor", type: "uint256" },
+          { internalType: "uint256", name: "faceArmor", type: "uint256" },
+          { internalType: "uint256", name: "eyewear", type: "uint256" },
+          { internalType: "uint256", name: "misc", type: "uint256" },
+          { internalType: "uint256", name: "xp", type: "uint256" },
+          { internalType: "bool", name: "isUnlocked", type: "bool" },
+          { internalType: "uint256", name: "faction", type: "uint256" },
+        ],
+        internalType: "struct IBrawlerBearzCommon.CustomMetadata",
+        name: "_md",
+        type: "tuple",
+      },
+    ],
+    name: "baseDna",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "baseURI",
     outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "consumableContract",
+    outputs: [
+      {
+        internalType: "contract IBrawlerBearzConsumables",
+        name: "",
+        type: "address",
+      },
+    ],
     stateMutability: "view",
     type: "function",
   },
@@ -4209,6 +4307,33 @@ export const bearzRendererABI = [
     type: "function",
   },
   {
+    inputs: [{ internalType: "bytes32", name: "role", type: "bytes32" }],
+    name: "getRoleAdmin",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "grantRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "hasRole",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "uint256", name: "_tokenId", type: "uint256" }],
     name: "hiddenURI",
     outputs: [{ internalType: "string", name: "", type: "string" }],
@@ -4216,15 +4341,44 @@ export const bearzRendererABI = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "owner",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
-    stateMutability: "view",
+    inputs: [
+      { internalType: "string", name: "_baseURI", type: "string" },
+      { internalType: "string", name: "_animationURI", type: "string" },
+    ],
+    name: "initialize",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
     inputs: [],
-    name: "renounceOwnership",
+    name: "parentContract",
+    outputs: [
+      {
+        internalType: "contract IERC721Upgradeable",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "renounceRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "revokeRole",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -4245,15 +4399,113 @@ export const bearzRendererABI = [
   },
   {
     inputs: [
+      { internalType: "address", name: "_consumableContract", type: "address" },
+    ],
+    name: "setConsumableContract",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_parentContractAddress",
+        type: "address",
+      },
+    ],
+    name: "setParentContract",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
       {
         internalType: "address",
         name: "_vendorContractAddress",
         type: "address",
       },
     ],
-    name: "setVendorContractAddress",
+    name: "setVendorContract",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "tokenId", type: "uint256" },
+      {
+        components: [
+          { internalType: "string", name: "name", type: "string" },
+          { internalType: "string", name: "description", type: "string" },
+          { internalType: "string", name: "dna", type: "string" },
+          { internalType: "string", name: "renderingDna", type: "string" },
+          {
+            components: [
+              { internalType: "uint256", name: "strength", type: "uint256" },
+              { internalType: "uint256", name: "endurance", type: "uint256" },
+              {
+                internalType: "uint256",
+                name: "intelligence",
+                type: "uint256",
+              },
+              { internalType: "uint256", name: "luck", type: "uint256" },
+              { internalType: "uint256", name: "xp", type: "uint256" },
+              { internalType: "uint256", name: "level", type: "uint256" },
+              { internalType: "string", name: "skin", type: "string" },
+              { internalType: "string", name: "head", type: "string" },
+              { internalType: "string", name: "eyes", type: "string" },
+              { internalType: "string", name: "outfit", type: "string" },
+              { internalType: "string", name: "mouth", type: "string" },
+              { internalType: "string", name: "background", type: "string" },
+              { internalType: "string", name: "weapon", type: "string" },
+              { internalType: "string", name: "armor", type: "string" },
+              { internalType: "string", name: "eyewear", type: "string" },
+              { internalType: "string", name: "faceArmor", type: "string" },
+              { internalType: "string", name: "misc", type: "string" },
+              { internalType: "string", name: "locked", type: "string" },
+              { internalType: "string", name: "faction", type: "string" },
+            ],
+            internalType: "struct IBrawlerBearzCommon.Traits",
+            name: "traits",
+            type: "tuple",
+          },
+          {
+            components: [
+              { internalType: "string", name: "name", type: "string" },
+              { internalType: "string", name: "lore", type: "string" },
+              { internalType: "uint256", name: "background", type: "uint256" },
+              { internalType: "uint256", name: "head", type: "uint256" },
+              { internalType: "uint256", name: "weapon", type: "uint256" },
+              { internalType: "uint256", name: "armor", type: "uint256" },
+              { internalType: "uint256", name: "faceArmor", type: "uint256" },
+              { internalType: "uint256", name: "eyewear", type: "uint256" },
+              { internalType: "uint256", name: "misc", type: "uint256" },
+              { internalType: "uint256", name: "xp", type: "uint256" },
+              { internalType: "bool", name: "isUnlocked", type: "bool" },
+              { internalType: "uint256", name: "faction", type: "uint256" },
+            ],
+            internalType: "struct IBrawlerBearzCommon.CustomMetadata",
+            name: "dynamic",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct IBrawlerBearzCommon.Bear",
+        name: "instance",
+        type: "tuple",
+      },
+    ],
+    name: "standardProperties",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes4", name: "interfaceId", type: "bytes4" }],
+    name: "supportsInterface",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -4313,13 +4565,6 @@ export const bearzRendererABI = [
     name: "tokenURI",
     outputs: [{ internalType: "string", name: "", type: "string" }],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [{ internalType: "address", name: "newOwner", type: "address" }],
-    name: "transferOwnership",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -5274,6 +5519,336 @@ export const bearzQuickSaleABI = [
     name: "withdraw",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+];
+
+export const bearzConsumableContractAddress =
+  "0xF3BEB3a8ad1C68EeB4FFeD6b003dEadE8834B66f";
+
+export const bearzConsumableABI = [
+  { inputs: [], name: "InvalidItemType", type: "error" },
+  { inputs: [], name: "InvalidOwner", type: "error" },
+  { inputs: [], name: "NotConsumed", type: "error" },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "itemTokenId",
+        type: "uint256",
+      },
+    ],
+    name: "Activated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "itemTokenId",
+        type: "uint256",
+      },
+    ],
+    name: "Consumed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "itemTokenId",
+        type: "uint256",
+      },
+    ],
+    name: "Deactivated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: false, internalType: "uint8", name: "version", type: "uint8" },
+    ],
+    name: "Initialized",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "previousAdminRole",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "newAdminRole",
+        type: "bytes32",
+      },
+    ],
+    name: "RoleAdminChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleGranted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "bytes32", name: "role", type: "bytes32" },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleRevoked",
+    type: "event",
+  },
+  {
+    inputs: [],
+    name: "DEFAULT_ADMIN_ROLE",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "tokenId", type: "uint256" },
+      { internalType: "uint256", name: "itemTokenId", type: "uint256" },
+    ],
+    name: "activate",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "tokenId", type: "uint256" },
+      { internalType: "uint256", name: "itemTokenId", type: "uint256" },
+      { internalType: "bool", name: "isEnabled", type: "bool" },
+    ],
+    name: "consume",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "tokenId", type: "uint256" },
+      { internalType: "uint256", name: "itemTokenId", type: "uint256" },
+    ],
+    name: "deactivate",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+    name: "getConsumables",
+    outputs: [{ internalType: "bytes[]", name: "", type: "bytes[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes32", name: "role", type: "bytes32" }],
+    name: "getRoleAdmin",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "grantRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "hasRole",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_parentContractAddress",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_vendorContractAddress",
+        type: "address",
+      },
+    ],
+    name: "initialize",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "tokenId", type: "uint256" },
+      { internalType: "uint256", name: "itemTokenId", type: "uint256" },
+    ],
+    name: "isActiveConsumable",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "parentContract",
+    outputs: [
+      {
+        internalType: "contract IERC721Upgradeable",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "renounceRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "bytes32", name: "role", type: "bytes32" },
+      { internalType: "address", name: "account", type: "address" },
+    ],
+    name: "revokeRole",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_parentContractAddress",
+        type: "address",
+      },
+    ],
+    name: "setParentContract",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_vendorContractAddress",
+        type: "address",
+      },
+    ],
+    name: "setVendorContract",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "bytes4", name: "interfaceId", type: "bytes4" }],
+    name: "supportsInterface",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
+    name: "toConsumableProperties",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "string", name: "key", type: "string" },
+      { internalType: "string", name: "value", type: "string" },
+    ],
+    name: "toJSONAttribute",
+    outputs: [{ internalType: "string", name: "", type: "string" }],
+    stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "vendorContract",
+    outputs: [
+      {
+        internalType: "contract IBrawlerBearzDynamicItems",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
 ];

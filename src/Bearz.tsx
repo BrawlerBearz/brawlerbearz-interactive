@@ -105,11 +105,6 @@ const useNFTWrapped = ({ isSimulated }) => {
 
     const smartAccountAddress = await smartAccount.getSmartAccountAddress();
 
-    console.log({
-      smartAccountAddress,
-      owner: smartAccount.owner,
-    });
-
     // Check if smart wallet is enabled already and associated to leverage
     const smartWalletAssociated = await polygonClient.readContract({
       address: bearzStakeChildContractAddress,
@@ -341,10 +336,24 @@ const useNFTWrapped = ({ isSimulated }) => {
 
           const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
 
-          await toast.promise(userOpResponse.wait(), {
-            pending: "Packing up to go out on quest...",
-            success: "Bear left to go on quest.",
-            error: "There was an error",
+          const toastId = toast.info("Packing up to go out on quest...", {
+            autoClose: false,
+          });
+
+          const { success } = await userOpResponse.wait();
+
+          if (success === "false") {
+            toast.update(toastId, {
+              type: toast.TYPE.ERROR,
+              render: "There was an error while trying to quest the bearz!",
+            });
+            return;
+          }
+
+          toast.update(toastId, {
+            type: toast.TYPE.SUCCESS,
+            autoClose: 7500,
+            render: "Bear(s) left to go on quest.",
           });
 
           return true;

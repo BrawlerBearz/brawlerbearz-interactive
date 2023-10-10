@@ -11,7 +11,7 @@ import SandboxWrapper from "./components/SandboxWrapper";
 const Experience = ({ isSandboxed, isSimulated = false }) => {
   return (
     <>
-      <div className="flex flex-col h-screen w-screen bg-dark items-center font-primary space-y-4">
+      <div className="flex flex-col h-screen w-screen bg-dark items-center font-primary space-y-4 overflow-x-hidden">
         <div className="flex flex-col space-y-2 items-center py-10">
           <img className="w-[180px] my-3" src={logoImage} alt="logo" />
           <h1 className="text-sm text-white">Interactive Experience</h1>
@@ -32,6 +32,19 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
             />
             <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
               My Bearz
+            </span>
+          </Link>
+          <Link
+            to="/rewards"
+            className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
+          >
+            <img
+              className="object-cover h-full w-full"
+              src={buttonBackground}
+              alt="button"
+            />
+            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+              Rewards
             </span>
           </Link>
           <Link
