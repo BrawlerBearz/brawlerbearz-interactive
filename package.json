@@ -10,7 +10,7 @@
     "@biconomy/bundler": "^3.1.0",
     "@biconomy/common": "^3.1.0",
     "@biconomy/core-types": "^3.1.0",
-    "@biconomy/mexa": "^2.0.35",
+    "@biconomy/mexa": "^2.0.36",
     "@biconomy/modules": "^3.1.0",
     "@biconomy/paymaster": "^3.1.0",
     "@react-hookz/web": "^23.1.0",

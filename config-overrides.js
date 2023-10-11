@@ -15,6 +15,9 @@ module.exports = function override(config) {
     querystring: false, // require.resolve("querystring-es3"),
     net: false,
     tls: false,
+    fs: false,
+    electron: false,
+    "@ethereumjs/tx": false,
   });
 
   config.resolve.fallback = fallback;

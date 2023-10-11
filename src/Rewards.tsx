@@ -112,7 +112,7 @@ const Experience = ({ isSimulated = false }) => {
               <div className="flex flex-col items-center w-full h-full z-[5] space-y-4 px-6">
                 <h1 className="text-xl mb-4">My Rewards</h1>
                 <div className="flex flex-col space-y-4 text-sm">
-                  <div className="flex flex-row items-center space-x-2">
+                  <div className="flex flex-row items-center justify-center space-x-2">
                     <span className="hidden md:flex">My Balance:</span>
                     <span>
                       {balance
@@ -132,15 +132,6 @@ const Experience = ({ isSimulated = false }) => {
             </div>
           ))}
       </div>
-      <ToastContainer
-        theme="dark"
-        position="bottom-center"
-        autoClose={6000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-      />
     </>
   );
 };

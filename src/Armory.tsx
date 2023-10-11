@@ -69,15 +69,6 @@ const Experience = ({ isSimulated = false }) => {
           </div>
         )}
       </div>
-      <ToastContainer
-        theme="dark"
-        position="bottom-center"
-        autoClose={6000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-      />
     </>
   );
 };

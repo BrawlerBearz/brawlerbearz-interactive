@@ -1,7 +1,7 @@
 // @ts-nocheck
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import classnames from "classnames";
-import { toast, ToastContainer } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import { useAccount } from "wagmi";
 import {
   MdLock as LockIcon,
@@ -19,33 +19,16 @@ import {
   GiJourney as QuestIcon,
 } from "react-icons/gi";
 import { keyBy, reduce, orderBy } from "lodash";
-import { PaymasterMode } from "@biconomy/paymaster";
-import { BiconomySmartAccount } from "@biconomy/account";
-import { ChainId } from "@biconomy/core-types";
-import { createPublicClient, encodeFunctionData, http } from "viem";
-import { mainnet, polygon } from "viem/chains";
-import {
-  getPublicClient,
-  getWalletClient,
-  waitForTransaction,
-} from "@wagmi/core";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import Header from "./components/Header";
 import SandboxWrapper from "./components/SandboxWrapper";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
-import {
-  bearzStakeABI,
-  bearzStakeChildABI,
-  bearzStakeChildContractAddress,
-  bearzStakeContractAddress,
-} from "./lib/contracts";
-import { L2_ALCHEMY_KEY } from "./lib/constants";
 import { formatNumber } from "./lib/formatting";
 import Loading from "./components/Loading";
 import PleaseConnectWallet from "./components/PleaseConnectWallet";
 import shadowImage from "./interactive/shadow.png";
-import { biconomyConfiguration } from "./lib/biconomy";
 import useBearzNFTs from "./hooks/useBearzNFTs";
+import useBearzActions from "./hooks/useBearzActions";
 
 const useSimulatedAccount = () => {
   return {
@@ -65,489 +48,18 @@ const useNFTWrapped = ({ isSimulated }) => {
 
   const { isLoading, owner: signer } = useSimpleAccountOwner();
 
+  const actions = useBearzActions({
+    account,
+    signer,
+  });
+
   if (isLoading || !signer?.getAddress()) {
     return account;
   }
 
-  // const biconomyAccount = new BiconomySmartAccount({
-  //   signer,
-  //   chainId: ChainId.MAINNET,
-  //   rpcUrl: `https://eth-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  //   paymaster: new BiconomyPaymaster({
-  //     paymasterUrl:
-  //       "https://paymaster.biconomy.io/api/v1/1/rtXq6jgwR.494442c9-9a97-4599-a187-6f8782a4689d",
-  //   }),
-  //   bundler: new Bundler({
-  //     bundlerUrl:
-  //       "https://bundler.biconomy.io/api/v2/1/nJPK7B3ru.dd7HjkIo-190d-hjUi-af80-6877f74b8f44",
-  //     chainId: ChainId.MAINNET,
-  //     entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-  //   }),
-  //   entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-  // });
-
-  const biconomyAccount = new BiconomySmartAccount(
-    biconomyConfiguration(signer, ChainId.POLYGON_MAINNET),
-  );
-
-  const checkSmartWalletAssociation = async ({ smartAccount }) => {
-    const polygonClient = createPublicClient({
-      chain: polygon,
-      transport: http(
-        `https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`,
-      ),
-    });
-
-    const smartAccountAddress = await smartAccount.getSmartAccountAddress();
-
-    // Check if smart wallet is enabled already and associated to leverage
-    const smartWalletAssociated = await polygonClient.readContract({
-      address: bearzStakeChildContractAddress,
-      abi: bearzStakeChildABI,
-      functionName: "operatorAccess",
-      args: [smartAccountAddress],
-    });
-
-    // Set up smart wallet association if different than expected
-    if (
-      smartWalletAssociated.toLowerCase() !== signer?.getAddress().toLowerCase()
-    ) {
-      toast.info(
-        `Setting up smart wallet permissions for EOA: ${smartAccount.owner}`,
-      );
-
-      const publicClient = getPublicClient({
-        chainId: polygon.id,
-      });
-
-      const { request } = await publicClient.simulateContract({
-        address: bearzStakeChildContractAddress,
-        abi: bearzStakeChildABI,
-        functionName: "associateOperatorAsOwner",
-        args: [smartAccountAddress],
-        account: {
-          address: signer.getAddress(),
-        },
-      });
-
-      const walletClient = await getWalletClient({
-        chainId: polygon.id,
-      });
-
-      const hash = await walletClient.writeContract(request);
-
-      const receipt = await waitForTransaction({
-        hash,
-      });
-
-      toast.success(
-        `Created smart wallet: ${smartAccountAddress}...continuing...`,
-      );
-    }
-  };
-
   return {
     ...account,
-    actions: {
-      // onUnequip: async ({ tokenIds }) => {
-      //   try {
-      //     const smartAccount = await biconomyAccount.init();
-      //
-      //     console.log({
-      //       smartAccount,
-      //     });
-      //
-      //     const callData = encodeFunctionData({
-      //       abi: bearzABI,
-      //       functionName: "unequip",
-      //       args: [2764, "BACKGROUND"],
-      //     });
-      //
-      //     const callData1 = encodeFunctionData({
-      //       abi: bearzABI,
-      //       functionName: "equip",
-      //       args: [2764, "BACKGROUND", 8],
-      //     });
-      //
-      //     // const callData2 = encodeFunctionData({
-      //     //   abi: bearzABI,
-      //     //   functionName: "equip",
-      //     //   args: [2764, "WEAPON"],
-      //     // });
-      //
-      //     const partialUserOp = await smartAccount.buildUserOp([
-      //       {
-      //         to: bearzContractAddress,
-      //         data: callData,
-      //       },
-      //       {
-      //         to: bearzContractAddress,
-      //         data: callData1,
-      //       },
-      //       // {
-      //       //   to: bearzContractAddress,
-      //       //   data: callData2,
-      //       // },
-      //     ]);
-      //
-      //     console.log(partialUserOp);
-      //
-      //     const { paymasterAndData } =
-      //       await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-      //         mode: PaymasterMode.SPONSORED,
-      //       });
-      //
-      //     partialUserOp.paymasterAndData = paymasterAndData;
-      //
-      //     const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-      //
-      //     console.log(userOpResponse);
-      //
-      //     toast.info("Removing item from asset...");
-      //
-      //     const { success } = await userOpResponse.wait();
-      //
-      //     if (!success) {
-      //       throw new Error("There was an error");
-      //     }
-      //
-      //     toast.success("Removed item!");
-      //   } catch (e) {
-      //     console.log(e);
-      //     if (e.code === -32500 && e.message.includes("AA21")) {
-      //       toast.error("Insufficient funds!");
-      //     } else {
-      //       toast.error("There was an error. Please try again!");
-      //     }
-      //   }
-      // },
-      // onEquip: async ({ tokenIds }) => {
-      //   try {
-      //     const smartAccount = await biconomyAccount.init();
-      //
-      //     console.log({
-      //       smartAccount,
-      //     });
-      //
-      //     const callData = encodeFunctionData({
-      //       abi: bearzABI,
-      //       functionName: "equip",
-      //       args: [2764, "BACKGROUND", 7],
-      //     });
-      //
-      //     const partialUserOp = await smartAccount.buildUserOp([
-      //       {
-      //         to: bearzContractAddress,
-      //         data: callData,
-      //       },
-      //     ]);
-      //
-      //     const { paymasterAndData } =
-      //       await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-      //         mode: PaymasterMode.SPONSORED,
-      //       });
-      //
-      //     partialUserOp.paymasterAndData = paymasterAndData;
-      //
-      //     const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-      //
-      //     await toast.promise(userOpResponse.wait(), {
-      //       pending: "Equipping asset...",
-      //       success: "Equipped asset!",
-      //       error: "There was an error",
-      //     });
-      //   } catch (e) {
-      //     console.log(e);
-      //     toast.error("There was an error. Please try again!");
-      //   }
-      // },
-      // onMigrate: async ({ tokenIds }) => {
-      //   try {
-      //     const smartAccount = await biconomyAccount.init();
-      //
-      //     const smartContractAddress =
-      //       await smartAccount.getSmartAccountAddress();
-      //
-      //     const publicClient = getPublicClient({
-      //       chainId: mainnet.id,
-      //     });
-      //
-      //     const { request } = await publicClient.simulateContract({
-      //       address: bearzContractAddress,
-      //       abi: bearzABI,
-      //       functionName: "transferFrom",
-      //       args: [account.address, smartContractAddress, tokenIds[0]],
-      //       account: {
-      //         address: signer.getAddress(),
-      //       },
-      //     });
-      //
-      //     const walletClient = await getWalletClient({
-      //       chainId: mainnet.id,
-      //     });
-      //
-      //     const hash = await walletClient.writeContract(request);
-      //
-      //     await toast.promise(
-      //       waitForTransaction({
-      //         hash,
-      //       }),
-      //       {
-      //         pending: "Migrating asset(s) into smart account...",
-      //         success: "Asset(s) have been migrated to smart wallet!",
-      //         error: "There was an error",
-      //       },
-      //     );
-      //   } catch (e) {
-      //     console.log(e);
-      //     toast.error("There was an error. Please try again!");
-      //   }
-      // },
-      onQuest: async ({ tokenIds, questTypeIds, tokenAmount }) => {
-        try {
-          const smartAccount = await biconomyAccount.init();
-
-          await checkSmartWalletAssociation({ smartAccount });
-
-          const callData = encodeFunctionData({
-            abi: bearzStakeChildABI,
-            functionName: "quest",
-            args: [tokenIds, questTypeIds, tokenAmount],
-          });
-
-          const partialUserOp = await smartAccount.buildUserOp([
-            {
-              to: bearzStakeChildContractAddress,
-              data: callData,
-            },
-          ]);
-
-          const { paymasterAndData } =
-            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-              mode: PaymasterMode.SPONSORED,
-            });
-
-          partialUserOp.paymasterAndData = paymasterAndData;
-
-          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-
-          const toastId = toast.info("Packing up to go out on quest...", {
-            autoClose: false,
-          });
-
-          const { success } = await userOpResponse.wait();
-
-          if (success === "false") {
-            toast.update(toastId, {
-              type: toast.TYPE.ERROR,
-              render: "There was an error while trying to quest the bearz!",
-            });
-            return;
-          }
-
-          toast.update(toastId, {
-            type: toast.TYPE.SUCCESS,
-            autoClose: 7500,
-            render: "Bear(s) left to go on quest.",
-          });
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-          return false;
-        }
-      },
-      onStopTraining: async ({ tokenIds }) => {
-        try {
-          const smartAccount = await biconomyAccount.init();
-
-          await checkSmartWalletAssociation({ smartAccount });
-
-          const callData = encodeFunctionData({
-            abi: bearzStakeChildABI,
-            functionName: "stopTraining",
-            args: [tokenIds],
-          });
-
-          const partialUserOp = await smartAccount.buildUserOp([
-            {
-              to: bearzStakeChildContractAddress,
-              data: callData,
-            },
-          ]);
-
-          const { paymasterAndData } =
-            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-              mode: PaymasterMode.SPONSORED,
-            });
-
-          partialUserOp.paymasterAndData = paymasterAndData;
-
-          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-
-          const toastId = toast.info(
-            "Calling bear(s) on the intercom...please wait...",
-            { autoClose: false },
-          );
-
-          const { success } = await userOpResponse.wait();
-
-          if (success === "false") {
-            toast.update(toastId, {
-              type: toast.TYPE.ERROR,
-              render: "There was an error while trying to call on the bearz!",
-            });
-            return;
-          }
-
-          toast.update(toastId, {
-            type: toast.TYPE.SUCCESS,
-            autoClose: 7500,
-            render: "Bear(s) left training.",
-          });
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-          return false;
-        }
-      },
-      onStartTraining: async ({ tokenIds }) => {
-        try {
-          const smartAccount = await biconomyAccount.init();
-
-          await checkSmartWalletAssociation({ smartAccount });
-
-          const callData = encodeFunctionData({
-            abi: bearzStakeChildABI,
-            functionName: "train",
-            args: [tokenIds],
-          });
-
-          const partialUserOp = await smartAccount.buildUserOp([
-            {
-              to: bearzStakeChildContractAddress,
-              data: callData,
-            },
-          ]);
-
-          const { paymasterAndData } =
-            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-              mode: PaymasterMode.SPONSORED,
-            });
-
-          partialUserOp.paymasterAndData = paymasterAndData;
-
-          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-
-          const toastId = toast.info("Time to train...", { autoClose: false });
-
-          const receipt = await userOpResponse.wait();
-
-          if (receipt?.success === "false") {
-            toast.update(toastId, {
-              type: toast.TYPE.ERROR,
-              render: "There was an error attempting to train!",
-            });
-            return;
-          }
-
-          toast.update(toastId, {
-            type: toast.TYPE.SUCCESS,
-            autoClose: 7500,
-            render: "Bear(s) are in training.",
-          });
-
-          return true;
-        } catch (error) {
-          console.log(error);
-          toast.error("There was an error. Please try again!");
-          return false;
-        }
-      },
-      onStake: async ({ tokenIds }) => {
-        try {
-          const publicClient = getPublicClient({
-            chainId: mainnet.id,
-          });
-
-          const { request } = await publicClient.simulateContract({
-            address: bearzStakeContractAddress,
-            abi: bearzStakeABI,
-            functionName: "stake",
-            args: [tokenIds],
-            account: {
-              address: signer.getAddress(),
-            },
-          });
-
-          const walletClient = await getWalletClient({
-            chainId: mainnet.id,
-          });
-
-          const hash = await walletClient.writeContract(request);
-
-          await toast.promise(
-            waitForTransaction({
-              hash,
-            }),
-            {
-              pending: "Staking assets...",
-              success: "Bear assets have been staked!",
-              error: "There was an error",
-            },
-          );
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-          return false;
-        }
-      },
-      onUnstake: async ({ tokenIds }) => {
-        try {
-          const publicClient = getPublicClient({
-            chainId: mainnet.id,
-          });
-
-          const { request } = await publicClient.simulateContract({
-            address: bearzStakeContractAddress,
-            abi: bearzStakeABI,
-            functionName: "unstake",
-            args: [tokenIds],
-            account: {
-              address: signer.getAddress(),
-            },
-          });
-
-          const walletClient = await getWalletClient({
-            chainId: mainnet.id,
-          });
-
-          const hash = await walletClient.writeContract(request);
-
-          await toast.promise(
-            waitForTransaction({
-              hash,
-            }),
-            {
-              pending: "Unstaking assets...",
-              success: "Bear assets have been unstaked!",
-              error: "There was an error",
-            },
-          );
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-          return false;
-        }
-      },
-    },
+    actions,
   };
 };
 
@@ -1044,6 +556,15 @@ const Experience = ({ isSimulated = false }) => {
     [hasItemsSelected, selectedValues],
   );
 
+  const hasAction =
+    hasItemsSelected &&
+    (canStakeSelected ||
+      canUnstakeSelected ||
+      canTrainSelected ||
+      canStopTrainSelected);
+
+  const isReady = !isLoading;
+
   return (
     <>
       <div className="flex flex-col h-screen w-screen bg-dark font-primary space-y-4 text-white overflow-x-hidden">
@@ -1055,7 +576,7 @@ const Experience = ({ isSimulated = false }) => {
             ) : (
               <div className="flex flex-col w-full h-full items-center space-y-10">
                 <h1 className="text-lg">Your Brawler Bearz ({data.length})</h1>
-                {isLoading ? (
+                {!isReady ? (
                   <Loading />
                 ) : (
                   <div className="flex flex-col w-full h-full space-y-2">
@@ -1375,7 +896,13 @@ const Experience = ({ isSimulated = false }) => {
                 </button>
               )}
               <button
-                className="hidden md:flex items-center justify-center focus:scale-[98%] text-xs hover:text-accent uppercase transition ease-in duration-200 px-2"
+                className={classnames(
+                  " items-center justify-center focus:scale-[98%] text-xs hover:text-accent uppercase transition ease-in duration-200 px-2",
+                  {
+                    "hidden md:flex": hasAction,
+                    flex: !hasAction,
+                  },
+                )}
                 onClick={(e) => {
                   setSelected({});
                 }}
@@ -1424,15 +951,6 @@ const Experience = ({ isSimulated = false }) => {
           </div>
         </div>
       )}
-      <ToastContainer
-        theme="dark"
-        position="bottom-center"
-        autoClose={6000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-      />
     </>
   );
 };

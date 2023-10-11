@@ -30,45 +30,29 @@ import {
 import { orderBy, last } from "lodash";
 import { WagmiConfig, createConfig, useAccount, useContractRead } from "wagmi";
 import {
-  getWalletClient,
-  getPublicClient,
-  waitForTransaction,
-} from "@wagmi/core";
-import {
   ConnectKitProvider,
   ConnectKitButton,
   getDefaultConfig,
 } from "connectkit";
-import { BiconomySmartAccount } from "@biconomy/account";
-import { PaymasterMode } from "@biconomy/paymaster";
-import { ChainId } from "@biconomy/core-types";
 import { mainnet, polygon } from "viem/chains";
-import { encodeFunctionData, createPublicClient, http } from "viem";
 import { generateRenderingOrder } from "./lib/renderer";
 import { BEARZ_SHOP_IMAGE_URI, getStatsByTokenId } from "./lib/blockchain";
 import { shortenAddress, formatNumber } from "./lib/formatting";
 import {
   WALLETCONNECT_PROJECT_ID,
   CONNECT_KIT_THEME,
-  L2_ALCHEMY_KEY,
+  ALCHEMY_KEY,
 } from "./lib/constants";
 import pawButton from "./interactive/paw.png";
 import buttonBackground from "./interactive/button.png";
 import twoDButton from "./interactive/toggle2d.png";
 import pixelButton from "./interactive/togglepixel.png";
 import logoImage from "./interactive/logo.gif";
-import {
-  bearzConsumableABI,
-  bearzConsumableContractAddress,
-  bearzShopABI,
-  bearzShopContractAddress,
-  bearzStakeChildABI,
-  bearzStakeChildContractAddress,
-} from "./lib/contracts";
+import { bearzShopABI, bearzShopContractAddress } from "./lib/contracts";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
-import { biconomyConfiguration } from "./lib/biconomy";
 import { consumableTypeToItemId } from "./lib/consumables";
 import useQuests from "./hooks/useQuests";
+import useBearzActions from "./hooks/useBearzActions";
 
 const LoadingScreen = ({ children, tokenId }) => {
   const [progress, setProgress] = useState(25);
@@ -208,309 +192,18 @@ const useNFTWrapped = ({ isSimulated, overrideAddress, onRefresh }) => {
 
   const { isLoading, owner: signer } = useSimpleAccountOwner();
 
+  const actions = useBearzActions({
+    account,
+    signer,
+  });
+
   if (isLoading || !signer?.getAddress()) {
     return account;
   }
 
-  const biconomyAccount = new BiconomySmartAccount(
-    biconomyConfiguration(signer, ChainId.POLYGON_MAINNET),
-  );
-
-  const checkSmartWalletAssociation = async ({ smartAccount }) => {
-    const polygonClient = createPublicClient({
-      chain: polygon,
-      transport: http(
-        `https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`,
-      ),
-    });
-
-    const smartAccountAddress = await smartAccount.getSmartAccountAddress();
-
-    // Check if smart wallet is enabled already and associated to leverage
-    const smartWalletAssociated = await polygonClient.readContract({
-      address: bearzStakeChildContractAddress,
-      abi: bearzStakeChildABI,
-      functionName: "operatorAccess",
-      args: [smartAccountAddress],
-    });
-
-    // Set up smart wallet association if different than expected
-    if (
-      smartWalletAssociated.toLowerCase() !== smartAccount.owner.toLowerCase()
-    ) {
-      toast.info(
-        `Setting up smart wallet permissions for EOA: ${smartAccount.owner}`,
-      );
-
-      const publicClient = getPublicClient({
-        chainId: polygon.id,
-      });
-
-      const { request } = await publicClient.simulateContract({
-        address: bearzStakeChildContractAddress,
-        abi: bearzStakeChildABI,
-        functionName: "associateOperatorAsOwner",
-        args: [smartAccountAddress],
-        account: {
-          address: signer.getAddress(),
-        },
-      });
-
-      const walletClient = await getWalletClient({
-        chainId: polygon.id,
-      });
-
-      const hash = await walletClient.writeContract(request);
-
-      const receipt = await waitForTransaction({
-        hash,
-      });
-
-      toast.success(
-        `Created smart wallet: ${smartAccountAddress}...continuing...`,
-      );
-    }
-  };
-
   return {
     ...account,
-    actions: {
-      onDeactivate: async ({ tokenId, itemTokenId }) => {
-        try {
-          const publicClient = getPublicClient({
-            chainId: mainnet.id,
-          });
-
-          const { request } = await publicClient.simulateContract({
-            address: bearzConsumableContractAddress,
-            abi: bearzConsumableABI,
-            functionName: "deactivate",
-            args: [tokenId, itemTokenId],
-            account: {
-              address: signer.getAddress(),
-            },
-          });
-
-          const walletClient = await getWalletClient({
-            chainId: mainnet.id,
-          });
-
-          const hash = await walletClient.writeContract(request);
-
-          await toast.promise(
-            waitForTransaction({
-              hash,
-            }),
-            {
-              pending: "De-activating consumable",
-              success: "Consumable deactivated!",
-              error: "There was an error",
-            },
-          );
-
-          onRefresh();
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-        }
-      },
-      onActivate: async ({ tokenId, itemTokenId }) => {
-        try {
-          const publicClient = getPublicClient({
-            chainId: mainnet.id,
-          });
-
-          const { request } = await publicClient.simulateContract({
-            address: bearzConsumableContractAddress,
-            abi: bearzConsumableABI,
-            functionName: "activate",
-            args: [tokenId, itemTokenId],
-            account: {
-              address: signer.getAddress(),
-            },
-          });
-
-          const walletClient = await getWalletClient({
-            chainId: mainnet.id,
-          });
-
-          const hash = await walletClient.writeContract(request);
-
-          await toast.promise(
-            waitForTransaction({
-              hash,
-            }),
-            {
-              pending: "Activating consumable",
-              success: "Consumable activated!",
-              error: "There was an error",
-            },
-          );
-
-          onRefresh();
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-        }
-      },
-      onQuest: async ({ tokenIds, questTypeIds, tokenAmount }) => {
-        try {
-          const smartAccount = await biconomyAccount.init();
-
-          await checkSmartWalletAssociation({ smartAccount });
-
-          const callData = encodeFunctionData({
-            abi: bearzStakeChildABI,
-            functionName: "quest",
-            args: [tokenIds, questTypeIds, tokenAmount],
-          });
-
-          const partialUserOp = await smartAccount.buildUserOp([
-            {
-              to: bearzStakeChildContractAddress,
-              data: callData,
-            },
-          ]);
-
-          const { paymasterAndData } =
-            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-              mode: PaymasterMode.SPONSORED,
-            });
-
-          partialUserOp.paymasterAndData = paymasterAndData;
-
-          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-
-          await toast.promise(userOpResponse.wait(), {
-            pending: "Packing up to go out on quest...",
-            success: "Bear left to go on quest.",
-            error: "There was an error",
-          });
-
-          onRefresh();
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-        }
-      },
-      onStopTraining: async ({ tokenIds }) => {
-        try {
-          const smartAccount = await biconomyAccount.init();
-
-          await checkSmartWalletAssociation({ smartAccount });
-
-          const callData = encodeFunctionData({
-            abi: bearzStakeChildABI,
-            functionName: "stopTraining",
-            args: [tokenIds],
-          });
-
-          const partialUserOp = await smartAccount.buildUserOp([
-            {
-              to: bearzStakeChildContractAddress,
-              data: callData,
-            },
-          ]);
-
-          const { paymasterAndData } =
-            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-              mode: PaymasterMode.SPONSORED,
-            });
-
-          partialUserOp.paymasterAndData = paymasterAndData;
-
-          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-
-          const toastId = toast.info(
-            "Calling bear on the intercom...please wait...",
-            { autoClose: false },
-          );
-
-          const receipt = await userOpResponse.wait();
-
-          if (receipt?.success === "false") {
-            toast.update(toastId, {
-              type: toast.TYPE.ERROR,
-              render: "There was an error",
-            });
-            return false;
-          }
-
-          toast.update(toastId, {
-            type: toast.TYPE.SUCCESS,
-            autoClose: 7500,
-            render: "Bear left training.",
-          });
-
-          onRefresh();
-
-          return true;
-        } catch (e) {
-          console.log(e);
-          toast.error("There was an error. Please try again!");
-          return false;
-        }
-      },
-      onStartTraining: async ({ tokenIds }) => {
-        try {
-          const smartAccount = await biconomyAccount.init();
-
-          await checkSmartWalletAssociation({ smartAccount });
-
-          const callData = encodeFunctionData({
-            abi: bearzStakeChildABI,
-            functionName: "train",
-            args: [tokenIds],
-          });
-
-          const partialUserOp = await smartAccount.buildUserOp([
-            {
-              to: bearzStakeChildContractAddress,
-              data: callData,
-            },
-          ]);
-
-          const { paymasterAndData } =
-            await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-              mode: PaymasterMode.SPONSORED,
-            });
-
-          partialUserOp.paymasterAndData = paymasterAndData;
-
-          const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-
-          const toastId = toast.info("Time to train...", { autoClose: false });
-
-          const receipt = await userOpResponse.wait();
-
-          if (receipt?.success === "false") {
-            toast.update(toastId, {
-              type: toast.TYPE.ERROR,
-              render: "There was an error attempting to train!",
-            });
-            return false;
-          }
-
-          toast.update(toastId, {
-            type: toast.TYPE.SUCCESS,
-            autoClose: 7500,
-            render: "Bear(s) are in training.",
-          });
-
-          onRefresh();
-
-          return true;
-        } catch (error) {
-          console.log(error);
-          toast.error("There was an error. Please try again!");
-          return false;
-        }
-      },
-    },
+    actions,
   };
 };
 
@@ -1574,7 +1267,8 @@ const ImageRenderer = ({
         className={classnames("absolute left-0 z-[1]", {
           "top-0": !isMobile,
           "!ml-0 !w-full !bottom-[210px] h-[100vw]": isMobile && selected,
-          "w-[calc(100%-80px)] h-[calc(100%-80px)] z-[1] ml-[40px]": !isMobile && !selected,
+          "w-[calc(100%-80px)] h-[calc(100%-80px)] z-[1] ml-[40px]":
+            !isMobile && !selected,
           "w-[calc(100%-200px)] h-[calc(100%-200px)] z-[1] ml-[100px]":
             !isMobile && selected,
         })}
@@ -2121,15 +1815,6 @@ const Experience = ({
           </div>
         )}
       </div>
-      <ToastContainer
-        theme="dark"
-        position="bottom-center"
-        autoClose={6000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-      />
     </>
   );
 };
@@ -2147,7 +1832,7 @@ const NFTViewer = ({ isSandboxed, metadata, onRefresh }) => {
       config={createConfig(
         getDefaultConfig({
           autoConnect: true,
-          alchemyId: L2_ALCHEMY_KEY, // or infuraId
+          alchemyId: ALCHEMY_KEY,
           walletConnectProjectId: WALLETCONNECT_PROJECT_ID,
           appName: "Brawler Bearz: Interactive Experience",
           appDescription: "A mini-dapp for managing your brawler bear",
