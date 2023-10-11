@@ -728,7 +728,7 @@ const CratesView = ({ isSimulated }) => {
   return (
     <div
       className={classnames("flex flex-col relative text-white items-center", {
-        "justify-center h-screen w-screen": !isConnected,
+        "h-screen w-screen": !isConnected,
         "h-full w-full overflow-x-hidden": isConnected,
       })}
     >
