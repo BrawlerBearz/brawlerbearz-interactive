@@ -38,6 +38,7 @@ import { mainnet } from "viem/chains";
 import logoImage from "./interactive/logo.gif";
 import { BEARZ_SHOP_IMAGE_URI } from "./lib/blockchain";
 import { FaSkull as SkullIcon } from "react-icons/fa";
+import buttonBackground from "./interactive/button.png";
 
 const useSimulatedAccount = () => {
   return {
@@ -82,7 +83,6 @@ const canUnstake = (i) =>
 const canStopTraining = (i) => i?.activity?.training?.isTraining;
 
 const canStopQuest = (i) => {
-  console.log(i.activity);
   return i?.activity?.questing?.isQuesting;
 };
 
@@ -163,7 +163,7 @@ const GridView = ({ data, selected, setSelected }) => {
           >
             <div
               className={classnames(
-                "cursor-pointer relative flex flex-col w-full bg-dark shadow-pixel hover:shadow-pixelAccent shadow-xs overflow-hidden transition ease-in duration-300",
+                "cursor-pointer relative flex flex-col w-full bg-dark shadow-pixel hover:bg-main shadow-xs overflow-hidden transition ease-in duration-300",
                 {
                   "shadow-pixelAccent": isSelected,
                 },
@@ -653,10 +653,6 @@ const QuestSelector = ({ activeQuests, onClose, onSubmit }) => {
     );
   }, [items]);
 
-  console.log({
-    itemLookup,
-  });
-
   return (
     <div className="fixed top-0 left-0 h-full w-full z-[99999] bg-dark overflow-auto text-white">
       <div className="absolute top-0 left-0 flex flex-row flex-shrink-0 w-full justify-between items-center h-[65px] px-4 sm:px-10 text-white z-[2]">
@@ -695,6 +691,63 @@ const QuestSelector = ({ activeQuests, onClose, onSubmit }) => {
   );
 };
 
+const Transferring = ({ tokenIds, onClose, onSubmit }) => {
+  const [recipient, setRecipient] = useState(null);
+
+  return (
+    <div className="fixed top-0 left-0 h-full w-full z-[99999] bg-dark overflow-auto text-white">
+      <div className="absolute top-0 left-0 flex flex-row flex-shrink-0 w-full justify-between items-center h-[65px] px-4 sm:px-10 text-white z-[2]">
+        <button
+          className="bg-main p-1 rounded-full text-3xl shadow-xl"
+          onClick={onClose}
+        >
+          <BackIcon />
+        </button>
+      </div>
+      <div className="flex flex-col space-y-3 py-[65px]">
+        <div className="flex flex-col flex-shrink-0 items-center justify-center w-full gap-4 px-6 md:px-10">
+          <h1 className="text-white text-base md:text-xl text-center">
+            Enter recipient
+          </h1>
+          <form
+            className="flex flex-col w-full h-full max-w-2xl items-center justify-center space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!recipient) return;
+              onSubmit(recipient);
+            }}
+          >
+            <p className="text-accent">You are transferring: {tokenIds.join(',')}</p>
+            <p className="text-sm opacity-80">
+              Enter a recipient eth address below. Please be careful as we
+              cannot recover assets from typos.
+            </p>
+            <Input
+              name="recipient"
+              placeholder="Enter eth address..."
+              value={recipient}
+              onChange={(value) => setRecipient(value)}
+            />
+            <button
+              type="submit"
+              className="relative flex items-center justify-center w-[200px] cursor-pointer"
+            >
+              <img
+                className="object-cover h-full w-full"
+                src={buttonBackground}
+                alt="button"
+              />
+              <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                Transfer
+              </span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Experience = ({ isSimulated = false }) => {
   const { address, isConnected, actions } = useNFTWrapped({
     isSimulated,
@@ -705,8 +758,9 @@ const Experience = ({ isSimulated = false }) => {
 
   const [selected, setSelected] = useState({});
   const [isShowingWarning, setIsShowingWarning] = useState(false);
-  const [selectedQuest, setSelectedQuest] = useState(null);
+
   const [isSelectingQuest, setIsSelectingQuest] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
 
   const dataLookup = useMemo(() => keyBy(data, "metadata.tokenId"), [data]);
 
@@ -831,8 +885,6 @@ const Experience = ({ isSimulated = false }) => {
 
   const isReady = !isLoading;
 
-  console.log(activeQuests);
-
   return (
     <>
       <div className="flex flex-col h-screen w-screen bg-dark font-primary space-y-4 text-white overflow-x-hidden">
@@ -886,6 +938,11 @@ const Experience = ({ isSimulated = false }) => {
                             onClick={() => setSelected(getStopQuestable(data))}
                           >
                             Select end questing
+                          </button>,
+                          <button
+                            onClick={() => setSelected(getStakable(data))}
+                          >
+                            Select transferrable
                           </button>,
                         ]}
                       />
@@ -1204,6 +1261,21 @@ const Experience = ({ isSimulated = false }) => {
                   End Quests
                 </button>
               )}
+              {canStakeSelected && (
+                <button
+                  className={classnames(
+                    "flex items-center justify-center focus:scale-[98%] text-xs uppercase transition ease-in duration-200 px-2",
+                    {
+                      "opacity-50 cursor-not-allowed":
+                        !canStakeSelected || isProcessing,
+                      "hover:text-accent": canStakeSelected,
+                    },
+                  )}
+                  onClick={() => setIsTransferring(true)}
+                >
+                  Transfer
+                </button>
+              )}
               <button
                 className={classnames(
                   " items-center justify-center focus:scale-[98%] text-xs hover:text-accent uppercase transition ease-in duration-200 px-2",
@@ -1244,6 +1316,30 @@ const Experience = ({ isSimulated = false }) => {
             if (success) {
               await actions?.onRefresh();
               setIsSelectingQuest(null);
+            }
+          }}
+        />
+      )}
+      {isTransferring && (
+        <Transferring
+          address={address}
+          tokenIds={selectedValues?.map((item) =>
+            BigInt(item.metadata.tokenId),
+          )}
+          onClose={() => {
+            setIsTransferring(false);
+          }}
+          onSubmit={async (recipient) => {
+            const success = await actions?.onTransfer({
+              recipient,
+              tokenIds: selectedValues.map((item) =>
+                BigInt(item.metadata.tokenId),
+              ),
+            });
+
+            if (success) {
+              await actions?.onRefresh();
+              setIsTransferring(false);
             }
           }}
         />

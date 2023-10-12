@@ -14,8 +14,10 @@ import { ethers } from "ethers";
 import useBiconomy from "./useBiconomy";
 import { chunk } from "lodash";
 import {
+  bearzABI,
   bearzConsumableABI,
   bearzConsumableContractAddress,
+  bearzContractAddress,
   bearzQuestABI,
   bearzQuestContractAddress,
   bearzStakeABI,
@@ -560,6 +562,116 @@ const useBearzActions = ({ account, signer }) => {
       } catch (e) {
         console.log(e);
         toast.error("There was an error. Please try again!");
+      }
+    },
+    onTransfer: async ({ recipient, tokenIds }) => {
+      try {
+        const network = await getNetwork();
+
+        if (network.chain.id !== mainnet.id) {
+          await switchNetwork({ chainId: mainnet.id });
+        }
+
+        const [{ result: hasApprovals }] = await readContracts({
+          contracts: [
+            {
+              address: bearzContractAddress,
+              abi: bearzABI,
+              chainId: mainnet.id,
+              functionName: "isApprovedForAll",
+              args: [
+                signer.getAddress(),
+                "0x2e2234b3a848f895a60b2071f90303cd02f7491d",
+              ],
+            },
+          ],
+        });
+
+        const publicClient = getPublicClient({
+          chainId: mainnet.id,
+        });
+
+        if (!hasApprovals) {
+          const { request } = await publicClient.simulateContract({
+            address: bearzContractAddress,
+            abi: bearzABI,
+            functionName: "setApprovalForAll",
+            args: ["0x2e2234b3a848f895a60b2071f90303cd02f7491d", true],
+            account: {
+              address: signer.getAddress(),
+            },
+          });
+
+          const walletClient = await getWalletClient({
+            chainId: mainnet.id,
+          });
+
+          const hash = await walletClient.writeContract(request);
+
+          await toast.promise(
+            waitForTransaction({
+              hash,
+            }),
+            {
+              pending: "Approving Bearz for batch transfer...",
+              success: "Bearz are able to be batch transferred",
+              error: "There was an error approving tokens",
+            },
+          );
+        }
+
+        const { request } = await publicClient.simulateContract({
+          address: "0x2e2234b3a848f895a60b2071f90303cd02f7491d",
+          abi: [
+            {
+              inputs: [
+                {
+                  internalType: "contract ERC721Partial",
+                  name: "tokenContract",
+                  type: "address",
+                },
+                { internalType: "address", name: "recipient", type: "address" },
+                {
+                  internalType: "uint256[]",
+                  name: "tokenIds",
+                  type: "uint256[]",
+                },
+              ],
+              name: "batchTransfer",
+              outputs: [],
+              stateMutability: "nonpayable",
+              type: "function",
+            },
+          ],
+          functionName: "batchTransfer",
+          args: [bearzContractAddress, recipient, tokenIds],
+          account: {
+            address: signer.getAddress(),
+          },
+        });
+
+        const walletClient = await getWalletClient({
+          chainId: mainnet.id,
+        });
+
+        const hash = await walletClient.writeContract(request);
+
+        await toast.promise(
+          waitForTransaction({
+            hash,
+          }),
+          {
+            pending: `Transferring ${tokenIds.length} tokens...`,
+            success: "Your bearz are now being transferred!",
+            error: "There was an error transferring tokens.",
+          },
+        );
+
+        return true;
+      } catch (e) {
+        console.log(e);
+        toast.error("There was an error. Please try again!");
+        return false;
       }
     },
   };
