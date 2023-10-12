@@ -448,7 +448,7 @@ const ActionMenu = ({
                 )}
                 <a
                   className="opacity-80 hover:opacity-100 text-[20px] cursor-pointer"
-                  href={image}
+                  href={`${image}?q=${Math.random()}`}
                   download
                 >
                   <DownloadIcon />
