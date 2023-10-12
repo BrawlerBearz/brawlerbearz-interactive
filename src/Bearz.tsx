@@ -165,7 +165,7 @@ const GridView = ({ data, selected, setSelected }) => {
               className={classnames(
                 "cursor-pointer relative flex flex-col w-full bg-dark shadow-pixel hover:bg-main shadow-xs overflow-hidden transition ease-in duration-300",
                 {
-                  "shadow-pixelAccent": isSelected,
+                  "bg-main shadow-pixelAccent": isSelected,
                 },
               )}
             >
@@ -239,17 +239,24 @@ const GridView = ({ data, selected, setSelected }) => {
                     <span>{lck || 0}</span>
                   </div>
                 </div>
-                <div className="flex flex-row items-center justify-center w-full text-xs w-full">
-                  <Link
-                    to={`/${metadata?.tokenId}`}
-                    className="shadow-pixel py-2 px-4 bg-main text-xs hover:animate-pulse hover:text-accent transition ease-in duration-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    Manage
-                  </Link>
-                </div>
+
+                {!isSelected ? (
+                  <div className="flex flex-row items-center justify-center w-full text-xs w-full">
+                    <Link
+                      to={`/${metadata?.tokenId}`}
+                      className="shadow-pixel py-2 px-4 bg-main text-xs hover:animate-pulse hover:text-accent transition ease-in duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      Manage
+                    </Link>
+                  </div>
+                ) : (
+                    <div className="flex flex-row items-center justify-center w-full text-xs w-full">
+                      <span className="text-accent uppercase">Selected</span>
+                    </div>
+                )}
               </div>
             </div>
           </div>
@@ -347,17 +354,23 @@ const ListView = ({ data, selected, setSelected }) => {
                     <span className="text-xs">{lck || 0}</span>
                   </div>
                 </div>
-                <div className="flex flex-row items-center w-full text-xs space-x-3">
-                  <Link
-                    to={`/${metadata?.tokenId}`}
-                    className="shadow-pixel py-1 px-2 bg-main text-xs hover:animate-pulse hover:text-accent transition ease-in duration-200"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  >
-                    Manage
-                  </Link>
-                </div>
+                {!isSelected ? (
+                    <div className="flex flex-row items-center w-full text-xs space-x-3">
+                      <Link
+                          to={`/${metadata?.tokenId}`}
+                          className="shadow-pixel py-1 px-2 bg-main text-xs hover:animate-pulse hover:text-accent transition ease-in duration-200"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                      >
+                        Manage
+                      </Link>
+                    </div>
+                ) : (
+                    <div className="flex flex-row items-center w-full text-xs space-x-3">
+                      <span className="text-accent uppercase">Selected</span>
+                    </div>
+                )}
               </div>
             </div>
           </div>
@@ -710,18 +723,25 @@ const Transferring = ({ tokenIds, onClose, onSubmit }) => {
             Enter recipient
           </h1>
           <form
-            className="flex flex-col w-full h-full max-w-2xl items-center justify-center space-y-6"
+            className="flex flex-col w-full h-full max-w-2xl items-center justify-center space-y-6 px-6 md:px-10"
             onSubmit={(e) => {
               e.preventDefault();
               if (!recipient) return;
               onSubmit(recipient);
             }}
           >
-            <p className="text-accent">You are transferring: {tokenIds.join(',')}</p>
-            <p className="text-sm opacity-80">
-              Enter a recipient eth address below. Please be careful as we
-              cannot recover assets from typos.
-            </p>
+            <div className="flex flex-col w-full space-y-1">
+              <p className="text-accent">
+                <span className="opacity-80 text-white">
+                  You are transferring:
+                </span>
+                <br /> {tokenIds.join(", ")}
+              </p>
+              <p className="text-sm opacity-80 pt-3">
+                Enter a recipient eth address below. Please be careful as we
+                cannot recover assets from typos.
+              </p>
+            </div>
             <Input
               name="recipient"
               placeholder="Enter eth address..."

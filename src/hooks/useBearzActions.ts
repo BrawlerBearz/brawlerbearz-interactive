@@ -84,32 +84,22 @@ const useBearzActions = ({ account, signer }) => {
           return;
         }
 
-        const provider = await initializeBiconomy();
-
-        const tokenContract = new ethers.Contract(
-          bearzTokenContractAddress,
-          bearzTokenABI,
-          provider.getSigner(account.address),
-        );
-
-        const contract = new ethers.Contract(
-          bearzStakeChildContractAddress,
-          bearzStakeChildABI,
-          provider.getSigner(account.address),
-        );
-
-        console.log({
-          questPrice,
-          balance,
-          allowances,
-          allTokes: questPrice * BigInt(tokenIds.length),
-          can: balance < questPrice * BigInt(tokenIds.length),
-        });
-
         if (allowances < questPrice * BigInt(tokenIds.length)) {
           const approvalToastId = toast.loading(
             "Awaiting for $CREDIT token allowance. You are signing to allow usage of your token.",
           );
+
+          const provider = await initializeBiconomy();
+
+          const { maxFeePerGas } = await provider.getFeeData();
+
+          const tokenContract = new ethers.Contract(
+            bearzTokenContractAddress,
+            bearzTokenABI,
+            provider.getSigner(account.address),
+          );
+
+          console.log(provider);
 
           const result = await signERC2612Permit(
             provider,
@@ -117,8 +107,6 @@ const useBearzActions = ({ account, signer }) => {
             account.address,
             bearzStakeChildContractAddress,
           );
-
-          const { maxFeePerGas } = await provider.getFeeData();
 
           const gasLimit = await tokenContract.estimateGas.permit(
             account.address,
@@ -161,6 +149,14 @@ const useBearzActions = ({ account, signer }) => {
           autoClose: false,
           progress: 0,
         });
+
+        const provider = await initializeBiconomy();
+
+        const contract = new ethers.Contract(
+          bearzStakeChildContractAddress,
+          bearzStakeChildABI,
+          provider.getSigner(account.address),
+        );
 
         for (let i = 0; i < chunks.length; i++) {
           const chunkTokenIds = chunks[i];
