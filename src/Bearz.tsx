@@ -2,7 +2,7 @@
 import React, { useMemo, useRef, useState } from "react";
 import classnames from "classnames";
 import { ToastContainer } from "react-toastify";
-import { useAccount } from "wagmi";
+import { useAccount, useContractRead } from "wagmi";
 import {
   MdLock as LockIcon,
   MdViewList as ListIcon,
@@ -10,6 +10,8 @@ import {
   MdSort as SortIcon,
   MdOutlineFilterAlt as FilterIcon,
   MdClose as CloseIcon,
+  MdArrowBack as BackIcon,
+  MdChevronRight as ArrowRightIcon,
 } from "react-icons/md";
 import { LuMousePointer2 as EditIcon } from "react-icons/lu";
 import { Link, useSearchParams } from "react-router-dom";
@@ -29,6 +31,13 @@ import PleaseConnectWallet from "./components/PleaseConnectWallet";
 import shadowImage from "./interactive/shadow.png";
 import useBearzNFTs from "./hooks/useBearzNFTs";
 import useBearzActions from "./hooks/useBearzActions";
+import useQuests from "./hooks/useQuests";
+import { formatDistanceToNow, fromUnixTime, isAfter, isBefore } from "date-fns";
+import { bearzShopABI, bearzShopContractAddress } from "./lib/contracts";
+import { mainnet } from "viem/chains";
+import logoImage from "./interactive/logo.gif";
+import { BEARZ_SHOP_IMAGE_URI } from "./lib/blockchain";
+import { FaSkull as SkullIcon } from "react-icons/fa";
 
 const useSimulatedAccount = () => {
   return {
@@ -72,6 +81,11 @@ const canUnstake = (i) =>
 
 const canStopTraining = (i) => i?.activity?.training?.isTraining;
 
+const canStopQuest = (i) => {
+  console.log(i.activity);
+  return i?.activity?.questing?.isQuesting;
+};
+
 const reduceStakable = (acc, item) => {
   if (canStake(item)) {
     acc[item?.metadata?.tokenId] = item;
@@ -100,6 +114,20 @@ const reduceStopTrainable = (acc, item) => {
   return acc;
 };
 
+const reduceQuestable = (acc, item) => {
+  if (canUnstake(item)) {
+    acc[item?.metadata?.tokenId] = item;
+  }
+  return acc;
+};
+
+const reduceStopQuestable = (acc, item) => {
+  if (canEndQuest(item)) {
+    acc[item?.metadata?.tokenId] = item;
+  }
+  return acc;
+};
+
 const getStakable = (data) => data?.reduce(reduceStakable, {});
 
 const getUnstakable = (data) => data?.reduce(reduceUnstakable, {});
@@ -108,7 +136,9 @@ const getTrainable = (data) => data?.reduce(reduceTrainable, {});
 
 const getStopTrainable = (data) => data?.reduce(reduceStopTrainable, {});
 
-const getQuestable = (data, questId) => {};
+const getQuestable = (data) => data?.reduce(reduceQuestable, {});
+
+const getStopQuestable = (data) => data?.reduce(reduceStopQuestable, {});
 
 const GridView = ({ data, selected, setSelected }) => {
   return (
@@ -133,7 +163,7 @@ const GridView = ({ data, selected, setSelected }) => {
           >
             <div
               className={classnames(
-                "cursor-pointer relative flex flex-col w-full bg-dark shadow-pixel hover:shadow-pixelAccent shadow-xs overflow-hidden transition ease-in duration-200",
+                "cursor-pointer relative flex flex-col w-full bg-dark shadow-pixel hover:shadow-pixelAccent shadow-xs overflow-hidden transition ease-in duration-300",
                 {
                   "shadow-pixelAccent": isSelected,
                 },
@@ -252,9 +282,9 @@ const ListView = ({ data, selected, setSelected }) => {
           >
             <div
               className={classnames(
-                "cursor-pointer relative flex flex-row w-full h-full bg-dark shadow-pixel hover:shadow-pixelAccent shadow-xs overflow-hidden transition ease-in duration-200",
+                "cursor-pointer relative flex flex-row w-full h-full bg-dark shadow-pixel hover:bg-main shadow-xs overflow-hidden",
                 {
-                  "shadow-pixelAccent": isSelected,
+                  "bg-main shadow-pixelAccent": isSelected,
                 },
               )}
             >
@@ -454,15 +484,229 @@ const Select = ({ onChange, value, options, ...rest }) => {
   );
 };
 
+const QuestListView = ({ data, itemLookup, selected, setSelected }) => {
+  return (
+    <div className="flex flex-col w-full h-full items-center justify-center gap-4 px-3 md:px-10 pt-6 pb-20">
+      {data?.length > 0 ? (
+        <div className="flex flex-col items-center justify-center flex-shrink-0 w-full max-w-2xl flex-wrap gap-2">
+          {data.map((quest) => {
+            const activeDate = new Date(fromUnixTime(quest?.activeUntil));
+            const isActive = isAfter(activeDate, new Date());
+            return (
+              <button
+                key={quest?.questId}
+                className={classnames(
+                  "min-h-[80px] flex space-x-2 w-full text-left shadow-xs shadow-pixel hover:bg-main p-4",
+                  {
+                    "bg-main shadow-pixelAccent": selected === quest?.questId,
+                  },
+                )}
+                onClick={() => {
+                  // Unselect
+                  if (selected === quest?.questId) {
+                    setSelected(null);
+                  } else {
+                    setSelected(quest?.questId);
+                  }
+                }}
+              >
+                <div className="flex flex-col flex-grow-1 space-y-2 truncate">
+                  <h3 className="text-base text-accent">{quest?.name}</h3>
+                  <p className="text-xs opacity-90 truncate">
+                    {quest?.description}
+                  </p>
+                  <span className="text-xs opacity-80">
+                    {isActive ? "Ends in " : "Ended "}
+                    {formatDistanceToNow(
+                      new Date(fromUnixTime(quest?.activeUntil)),
+                    )}
+                    {isActive ? "" : " ago"}
+                  </span>
+                  <div className="flex flex-row flex-shrink-0 items-center w-full flex-wrap gap-4">
+                    {quest?.itemIds.map((item, index) => {
+                      const isValidItem = Number(item) !== 0;
+
+                      const metadata = isValidItem ? itemLookup[item] : {};
+
+                      const currentRarity =
+                        index === quest?.rarities.length - 1
+                          ? Number(quest?.rarities[index]) - 1
+                          : Number(quest?.rarities[index]);
+
+                      const dropRarity =
+                        (index === 0
+                          ? Number(currentRarity)
+                          : Number(currentRarity) -
+                            Number(quest?.rarities[index - 1])) / 100;
+
+                      return (
+                        <div key={item} className="flex flex-col space-y-2">
+                          {isValidItem ? (
+                            <div
+                              title={metadata.name}
+                              className="flex flex-col flex-shrink-0 w-[60px] gap-2"
+                            >
+                              <img
+                                className="h-full w-full"
+                                src={`${BEARZ_SHOP_IMAGE_URI}${item}.png`}
+                                alt={metadata.name}
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              key={`NONE_${index}`}
+                              className="flex flex-col items-center bg-main border border-[1px] border-white rounded-md justify-center space-y-2 p-4 text-center flex flex-col flex-shrink-0 w-[60px] h-[84px] gap-2"
+                            >
+                              <SkullIcon className="relative h-[30px] w-[30px] object-contain" />
+                              <span className="text-[10px] opacity-80">
+                                Nothing
+                              </span>
+                            </div>
+                          )}
+                          <span className="text-[10px] text-center">
+                            {dropRarity}%
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <p>
+          <p className="text-xs">No recent quests</p>
+        </p>
+      )}
+    </div>
+  );
+};
+
+const QuestViewActions = ({ selected, setSelected, onSubmit, onClose }) => {
+  return (
+    <div className="flex flex-row items-center justify-center fixed z-[10000] bottom-0 w-full text-base bg-dark2 border-t-[3px] border-accent">
+      <div
+        className="flex flex-row h-[80px] w-full items-center justify-center px-6 space-x-6"
+        style={{
+          backdropFilter: "blur(12px)",
+        }}
+      >
+        <button
+          className={classnames(
+            "flex flex-col space-x-2 items-center justify-center focus:scale-[98%] text-xs uppercase transition ease-in duration-200 px-2",
+            {
+              "opacity-50 cursor-not-allowed": !selected,
+              "hover:text-accent": selected,
+            },
+          )}
+          onClick={async () => {
+            await onSubmit(selected);
+            onClose();
+          }}
+        >
+          <span>Quest</span>
+        </button>
+        {/*<button*/}
+        {/*  className="flex items-center justify-center focus:scale-[98%] text-xs hover:text-accent uppercase transition ease-in duration-200 px-2"*/}
+        {/*  onClick={(e) => {*/}
+        {/*    setSelected(null);*/}
+        {/*  }}*/}
+        {/*>*/}
+        {/*  Unselect*/}
+        {/*</button>*/}
+      </div>
+    </div>
+  );
+};
+
+const QuestSelector = ({ activeQuests, onClose, onSubmit }) => {
+  const [selected, setSelected] = useState(null);
+
+  const quest = selected
+    ? activeQuests.find((quest) => quest?.questId === selected)
+    : {};
+
+  const allItemIds = activeQuests.reduce((acc, item) => {
+    acc = acc.concat(item.itemIds);
+    return acc;
+  }, []);
+
+  const { data: items, isLoading } = useContractRead({
+    address: bearzShopContractAddress,
+    abi: bearzShopABI,
+    chainId: mainnet.id,
+    functionName: "getMetadataBatch",
+    args: [allItemIds],
+  });
+
+  const itemLookup = useMemo(() => {
+    return keyBy(
+      items.map((item, index) => {
+        return {
+          id: allItemIds[index],
+          ...item,
+        };
+      }),
+      "id",
+    );
+  }, [items]);
+
+  console.log({
+    itemLookup,
+  });
+
+  return (
+    <div className="fixed top-0 left-0 h-full w-full z-[99999] bg-dark overflow-auto text-white">
+      <div className="absolute top-0 left-0 flex flex-row flex-shrink-0 w-full justify-between items-center h-[65px] px-4 sm:px-10 text-white z-[2]">
+        <button
+          className="bg-main p-1 rounded-full text-3xl shadow-xl"
+          onClick={onClose}
+        >
+          <BackIcon />
+        </button>
+      </div>
+      <div className="flex flex-col space-y-3 py-[65px]">
+        <div className="flex flex-col flex-shrink-0 items-center justify-center w-full gap-4 px-6 md:px-10">
+          <h1 className="text-white text-base md:text-xl text-center">
+            Select active quest
+          </h1>
+        </div>
+        <QuestListView
+          data={activeQuests}
+          itemLookup={itemLookup}
+          selected={selected}
+          setSelected={setSelected}
+        />
+        {selected && quest && (
+          <QuestViewActions
+            quest={quest}
+            items={items}
+            isLoading={isLoading}
+            selected={selected}
+            setSelected={setSelected}
+            onSubmit={onSubmit}
+            onClose={onClose}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Experience = ({ isSimulated = false }) => {
   const { address, isConnected, actions } = useNFTWrapped({
     isSimulated,
   });
 
   const { data, isLoading, onRefresh } = useBearzNFTs(address);
+  const [{ quests }] = useQuests({ address });
 
   const [selected, setSelected] = useState({});
   const [isShowingWarning, setIsShowingWarning] = useState(false);
+  const [selectedQuest, setSelectedQuest] = useState(null);
+  const [isSelectingQuest, setIsSelectingQuest] = useState(false);
 
   const dataLookup = useMemo(() => keyBy(data, "metadata.tokenId"), [data]);
 
@@ -556,14 +800,38 @@ const Experience = ({ isSimulated = false }) => {
     [hasItemsSelected, selectedValues],
   );
 
+  const canQuestSelected = useMemo(
+    () => hasItemsSelected && selectedValues?.every(canUnstake),
+    [hasItemsSelected, selectedValues],
+  );
+
+  const canStopQuestSelected = useMemo(
+    () => hasItemsSelected && selectedValues?.every(canStopQuest),
+    [hasItemsSelected, selectedValues],
+  );
+
+  const activeQuests = useMemo(
+    () =>
+      quests.filter((quest) =>
+        isBefore(new Date(), fromUnixTime(quest?.activeUntil)),
+      ),
+    [quests],
+  );
+
+  const hasActiveQuests = activeQuests?.length > 0;
+
   const hasAction =
     hasItemsSelected &&
     (canStakeSelected ||
       canUnstakeSelected ||
       canTrainSelected ||
-      canStopTrainSelected);
+      canStopTrainSelected ||
+      (canQuestSelected && hasActiveQuests) ||
+      canStopQuestSelected);
 
   const isReady = !isLoading;
+
+  console.log(activeQuests);
 
   return (
     <>
@@ -592,12 +860,12 @@ const Experience = ({ isSimulated = false }) => {
                           <button
                             onClick={() => setSelected(getStakable(data))}
                           >
-                            Select stakeable
+                            Select stakable
                           </button>,
                           <button
                             onClick={() => setSelected(getUnstakable(data))}
                           >
-                            Select un-stakeable
+                            Select end staking
                           </button>,
                           <button
                             onClick={() => setSelected(getTrainable(data))}
@@ -607,7 +875,17 @@ const Experience = ({ isSimulated = false }) => {
                           <button
                             onClick={() => setSelected(getStopTrainable(data))}
                           >
-                            Select stop trainable
+                            Select end training
+                          </button>,
+                          <button
+                            onClick={() => setSelected(getQuestable(data))}
+                          >
+                            Select questable
+                          </button>,
+                          <button
+                            onClick={() => setSelected(getStopQuestable(data))}
+                          >
+                            Select end questing
                           </button>,
                         ]}
                       />
@@ -813,15 +1091,11 @@ const Experience = ({ isSimulated = false }) => {
                     },
                   )}
                   onClick={async (e) => {
-                    setIsShowingWarning(true);
-
                     const success = await actions.onUnstake({
                       tokenIds: selectedValues.map((item) =>
                         BigInt(item.metadata.tokenId),
                       ),
                     });
-
-                    setIsShowingWarning(false);
 
                     if (success) {
                       setSelected({});
@@ -844,15 +1118,11 @@ const Experience = ({ isSimulated = false }) => {
                     },
                   )}
                   onClick={async (e) => {
-                    setIsShowingWarning(true);
-
                     const success = await actions.onStartTraining({
                       tokenIds: selectedValues.map((item) =>
                         BigInt(item.metadata.tokenId),
                       ),
                     });
-
-                    setIsShowingWarning(false);
 
                     if (success) {
                       setSelected({});
@@ -875,15 +1145,11 @@ const Experience = ({ isSimulated = false }) => {
                     },
                   )}
                   onClick={async (e) => {
-                    setIsShowingWarning(true);
-
                     const success = await actions.onStopTraining({
                       tokenIds: selectedValues.map((item) =>
                         BigInt(item.metadata.tokenId),
                       ),
                     });
-
-                    setIsShowingWarning(false);
 
                     if (success) {
                       setSelected({});
@@ -893,6 +1159,49 @@ const Experience = ({ isSimulated = false }) => {
                   disabled={!canStopTrainSelected || isProcessing}
                 >
                   Stop Training
+                </button>
+              )}
+              {canQuestSelected && activeQuests.length > 0 && (
+                <button
+                  className={classnames(
+                    "flex items-center justify-center focus:scale-[98%] text-xs uppercase transition ease-in duration-200 px-2",
+                    {
+                      "opacity-50 cursor-not-allowed":
+                        !canQuestSelected || isProcessing,
+                      "hover:text-accent": canQuestSelected,
+                    },
+                  )}
+                  onClick={() => setIsSelectingQuest(true)}
+                  disabled={!canQuestSelected || isProcessing}
+                >
+                  Quest
+                </button>
+              )}
+              {canStopQuestSelected && (
+                <button
+                  className={classnames(
+                    "flex items-center justify-center focus:scale-[98%] text-xs uppercase transition ease-in duration-200 px-2",
+                    {
+                      "opacity-50 cursor-not-allowed":
+                        !canStopQuestSelected || isProcessing,
+                      "hover:text-accent": canStopQuestSelected,
+                    },
+                  )}
+                  onClick={async (e) => {
+                    const success = await actions.onEndQuest({
+                      tokenIds: selectedValues.map((item) =>
+                        BigInt(item.metadata.tokenId),
+                      ),
+                    });
+
+                    if (success) {
+                      setSelected({});
+                      onRefresh();
+                    }
+                  }}
+                  disabled={!canQuestSelected || isProcessing}
+                >
+                  End Quests
                 </button>
               )}
               <button
@@ -913,6 +1222,32 @@ const Experience = ({ isSimulated = false }) => {
           </div>
         )}
       </div>
+      {isSelectingQuest && (
+        <QuestSelector
+          address={address}
+          activeQuests={activeQuests}
+          quests={quests}
+          onClose={() => {
+            setIsSelectingQuest(null);
+          }}
+          onSubmit={async (questId) => {
+            const tokenIds = selectedValues.map((item) =>
+              BigInt(item.metadata.tokenId),
+            );
+
+            // Check eligibility for each token
+            const success = await actions?.onQuest({
+              tokenIds,
+              questId,
+            });
+
+            if (success) {
+              await actions?.onRefresh();
+              setIsSelectingQuest(null);
+            }
+          }}
+        />
+      )}
       {isShowingWarning && (
         <div
           className="fixed z-[10000] w-full h-[100vh] mx-auto overflow-hidden flex flex-col mx-auto"

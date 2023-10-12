@@ -5796,9 +5796,16 @@ export const bearzQuickSale2ABI = [
 ];
 
 export const bearzConsumableContractAddress =
-  "0xF3BEB3a8ad1C68EeB4FFeD6b003dEadE8834B66f";
+  "0x5f5303768078dF6aB7Ae109648dd5792Fc46A68d";
 
 export const bearzConsumableABI = [
+  {
+    inputs: [
+      { internalType: "address", name: "_trustedForwarder", type: "address" },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
   { inputs: [], name: "InvalidItemType", type: "error" },
   { inputs: [], name: "InvalidOwner", type: "error" },
   { inputs: [], name: "NotConsumed", type: "error" },
@@ -5859,6 +5866,7 @@ export const bearzConsumableABI = [
     name: "Deactivated",
     type: "event",
   },
+  { anonymous: false, inputs: [], name: "EIP712DomainChanged", type: "event" },
   {
     anonymous: false,
     inputs: [
@@ -5966,9 +5974,56 @@ export const bearzConsumableABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "eip712Domain",
+    outputs: [
+      { internalType: "bytes1", name: "fields", type: "bytes1" },
+      { internalType: "string", name: "name", type: "string" },
+      { internalType: "string", name: "version", type: "string" },
+      { internalType: "uint256", name: "chainId", type: "uint256" },
+      { internalType: "address", name: "verifyingContract", type: "address" },
+      { internalType: "bytes32", name: "salt", type: "bytes32" },
+      { internalType: "uint256[]", name: "extensions", type: "uint256[]" },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          { internalType: "address", name: "from", type: "address" },
+          { internalType: "address", name: "to", type: "address" },
+          { internalType: "uint256", name: "value", type: "uint256" },
+          { internalType: "uint256", name: "gas", type: "uint256" },
+          { internalType: "uint256", name: "nonce", type: "uint256" },
+          { internalType: "bytes", name: "data", type: "bytes" },
+        ],
+        internalType: "struct MinimalForwarderUpgradeable.ForwardRequest",
+        name: "req",
+        type: "tuple",
+      },
+      { internalType: "bytes", name: "signature", type: "bytes" },
+    ],
+    name: "execute",
+    outputs: [
+      { internalType: "bool", name: "", type: "bool" },
+      { internalType: "bytes", name: "", type: "bytes" },
+    ],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "uint256", name: "tokenId", type: "uint256" }],
     name: "getConsumables",
     outputs: [{ internalType: "bytes[]", name: "", type: "bytes[]" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "from", type: "address" }],
+    name: "getNonce",
+    outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
     stateMutability: "view",
     type: "function",
   },
@@ -6023,6 +6078,13 @@ export const bearzConsumableABI = [
       { internalType: "uint256", name: "itemTokenId", type: "uint256" },
     ],
     name: "isActiveConsumable",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "forwarder", type: "address" }],
+    name: "isTrustedForwarder",
     outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
     type: "function",
@@ -6120,6 +6182,28 @@ export const bearzConsumableABI = [
         type: "address",
       },
     ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          { internalType: "address", name: "from", type: "address" },
+          { internalType: "address", name: "to", type: "address" },
+          { internalType: "uint256", name: "value", type: "uint256" },
+          { internalType: "uint256", name: "gas", type: "uint256" },
+          { internalType: "uint256", name: "nonce", type: "uint256" },
+          { internalType: "bytes", name: "data", type: "bytes" },
+        ],
+        internalType: "struct MinimalForwarderUpgradeable.ForwardRequest",
+        name: "req",
+        type: "tuple",
+      },
+      { internalType: "bytes", name: "signature", type: "bytes" },
+    ],
+    name: "verify",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
     stateMutability: "view",
     type: "function",
   },

@@ -1,9 +1,11 @@
+// @ts-nocheck
 import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { useAccount, useContractRead, useWalletClient } from "wagmi";
 import { keyBy } from "lodash";
 import { Contract, providers } from "ethers";
 import { toast } from "react-toastify";
+import { Biconomy } from "@biconomy/mexa";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 import { useSimpleAccountOwner } from "../lib/useSimpleAccountOwner";
@@ -14,8 +16,10 @@ import {
   bearzQuickSale2Address,
   bearzShopABI,
   bearzShopContractAddress,
+  bearzSupplyCratesContractAddress,
 } from "../lib/contracts";
 import { ALCHEMY_KEY } from "../lib/constants";
+import { getNetwork, switchNetwork } from "@wagmi/core";
 
 const CONSUMABLE_TOKEN_IDS = [300];
 
@@ -27,6 +31,8 @@ const useSimulatedAccount = (simulatedAddress) => {
     status: "connected",
   };
 };
+
+let biconomy: any;
 
 function walletClientToSigner(walletClient) {
   const { account, chain, transport } = walletClient;
@@ -96,6 +102,7 @@ const getUserConsumables = async (address, tokenIds) => {
 const useConsumables = ({ isSimulated, overrideAddress }) => {
   const navigate = useNavigate();
 
+  const [isLoadingBiconomy, setIsLoadingBiconomy] = useState(true);
   const [consumables, setConsumables] = useState(null);
   const [isApproving, setApproving] = useState(false);
 
@@ -125,6 +132,35 @@ const useConsumables = ({ isSimulated, overrideAddress }) => {
 
   useEffect(() => {
     (async function () {
+      if (
+        (account?.address && signer?.provider && !biconomy) ||
+        (biconomy && biconomy?.status !== biconomy?.READY)
+      ) {
+        const network = await getNetwork();
+
+        if (network.chain.id !== mainnet.id) {
+          await switchNetwork({ chainId: mainnet.id });
+        }
+
+        biconomy = new Biconomy(new providers.Web3Provider(window.ethereum), {
+          apiKey: "DZgKduUcK.58f69cf0-6070-482c-85a6-17c5e2f24d83",
+          debug: false,
+          contractAddresses: [bearzSupplyCratesContractAddress],
+          strictMode: true,
+        });
+
+        biconomy
+          .onEvent(biconomy.READY, async () => {
+            setIsLoadingBiconomy(false);
+          })
+          .onEvent(biconomy.ERROR, (error, message) => {
+            console.log(error);
+            toast.error(message);
+          });
+      } else {
+        setIsLoadingBiconomy(false);
+      }
+
       if (account?.address) {
         await onRefresh(account?.address);
       }
@@ -228,12 +264,14 @@ const useConsumables = ({ isSimulated, overrideAddress }) => {
       },
       onConsume: async ({ tokenId, itemTokenId }) => {
         try {
-          const feeData = await signer.provider.getFeeData();
+          const provider = new providers.Web3Provider(biconomy);
+
+          const feeData = await provider.getFeeData();
 
           const contract = new Contract(
             bearzConsumableContractAddress,
             bearzConsumableABI,
-            signer,
+            provider.getSigner(account.address),
           );
 
           const gasLimit = await contract.estimateGas.consume(
@@ -246,7 +284,7 @@ const useConsumables = ({ isSimulated, overrideAddress }) => {
           setConsumingContext(`Check wallet for transaction...`);
 
           const tx = await contract.consume(tokenId, itemTokenId, true, {
-            gasLimit: gasLimit.mul(100).div(80),
+            gasLimit: gasLimit.mul(100).div(60),
             maxFeePerGas: feeData.maxFeePerGas,
             maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
           });

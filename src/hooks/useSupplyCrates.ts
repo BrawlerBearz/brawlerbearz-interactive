@@ -33,6 +33,7 @@ import rollEffect from "../interactive/sounds/roll.wav";
 import revealEffect from "../interactive/sounds/reveal.wav";
 import slideEffect from "../interactive/sounds/slide.wav";
 import winnerEffect from "../interactive/sounds/winner.wav";
+import { getNetwork, switchNetwork } from "@wagmi/core";
 
 let biconomy: any;
 
@@ -251,6 +252,12 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
         (account?.address && signer?.provider && !biconomy) ||
         (biconomy && biconomy?.status !== biconomy?.READY)
       ) {
+        const network = await getNetwork();
+
+        if (network.chain.id !== mainnet.id) {
+          await switchNetwork({ chainId: mainnet.id });
+        }
+
         biconomy = new Biconomy(new providers.Web3Provider(window.ethereum), {
           apiKey: "DZgKduUcK.58f69cf0-6070-482c-85a6-17c5e2f24d83",
           debug: false,

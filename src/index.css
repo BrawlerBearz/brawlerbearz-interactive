@@ -37,7 +37,7 @@ html {
 .Toastify__toast-container {
   font-size: 1rem;
   color: #fff;
-  z-index: 1000000 !important;
+  z-index: 10000000 !important;
 }
 
 .Toastify__toast-theme--dark {

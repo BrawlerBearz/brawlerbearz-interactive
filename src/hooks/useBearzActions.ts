@@ -1,12 +1,14 @@
 // @ts-nocheck
 import { mainnet, polygon } from "viem/chains";
 import { toast } from "react-toastify";
+import { signERC2612Permit } from "eth-permit";
 import {
   getPublicClient,
   getWalletClient,
   waitForTransaction,
   switchNetwork,
   getNetwork,
+  readContracts,
 } from "@wagmi/core";
 import { ethers } from "ethers";
 import useBiconomy from "./useBiconomy";
@@ -14,14 +16,19 @@ import { chunk } from "lodash";
 import {
   bearzConsumableABI,
   bearzConsumableContractAddress,
+  bearzQuestABI,
+  bearzQuestContractAddress,
   bearzStakeABI,
   bearzStakeChildABI,
   bearzStakeChildContractAddress,
   bearzStakeContractAddress,
+  bearzTokenABI,
+  bearzTokenContractAddress,
 } from "../lib/contracts";
 
 const useBearzActions = ({ account, signer }) => {
   const CHUNK_SIZE = 25;
+
   const { initializeBiconomy } = useBiconomy({
     account,
     contractAddresses: [bearzStakeChildContractAddress],
@@ -30,83 +37,178 @@ const useBearzActions = ({ account, signer }) => {
     chainId: polygon.id,
   });
 
-  // const biconomyAccount = new BiconomySmartAccount({
-  //   signer,
-  //   chainId: ChainId.POLYGON_MAINNET,
-  //   rpcUrl: `https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`,
-  //   paymaster: new BiconomyPaymaster({
-  //     paymasterUrl:
-  //         "https://paymaster.biconomy.io/api/v1/137/pQ4YfSfVI.5f85bc99-110a-4594-9629-5f5c5ddacded",
-  //   }),
-  //   bundler: new Bundler({
-  //     bundlerUrl:
-  //         "https://bundler.biconomy.io/api/v2/137/BB897hJ89.dd7fopYh-iJkl-jI89-af80-6877f74b7Fcg",
-  //     chainId: ChainId.POLYGON_MAINNET,
-  //     entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-  //   }),
-  //   entryPointAddress: DEFAULT_ENTRYPOINT_ADDRESS,
-  // });
-  //
-  // const checkSmartWalletAssociation = async ({ smartAccount }) => {
-  //   const polygonClient = createPublicClient({
-  //     chain: polygon,
-  //     transport: http(
-  //         `https://polygon-mainnet.g.alchemy.com/v2/${L2_ALCHEMY_KEY}`,
-  //     ),
-  //   });
-  //
-  //   const smartAccountAddress = await smartAccount.getSmartAccountAddress();
-  //
-  //   // Check if smart wallet is enabled already and associated to leverage
-  //   const smartWalletAssociated = await polygonClient.readContract({
-  //     address: bearzStakeChildContractAddress,
-  //     abi: bearzStakeChildABI,
-  //     functionName: "operatorAccess",
-  //     args: [smartAccountAddress],
-  //   });
-  //
-  //   await switchNetwork({ chainId: polygon.id });
-  //
-  //   // Set up smart wallet association if different than expected
-  //   if (
-  //       true // smartWalletAssociated.toLowerCase() !== smartAccount.owner.toLowerCase()
-  //   ) {
-  //     toast.info(
-  //         `Setting up smart wallet permissions for EOA: ${smartAccount.owner}`,
-  //     );
-  //
-  //     const publicClient = getPublicClient({
-  //       chainId: polygon.id,
-  //     });
-  //
-  //     const { request } = await publicClient.simulateContract({
-  //       address: bearzStakeChildContractAddress,
-  //       abi: bearzStakeChildABI,
-  //       functionName: "associateOperatorAsOwner",
-  //       args: [smartAccountAddress],
-  //       account: {
-  //         address: signer.getAddress(),
-  //       },
-  //     });
-  //
-  //     const walletClient = await getWalletClient({
-  //       chainId: polygon.id,
-  //     });
-  //
-  //     const hash = await walletClient.writeContract(request);
-  //
-  //     const receipt = await waitForTransaction({
-  //       hash,
-  //     });
-  //
-  //     toast.success(
-  //         `Created smart wallet: ${smartAccountAddress}...continuing...`,
-  //     );
-  //   }
-  // };
-
   return {
-    onQuest: async ({ tokenIds, questTypeIds, tokenAmount }) => {
+    onQuest: async ({ tokenIds, questId }) => {
+      let toastId;
+
+      try {
+        const network = await getNetwork();
+
+        if (network.chain.id !== polygon.id) {
+          await switchNetwork({ chainId: polygon.id });
+        }
+
+        const [
+          { result: questPrice },
+          { result: balance },
+          { result: allowances },
+        ] = await readContracts({
+          contracts: [
+            {
+              address: bearzStakeChildContractAddress,
+              abi: bearzStakeChildABI,
+              chainId: polygon.id,
+              functionName: "questPrice",
+            },
+            {
+              address: bearzTokenContractAddress,
+              abi: bearzTokenABI,
+              chainId: polygon.id,
+              functionName: "balanceOf",
+              args: [account.address],
+            },
+            {
+              address: bearzTokenContractAddress,
+              abi: bearzTokenABI,
+              chainId: polygon.id,
+              functionName: "allowance",
+              args: [account.address, bearzStakeChildContractAddress],
+            },
+          ],
+        });
+
+        if (!balance || balance < questPrice * BigInt(tokenIds.length)) {
+          toast.error("You do not have enough credits to quest!");
+          return;
+        }
+
+        const provider = await initializeBiconomy();
+
+        const tokenContract = new ethers.Contract(
+          bearzTokenContractAddress,
+          bearzTokenABI,
+          provider.getSigner(account.address),
+        );
+
+        const contract = new ethers.Contract(
+          bearzStakeChildContractAddress,
+          bearzStakeChildABI,
+          provider.getSigner(account.address),
+        );
+
+        console.log({
+          questPrice,
+          balance,
+          allowances,
+          allTokes: questPrice * BigInt(tokenIds.length),
+          can: balance < questPrice * BigInt(tokenIds.length),
+        });
+
+        if (allowances < questPrice * BigInt(tokenIds.length)) {
+          const approvalToastId = toast.loading(
+            "Awaiting for $CREDIT token allowance. You are signing to allow usage of your token.",
+          );
+
+          const result = await signERC2612Permit(
+            provider,
+            bearzTokenContractAddress,
+            account.address,
+            bearzStakeChildContractAddress,
+          );
+
+          const { maxFeePerGas } = await provider.getFeeData();
+
+          const gasLimit = await tokenContract.estimateGas.permit(
+            account.address,
+            bearzStakeChildContractAddress,
+            result.value,
+            result.deadline,
+            result.v,
+            result.r,
+            result.s,
+          );
+
+          const approval = await tokenContract.permit(
+            account.address,
+            bearzStakeChildContractAddress,
+            result.value,
+            result.deadline,
+            result.v,
+            result.r,
+            result.s,
+            {
+              gasLimit,
+              maxFeePerGas,
+            },
+          );
+
+          await approval.wait();
+
+          toast.update(approvalToastId, {
+            render: `Approved token usage! Continuing quest tx...`,
+            type: "success",
+            isLoading: false,
+            closeButton: true,
+            autoClose: 5000,
+          });
+        }
+
+        const chunks = chunk(tokenIds, CHUNK_SIZE);
+
+        toastId = toast(`Check wallet for ${chunks.length} transaction(s)...`, {
+          autoClose: false,
+          progress: 0,
+        });
+
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkTokenIds = chunks[i];
+
+          const questTokenIds = chunkTokenIds.map((_) => questId);
+
+          const gasLimit = await contract.estimateGas.quest(
+            chunkTokenIds,
+            questTokenIds,
+            questPrice * chunkTokenIds.length,
+          );
+
+          const { maxFeePerGas } = await provider.getFeeData();
+
+          const transaction = await contract.quest(
+            chunkTokenIds,
+            questTokenIds,
+            questPrice * chunkTokenIds.length,
+            {
+              gasLimit: gasLimit.mul(100).div(50),
+              maxFeePerGas,
+            },
+          );
+
+          toast.update(toastId, {
+            type: "default",
+            render: "Time to quest...",
+            autoClose: false,
+          });
+          await transaction.wait();
+          toast.update(toastId, {
+            type: "success",
+            render: "Bear(s) are questing.",
+            autoClose: i === chunks?.length - 1 ? 5000 : false,
+          });
+        }
+
+        return true;
+      } catch (error) {
+        console.log(error);
+        if (toastId) {
+          toast.update(toastId, {
+            type: "error",
+            render: "There was an error please try again.",
+          });
+        }
+        return false;
+      }
+    },
+    onEndQuest: async ({ tokenIds, questTypeIds }) => {
       try {
         // const smartAccount = await biconomyAccount.init();
         //
