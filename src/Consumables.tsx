@@ -22,6 +22,7 @@ import { consumableTypeToItemId } from "./lib/consumables";
 import useConsumables from "./hooks/useConsumables";
 
 const ListView = ({ data, selected, setSelected, consumableTokenId }) => {
+
   const selectable = useMemo(() => {
     return data?.filter((item) => {
       const foundIndex = item?.metadata?.consumables?.findIndex(
@@ -31,7 +32,7 @@ const ListView = ({ data, selected, setSelected, consumableTokenId }) => {
       );
       return foundIndex === -1;
     }, []);
-  }, [consumableTokenId]);
+  }, [JSON.stringify(data.map(item => item?.metadata?.tokenId)), consumableTokenId]);
 
   return (
     <div className="flex flex-row flex-wrap justify-center gap-4 px-3 md:px-10 pt-6 pb-20">
