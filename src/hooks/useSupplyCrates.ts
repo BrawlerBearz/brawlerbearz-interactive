@@ -242,6 +242,13 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
     args: [account?.address, bearzSupplyCratesContractAddress],
   });
 
+  const { data: isPaused, refetch: refreshPaused } = useContractRead({
+    address: bearzQuickSaleAddress,
+    abi: bearzQuickSaleABI,
+    functionName: "isPaused",
+    args: [],
+  });
+
   const onRefresh = async (address) => {
     setCrates(await getUserCrates(address, CRATE_TOKEN_IDS));
   };
@@ -328,6 +335,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
       openingContext,
       isBuying,
       buyingContext,
+      canBuy: !isPaused
     },
     actions: {
       onRefresh: onRefresh.bind(null, account?.address),

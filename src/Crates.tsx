@@ -775,47 +775,53 @@ const CratesView = ({ isSimulated }) => {
                         alt={String(viewCrateId)}
                       />
                       <div className="flex flex-col space-y-1">
-                        <div className="flex flex-row items-center justify-center space-x-2 mt-3">
-                          <select
-                            className="flex text-right h-[34px] px-1 rounded-full bg-main border-dark border-[1px] text-white cursor-pointer z-[1]"
-                            value={amountToBuy}
-                            onChange={(e) => {
-                              setAmountToBuy(e.target.value);
-                            }}
-                            disabled={data?.isBuying}
-                          >
-                            {new Array(Number(100)).fill(0).map((i, index) => (
-                              <option key={index} value={index + 1}>
-                                {index + 1}
-                              </option>
-                            ))}
-                          </select>
-                          <button
-                            onClick={async () => {
-                              sounds?.start();
+                        {data?.canBuy ? (
+                            <div className="flex flex-row items-center justify-center space-x-2 mt-3">
+                              <select
+                                  className="flex text-right h-[34px] px-1 rounded-full bg-main border-dark border-[1px] text-white cursor-pointer z-[1]"
+                                  value={amountToBuy}
+                                  onChange={(e) => {
+                                    setAmountToBuy(e.target.value);
+                                  }}
+                                  disabled={data?.isBuying}
+                              >
+                                {new Array(Number(100)).fill(0).map((i, index) => (
+                                    <option key={index} value={index + 1}>
+                                      {index + 1}
+                                    </option>
+                                ))}
+                              </select>
+                              <button
+                                  onClick={async () => {
+                                    sounds?.start();
 
-                              const success = await actions?.onBuyCrates({
-                                amount: amountToBuy,
-                              });
+                                    const success = await actions?.onBuyCrates({
+                                      amount: amountToBuy,
+                                    });
 
-                              if (success) {
-                                setViewCrateId(null);
-                                actions?.onRefresh();
-                              }
-                            }}
-                            className="relative flex items-center justify-center h-[36px] cursor-pointer z-[1]"
-                            disabled={data?.isBuying}
-                          >
-                            <img
-                              className="object-cover h-full w-full"
-                              src={buttonBackground}
-                              alt="button"
-                            />
-                            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+                                    if (success) {
+                                      setViewCrateId(null);
+                                      actions?.onRefresh();
+                                    }
+                                  }}
+                                  className="relative flex items-center justify-center h-[36px] cursor-pointer z-[1]"
+                                  disabled={data?.isBuying}
+                              >
+                                <img
+                                    className="object-cover h-full w-full"
+                                    src={buttonBackground}
+                                    alt="button"
+                                />
+                                <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
                               {data?.isBuying ? "Buying..." : "Buy"}
                             </span>
-                          </button>
-                        </div>
+                              </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-row items-center justify-center space-x-2 mt-3">
+                              <p className="text-warn">Sale over</p>
+                            </div>
+                        )}
                         {data?.buyingContext && (
                           <p className="text-center text-warn text-sm py-2">
                             {data?.buyingContext}
@@ -830,7 +836,7 @@ const CratesView = ({ isSimulated }) => {
                         rel="noreferrer"
                         className="underline text-white text-sm text-center"
                       >
-                        Buy with credit card at the Bearzaar
+                        {data?.canBuy ? 'Buy with credit card at the Bearzaar' : 'Buy on secondary at the Bearzaar'}
                       </Link>
                       <h3 className="text-center">Drop rate(s)</h3>
                       <div className="flex flex-shrink-0 bg-main bg-opacity-80 w-full gap-4 py-6 px-6 md:px-10 overflow-x-auto whitespace-nowrap px-6 md:px-10 shadow-inner shadow-2xl">

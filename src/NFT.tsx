@@ -412,10 +412,6 @@ const ActionMenu = ({
 
   const { name, ownerOf, tokenId, image, consumables } = onChainMetadata || {};
 
-  console.log({
-    onChainMetadata
-  })
-
   const { level, xp, nextXpLevel } = stats || {};
 
   const { address, isConnected, actions } = useNFTWrapped({
