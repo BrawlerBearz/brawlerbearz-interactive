@@ -770,15 +770,15 @@ const QuestSelector = ({ activeQuests, tokenIds, onClose, onSubmit }) => {
                       The tokens below will not be included on the quest.
                     </p>
                     <span className="flex flex-row items-center space-x-2">
-                      <WarnIcon className="text-2xl" />
+                      <WarnIcon className="flex flex-shrink-0 text-2xl" />
                       <span className="text-warn">
-                        On cooldown: {invalidTokens?.join(", ")}
+                        On cooldown: {invalidTokens?.length > 0 ? invalidTokens?.join(", ") : 'N/A'}
                       </span>
                     </span>
                     <span className="flex flex-row items-center space-x-2">
-                      <CheckIcon className="text-2xl text-accent" />
+                      <CheckIcon className="flex flex-shrink-0 text-2xl text-accent" />
                       <span className="text-accent">
-                        Valid: {validTokens?.join(", ")}
+                        Valid: {validTokens?.length > 0 ? validTokens?.join(", ") : 'N/A'}
                       </span>
                     </span>
                   </div>
