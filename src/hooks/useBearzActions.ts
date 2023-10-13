@@ -99,10 +99,8 @@ const useBearzActions = ({ account, signer }) => {
             provider.getSigner(account.address),
           );
 
-          console.log(provider);
-
           const result = await signERC2612Permit(
-            provider,
+            window.ethereum,
             bearzTokenContractAddress,
             account.address,
             bearzStakeChildContractAddress,
@@ -166,7 +164,7 @@ const useBearzActions = ({ account, signer }) => {
           const gasLimit = await contract.estimateGas.quest(
             chunkTokenIds,
             questTokenIds,
-            questPrice * chunkTokenIds.length,
+            questPrice * BigInt(chunkTokenIds.length),
           );
 
           const { maxFeePerGas } = await provider.getFeeData();
@@ -174,7 +172,7 @@ const useBearzActions = ({ account, signer }) => {
           const transaction = await contract.quest(
             chunkTokenIds,
             questTokenIds,
-            questPrice * chunkTokenIds.length,
+            questPrice * BigInt(chunkTokenIds.length),
             {
               gasLimit: gasLimit.mul(100).div(50),
               maxFeePerGas,
@@ -186,10 +184,12 @@ const useBearzActions = ({ account, signer }) => {
             render: "Time to quest...",
             autoClose: false,
           });
+
           await transaction.wait();
+
           toast.update(toastId, {
             type: "success",
-            render: "Bear(s) are questing.",
+            render: "Bearz are questing.",
             autoClose: i === chunks?.length - 1 ? 5000 : false,
           });
         }
@@ -206,58 +206,67 @@ const useBearzActions = ({ account, signer }) => {
         return false;
       }
     },
-    onEndQuest: async ({ tokenIds, questTypeIds }) => {
+    onEndQuest: async ({ tokenIds }) => {
+      let toastId;
+
       try {
-        // const smartAccount = await biconomyAccount.init();
-        //
-        // await checkSmartWalletAssociation({ smartAccount });
-        //
-        // const callData = encodeFunctionData({
-        //   abi: bearzStakeChildABI,
-        //   functionName: "quest",
-        //   args: [tokenIds, questTypeIds, tokenAmount],
-        // });
-        //
-        // const partialUserOp = await smartAccount.buildUserOp([
-        //   {
-        //     to: bearzStakeChildContractAddress,
-        //     data: callData,
-        //   },
-        // ]);
-        //
-        // const { paymasterAndData } =
-        //   await smartAccount.paymaster.getPaymasterAndData(partialUserOp, {
-        //     mode: PaymasterMode.SPONSORED,
-        //   });
-        //
-        // partialUserOp.paymasterAndData = paymasterAndData;
-        //
-        // const userOpResponse = await smartAccount.sendUserOp(partialUserOp);
-        //
-        // const toastId = toast.info("Packing up to go out on quest...", {
-        //   autoClose: false,
-        // });
-        //
-        // const { success } = await userOpResponse.wait();
-        //
-        // if (success === "false") {
-        //   toast.update(toastId, {
-        //     type: toast.TYPE.ERROR,
-        //     render: "There was an error while trying to quest the bearz!",
-        //   });
-        //   return;
-        // }
-        //
-        // toast.update(toastId, {
-        //   type: toast.TYPE.SUCCESS,
-        //   autoClose: 7500,
-        //   render: "Bear(s) left to go on quest.",
-        // });
+        const network = await getNetwork();
+
+        if (network.chain.id !== polygon.id) {
+          await switchNetwork({ chainId: polygon.id });
+        }
+
+        const chunks = chunk(tokenIds, CHUNK_SIZE);
+
+        toastId = toast(`Check wallet for ${chunks.length} transaction(s)...`, {
+          autoClose: false,
+          progress: 0,
+        });
+
+        const provider = await initializeBiconomy();
+
+        const contract = new ethers.Contract(
+          bearzStakeChildContractAddress,
+          bearzStakeChildABI,
+          provider.getSigner(account.address),
+        );
+
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkTokenIds = chunks[i];
+
+          const gasLimit = await contract.estimateGas.endQuest(chunkTokenIds);
+
+          const { maxFeePerGas } = await provider.getFeeData();
+
+          const transaction = await contract.endQuest(chunkTokenIds, {
+            gasLimit: gasLimit.mul(100).div(50),
+            maxFeePerGas,
+          });
+
+          toast.update(toastId, {
+            type: "default",
+            render: "Time to end quest(s)...",
+            autoClose: false,
+          });
+
+          await transaction.wait();
+
+          toast.update(toastId, {
+            type: "success",
+            render: "Bearz are back from quest. Check rewards!",
+            autoClose: i === chunks?.length - 1 ? 5000 : false,
+          });
+        }
 
         return true;
-      } catch (e) {
-        console.log(e);
-        toast.error("There was an error. Please try again!");
+      } catch (error) {
+        console.log(error);
+        if (toastId) {
+          toast.update(toastId, {
+            type: "error",
+            render: "There was an error please try again.",
+          });
+        }
         return false;
       }
     },
@@ -303,7 +312,7 @@ const useBearzActions = ({ account, signer }) => {
           await transaction.wait();
           toast.update(toastId, {
             type: "success",
-            render: "Bear(s) are now back from training.",
+            render: "Bearz are now back from training.",
             autoClose: i === chunks?.length - 1 ? 5000 : false,
           });
         }
@@ -361,7 +370,7 @@ const useBearzActions = ({ account, signer }) => {
           await transaction.wait();
           toast.update(toastId, {
             type: "success",
-            render: "Bear(s) are training.",
+            render: "Bearz are training.",
             autoClose: i === chunks?.length - 1 ? 5000 : false,
           });
         }

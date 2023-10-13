@@ -92,3 +92,17 @@ html {
   --toastify-color-progress-warning: var(--toastify-color-warning);
   --toastify-color-progress-error: var(--toastify-color-error);
 }
+
+.react-confirm-alert {
+  z-index: 9999999 !important;
+ }
+
+.react-confirm-alert-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999999 !important;
+  background: #08111b !important;
+}

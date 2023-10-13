@@ -1,17 +1,17 @@
 // @ts-nocheck
 import React, { useMemo, useRef, useState } from "react";
 import classnames from "classnames";
-import { ToastContainer } from "react-toastify";
-import { useAccount, useContractRead } from "wagmi";
+import { useAccount, useContractReads } from "wagmi";
 import {
   MdLock as LockIcon,
   MdViewList as ListIcon,
+  MdWarning as WarnIcon,
   MdGridView as GridIcon,
   MdSort as SortIcon,
   MdOutlineFilterAlt as FilterIcon,
   MdClose as CloseIcon,
   MdArrowBack as BackIcon,
-  MdChevronRight as ArrowRightIcon,
+  MdCheckCircle as CheckIcon,
 } from "react-icons/md";
 import { LuMousePointer2 as EditIcon } from "react-icons/lu";
 import { Link, useSearchParams } from "react-router-dom";
@@ -20,8 +20,9 @@ import {
   GiStrongMan as TrainingIcon,
   GiJourney as QuestIcon,
 } from "react-icons/gi";
-import { keyBy, reduce, orderBy } from "lodash";
+import { keyBy, reduce, orderBy, isEmpty } from "lodash";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import { confirmAlert } from "react-confirm-alert";
 import Header from "./components/Header";
 import SandboxWrapper from "./components/SandboxWrapper";
 import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
@@ -33,12 +34,19 @@ import useBearzNFTs from "./hooks/useBearzNFTs";
 import useBearzActions from "./hooks/useBearzActions";
 import useQuests from "./hooks/useQuests";
 import { formatDistanceToNow, fromUnixTime, isAfter, isBefore } from "date-fns";
-import { bearzShopABI, bearzShopContractAddress } from "./lib/contracts";
-import { mainnet } from "viem/chains";
-import logoImage from "./interactive/logo.gif";
+import {
+  bearzQuestABI,
+  bearzQuestContractAddress,
+  bearzShopABI,
+  bearzShopContractAddress,
+  bearzStakeChildABI,
+  bearzStakeChildContractAddress,
+} from "./lib/contracts";
+import { mainnet, polygon } from "viem/chains";
 import { BEARZ_SHOP_IMAGE_URI } from "./lib/blockchain";
 import { FaSkull as SkullIcon } from "react-icons/fa";
 import buttonBackground from "./interactive/button.png";
+import "react-confirm-alert/src/react-confirm-alert.css";
 
 const useSimulatedAccount = () => {
   return {
@@ -82,8 +90,15 @@ const canUnstake = (i) =>
 
 const canStopTraining = (i) => i?.activity?.training?.isTraining;
 
-const canStopQuest = (i) => {
+const canForceEnd = (i) => {
   return i?.activity?.questing?.isQuesting;
+};
+
+const canEndAnyQuest = (i) => {
+  return (
+    i?.activity?.questing?.isQuesting &&
+    isAfter(new Date(fromUnixTime(i?.quest?.endsAt)), new Date())
+  );
 };
 
 const reduceStakable = (acc, item) => {
@@ -122,11 +137,20 @@ const reduceQuestable = (acc, item) => {
 };
 
 const reduceStopQuestable = (acc, item) => {
-  if (canEndQuest(item)) {
+  if (canEndAnyQuest(item)) {
     acc[item?.metadata?.tokenId] = item;
   }
   return acc;
 };
+
+const reduceForceStopQuestable = (acc, item) => {
+  if (canForceEnd(item)) {
+    acc[item?.metadata?.tokenId] = item;
+  }
+  return acc;
+};
+
+const getAll = (data) => keyBy(data, "metadata.tokenId");
 
 const getStakable = (data) => data?.reduce(reduceStakable, {});
 
@@ -140,6 +164,9 @@ const getQuestable = (data) => data?.reduce(reduceQuestable, {});
 
 const getStopQuestable = (data) => data?.reduce(reduceStopQuestable, {});
 
+const getForceStopQuestable = (data) =>
+  data?.reduce(reduceForceStopQuestable, {});
+
 const GridView = ({ data, selected, setSelected }) => {
   return (
     <div className="flex flex-row justify-center flex-wrap gap-4 px-6 md:px-10 pt-6 pb-20">
@@ -148,6 +175,9 @@ const GridView = ({ data, selected, setSelected }) => {
         const { end, int, lck, level, nextXpLevel, str, xp } = stats || {};
         const { isStaked, training, questing } = activity;
         const isSelected = selected[metadata?.tokenId];
+        const questOver =
+          questing?.isQuesting &&
+          isAfter(new Date(fromUnixTime(questing?.quest?.endsAt)), new Date());
 
         return (
           <div
@@ -181,7 +211,16 @@ const GridView = ({ data, selected, setSelected }) => {
                       <LockIcon className="relative text-lg text-accent flex-shrink-0" />
                     )}
                     {questing?.isQuesting && (
-                      <QuestIcon className="relative text-lg text-accent flex-shrink-0" />
+                      <QuestIcon
+                        className={classnames(
+                          "relative text-lg flex-shrink-0",
+                          {
+                            "text-accent": questOver,
+                            "text-error": !questOver,
+                          },
+                        )}
+                        title={questOver ? "Quest is over" : "Quest ongoing"}
+                      />
                     )}
                     {training?.isTraining && (
                       <TrainingIcon className="relative text-lg text-accent flex-shrink-0" />
@@ -253,9 +292,9 @@ const GridView = ({ data, selected, setSelected }) => {
                     </Link>
                   </div>
                 ) : (
-                    <div className="flex flex-row items-center justify-center w-full text-xs w-full">
-                      <span className="text-accent uppercase">Selected</span>
-                    </div>
+                  <div className="flex flex-row items-center justify-center w-full text-xs w-full">
+                    <span className="text-accent uppercase">Selected</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -274,6 +313,9 @@ const ListView = ({ data, selected, setSelected }) => {
         const { end, int, lck, level, nextXpLevel, str, xp } = stats || {};
         const { isStaked, training, questing } = activity;
         const isSelected = selected[metadata?.tokenId];
+        const questOver =
+          questing?.isQuesting &&
+          isAfter(new Date(fromUnixTime(questing?.quest?.endsAt)), new Date());
 
         return (
           <div
@@ -331,7 +373,18 @@ const ListView = ({ data, selected, setSelected }) => {
                     training?.isTraining) && (
                     <div className="flex flex-row items-center space-x-2 flex-shrink-0 text-accent">
                       {isStaked && <LockIcon />}
-                      {questing?.isQuesting && <QuestIcon />}
+                      {questing?.isQuesting && (
+                        <QuestIcon
+                          className={classnames(
+                            "relative text-lg flex-shrink-0",
+                            {
+                              "text-accent": questOver,
+                              "text-error": !questOver,
+                            },
+                          )}
+                          title={questOver ? "Quest is over" : "Quest ongoing"}
+                        />
+                      )}
                       {training?.isTraining && <TrainingIcon />}
                     </div>
                   )}
@@ -355,21 +408,21 @@ const ListView = ({ data, selected, setSelected }) => {
                   </div>
                 </div>
                 {!isSelected ? (
-                    <div className="flex flex-row items-center w-full text-xs space-x-3">
-                      <Link
-                          to={`/${metadata?.tokenId}`}
-                          className="shadow-pixel py-1 px-2 bg-main text-xs hover:animate-pulse hover:text-accent transition ease-in duration-200"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                          }}
-                      >
-                        Manage
-                      </Link>
-                    </div>
+                  <div className="flex flex-row items-center w-full text-xs space-x-3">
+                    <Link
+                      to={`/${metadata?.tokenId}`}
+                      className="shadow-pixel py-1 px-2 bg-main text-xs hover:animate-pulse hover:text-accent transition ease-in duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      Manage
+                    </Link>
+                  </div>
                 ) : (
-                    <div className="flex flex-row items-center w-full text-xs space-x-3">
-                      <span className="text-accent uppercase">Selected</span>
-                    </div>
+                  <div className="flex flex-row items-center w-full text-xs space-x-3">
+                    <span className="text-accent uppercase">Selected</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -408,7 +461,7 @@ const sortOptions = [
   { label: "Luck (asc)", value: "stats.lck" },
 ];
 
-const Dropdown = ({ title, trigger, menu, className, containerClassName }) => {
+const Dropdown = ({ title, trigger, menu, containerClassName }) => {
   const [open, setOpen] = React.useState(false);
 
   const handleOpen = () => {
@@ -442,23 +495,34 @@ const Dropdown = ({ title, trigger, menu, className, containerClassName }) => {
               <CloseIcon />
             </button>
           </div>
-          <ul className="list-style-none space-y-2 w-full">
-            {menu.map((menuItem, index) => (
-              <li
-                key={index}
-                className="flex flex-row p-1 text-xs truncate hover:opacity-100 opacity-80 w-full"
-              >
-                {React.cloneElement(menuItem, {
-                  onClick: () => {
-                    if (menuItem?.props?.onClick) {
-                      menuItem?.props?.onClick();
-                      setOpen(false);
-                    }
-                  },
-                })}
-              </li>
-            ))}
-          </ul>
+          {menu?.length > 0 ? (
+            <ul className="list-style-none space-y-2 w-full">
+              {menu?.map((menuItem, index) => (
+                <li
+                  key={index}
+                  className="flex flex-row p-1 text-xs truncate hover:opacity-100 opacity-80 w-full"
+                >
+                  {React.cloneElement(menuItem, {
+                    onClick: () => {
+                      if (menuItem?.props?.onClick) {
+                        menuItem?.props?.onClick();
+                        // Close out menu
+                        setTimeout(() => {
+                          setOpen(false);
+                        }, 100);
+                      }
+                    },
+                  })}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="space-y-2 w-full">
+              <p className="text-opacity text-warn text-xs">
+                No available actions
+              </p>
+            </div>
+          )}
         </div>
       ) : null}
     </div>
@@ -597,44 +661,7 @@ const QuestListView = ({ data, itemLookup, selected, setSelected }) => {
   );
 };
 
-const QuestViewActions = ({ selected, setSelected, onSubmit, onClose }) => {
-  return (
-    <div className="flex flex-row items-center justify-center fixed z-[10000] bottom-0 w-full text-base bg-dark2 border-t-[3px] border-accent">
-      <div
-        className="flex flex-row h-[80px] w-full items-center justify-center px-6 space-x-6"
-        style={{
-          backdropFilter: "blur(12px)",
-        }}
-      >
-        <button
-          className={classnames(
-            "flex flex-col space-x-2 items-center justify-center focus:scale-[98%] text-xs uppercase transition ease-in duration-200 px-2",
-            {
-              "opacity-50 cursor-not-allowed": !selected,
-              "hover:text-accent": selected,
-            },
-          )}
-          onClick={async () => {
-            await onSubmit(selected);
-            onClose();
-          }}
-        >
-          <span>Quest</span>
-        </button>
-        {/*<button*/}
-        {/*  className="flex items-center justify-center focus:scale-[98%] text-xs hover:text-accent uppercase transition ease-in duration-200 px-2"*/}
-        {/*  onClick={(e) => {*/}
-        {/*    setSelected(null);*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  Unselect*/}
-        {/*</button>*/}
-      </div>
-    </div>
-  );
-};
-
-const QuestSelector = ({ activeQuests, onClose, onSubmit }) => {
+const QuestSelector = ({ activeQuests, tokenIds, onClose, onSubmit }) => {
   const [selected, setSelected] = useState(null);
 
   const quest = selected
@@ -646,17 +673,38 @@ const QuestSelector = ({ activeQuests, onClose, onSubmit }) => {
     return acc;
   }, []);
 
-  const { data: items, isLoading } = useContractRead({
-    address: bearzShopContractAddress,
-    abi: bearzShopABI,
-    chainId: mainnet.id,
-    functionName: "getMetadataBatch",
-    args: [allItemIds],
+  const { data, isLoading } = useContractReads({
+    contracts: [
+      {
+        address: bearzStakeChildContractAddress,
+        abi: bearzStakeChildABI,
+        chainId: polygon.id,
+        functionName: "getAllQuests",
+      },
+      {
+        address: bearzShopContractAddress,
+        abi: bearzShopABI,
+        chainId: mainnet.id,
+        functionName: "getMetadataBatch",
+        args: [allItemIds],
+        enabled: allItemIds?.length > 0,
+      },
+      {
+        address: bearzQuestContractAddress,
+        abi: bearzQuestABI,
+        chainId: polygon.id,
+        functionName: "tokenQuestCooldownBatch",
+        args: [tokenIds, tokenIds.map((_) => selected)],
+        enabled: selected !== null,
+      },
+    ],
   });
+
+  const [quests, items, cooldowns] = data || [];
 
   const itemLookup = useMemo(() => {
     return keyBy(
-      items.map((item, index) => {
+      items?.result.map((item, index) => {
         return {
           id: allItemIds[index],
           ...item,
@@ -664,7 +712,24 @@ const QuestSelector = ({ activeQuests, onClose, onSubmit }) => {
       }),
       "id",
     );
-  }, [items]);
+  }, [items?.result]);
+
+  const cooldownLookup = useMemo(() => {
+    if (!Array.isArray(cooldowns?.result)) return {};
+    return cooldowns?.result?.reduce((acc, cooldown, index) => {
+      const tokenId = tokenIds[index];
+      acc[tokenId] = cooldown;
+      return acc;
+    }, {});
+  }, [cooldowns?.result]);
+
+  const invalidTokens = tokenIds?.filter(
+    (tokenId) => cooldownLookup[tokenId]?.endsAt > 0n,
+  );
+
+  const validTokens = tokenIds?.filter(
+    (tokenId) => cooldownLookup[tokenId]?.endsAt === 0n,
+  );
 
   return (
     <div className="fixed top-0 left-0 h-full w-full z-[99999] bg-dark overflow-auto text-white">
@@ -682,22 +747,71 @@ const QuestSelector = ({ activeQuests, onClose, onSubmit }) => {
             Select active quest
           </h1>
         </div>
-        <QuestListView
-          data={activeQuests}
-          itemLookup={itemLookup}
-          selected={selected}
-          setSelected={setSelected}
-        />
-        {selected && quest && (
-          <QuestViewActions
-            quest={quest}
-            items={items}
-            isLoading={isLoading}
-            selected={selected}
-            setSelected={setSelected}
-            onSubmit={onSubmit}
-            onClose={onClose}
-          />
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <>
+            <QuestListView
+              data={activeQuests}
+              itemLookup={itemLookup}
+              selected={selected}
+              setSelected={setSelected}
+            />
+            {selected && quest && (
+              <div className="flex flex-col items-center justify-center fixed z-[10000] bottom-0 w-full text-base bg-dark2 border-t-[3px] border-accent">
+                {invalidTokens && (
+                  <div
+                    className="flex flex-col w-full py-2 px-2 text-xs text-warn max-w-[380px]"
+                    style={{
+                      backdropFilter: "blur(12px)",
+                    }}
+                  >
+                    <p className="text-white opacity-80 mb-1">
+                      The tokens below will not be included on the quest.
+                    </p>
+                    <span className="flex flex-row items-center space-x-2">
+                      <WarnIcon className="text-2xl" />
+                      <span className="text-warn">
+                        On cooldown: {invalidTokens?.join(", ")}
+                      </span>
+                    </span>
+                    <span className="flex flex-row items-center space-x-2">
+                      <CheckIcon className="text-2xl text-accent" />
+                      <span className="text-accent">
+                        Valid: {validTokens?.join(", ")}
+                      </span>
+                    </span>
+                  </div>
+                )}
+                <div
+                  className="flex flex-row h-[80px] w-full items-center justify-center px-6 space-x-6"
+                  style={{
+                    backdropFilter: "blur(12px)",
+                  }}
+                >
+                  {invalidTokens.length === tokenIds.length ? (
+                    <p>No valid tokens for this quest!</p>
+                  ) : (
+                    <button
+                      className={classnames(
+                        "flex flex-col space-x-2 items-center justify-center focus:scale-[98%] text-xs uppercase transition ease-in duration-200 px-2",
+                        {
+                          "opacity-50 cursor-not-allowed": !selected,
+                          "hover:text-accent": selected,
+                        },
+                      )}
+                      onClick={async () => {
+                        await onSubmit(validTokens, selected);
+                        onClose();
+                      }}
+                    >
+                      <span>Quest ({validTokens?.length})</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
@@ -880,14 +994,19 @@ const Experience = ({ isSimulated = false }) => {
   );
 
   const canStopQuestSelected = useMemo(
-    () => hasItemsSelected && selectedValues?.every(canStopQuest),
+    () => hasItemsSelected && selectedValues?.every(canEndAnyQuest),
+    [hasItemsSelected, selectedValues],
+  );
+
+  const canForceStopQuestSelected = useMemo(
+    () => hasItemsSelected && selectedValues?.every(canForceEnd),
     [hasItemsSelected, selectedValues],
   );
 
   const activeQuests = useMemo(
     () =>
       quests.filter((quest) =>
-        isBefore(new Date(), fromUnixTime(quest?.activeUntil)),
+        isBefore(new Date(), new Date(fromUnixTime(quest?.activeUntil))),
       ),
     [quests],
   );
@@ -895,15 +1014,31 @@ const Experience = ({ isSimulated = false }) => {
   const hasActiveQuests = activeQuests?.length > 0;
 
   const hasAction =
-    hasItemsSelected &&
-    (canStakeSelected ||
-      canUnstakeSelected ||
-      canTrainSelected ||
-      canStopTrainSelected ||
-      (canQuestSelected && hasActiveQuests) ||
-      canStopQuestSelected);
+    (hasItemsSelected &&
+      (canStakeSelected ||
+        canUnstakeSelected ||
+        canTrainSelected ||
+        canStopTrainSelected ||
+        (canQuestSelected && hasActiveQuests) ||
+        canStopQuestSelected)) ||
+    canForceStopQuestSelected;
 
   const isReady = !isLoading;
+
+  const selectedTokenIds = selectedValues?.map((item) =>
+    BigInt(item.metadata.tokenId),
+  );
+
+  const stakableTokens = useMemo(() => getStakable(filtered), [filtered]);
+  const unstakableTokens = useMemo(() => getUnstakable(filtered), [filtered]);
+  const trainableTokens = useMemo(() => getTrainable(filtered), [filtered]);
+  const stopTrainTokens = useMemo(() => getStopTrainable(filtered), [filtered]);
+  const questableTokens = useMemo(() => getQuestable(filtered), [filtered]);
+  const stopQuestTokens = useMemo(() => getStopQuestable(filtered), [filtered]);
+  const forceStopQuestTokens = useMemo(
+    () => getForceStopQuestable(filtered),
+    [filtered],
+  );
 
   return (
     <>
@@ -929,42 +1064,70 @@ const Experience = ({ isSimulated = false }) => {
                           </button>
                         }
                         menu={[
-                          <button
-                            onClick={() => setSelected(getStakable(data))}
-                          >
-                            Select stakable
-                          </button>,
-                          <button
-                            onClick={() => setSelected(getUnstakable(data))}
-                          >
-                            Select end staking
-                          </button>,
-                          <button
-                            onClick={() => setSelected(getTrainable(data))}
-                          >
-                            Select trainable
-                          </button>,
-                          <button
-                            onClick={() => setSelected(getStopTrainable(data))}
-                          >
-                            Select end training
-                          </button>,
-                          <button
-                            onClick={() => setSelected(getQuestable(data))}
-                          >
-                            Select questable
-                          </button>,
-                          <button
-                            onClick={() => setSelected(getStopQuestable(data))}
-                          >
-                            Select end questing
-                          </button>,
-                          <button
-                            onClick={() => setSelected(getStakable(data))}
-                          >
-                            Select transferrable
-                          </button>,
-                        ]}
+                          selectedTokenIds?.length > 0 ? (
+                            <button onClick={() => setSelected({})}>
+                              Unselect all
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setSelected(getAll(filtered))}
+                            >
+                              Select all
+                            </button>
+                          ),
+                          !isEmpty(stakableTokens) ? (
+                            <button onClick={() => setSelected(stakableTokens)}>
+                              Select stakable
+                            </button>
+                          ) : null,
+                          !isEmpty(unstakableTokens) ? (
+                            <button
+                              onClick={() => setSelected(unstakableTokens)}
+                            >
+                              Select end staking
+                            </button>
+                          ) : null,
+                          !isEmpty(trainableTokens) ? (
+                            <button
+                              onClick={() => setSelected(trainableTokens)}
+                            >
+                              Select trainable
+                            </button>
+                          ) : null,
+                          !isEmpty(stopTrainTokens) ? (
+                            <button
+                              onClick={() => setSelected(stopTrainTokens)}
+                            >
+                              Select end training
+                            </button>
+                          ) : null,
+                          !isEmpty(questableTokens) ? (
+                            <button
+                              onClick={() => setSelected(questableTokens)}
+                            >
+                              Select questable
+                            </button>
+                          ) : null,
+                          !isEmpty(stopQuestTokens) ? (
+                            <button
+                              onClick={() => setSelected(stopQuestTokens)}
+                            >
+                              Select end questing
+                            </button>
+                          ) : null,
+                          !isEmpty(forceStopQuestTokens) ? (
+                            <button
+                              onClick={() => setSelected(forceStopQuestTokens)}
+                            >
+                              Select force end quests
+                            </button>
+                          ) : null,
+                          !isEmpty(stakableTokens) ? (
+                            <button onClick={() => setSelected(stakableTokens)}>
+                              Select transferrable
+                            </button>
+                          ) : null,
+                        ].filter(Boolean)}
                       />
                       <Dropdown
                         title="Filters"
@@ -1276,9 +1439,67 @@ const Experience = ({ isSimulated = false }) => {
                       onRefresh();
                     }
                   }}
-                  disabled={!canQuestSelected || isProcessing}
+                  disabled={!canStopQuestSelected || isProcessing}
                 >
-                  End Quests
+                  End Quest
+                </button>
+              )}
+              {canForceStopQuestSelected && (
+                <button
+                  className={classnames(
+                    "flex items-center text-error justify-center focus:scale-[98%] text-xs uppercase transition ease-in duration-200 px-2",
+                    {
+                      "opacity-50 cursor-not-allowed":
+                        !canForceStopQuestSelected || isProcessing,
+                      "hover:text-error": canForceStopQuestSelected,
+                    },
+                  )}
+                  onClick={async (e) => {
+                    confirmAlert({
+                      customUI: ({ onClose }) => {
+                        return (
+                          <div className="flex flex-col w-full h-full items-center justify-center text-white p-2 md:p-4 max-w-2xl space-y-4">
+                            <h1 className="text-xl text-center text-error underline">Are you sure?</h1>
+                            <p className="opacity-80 text-center">This will force end your bearz quest. You <u className="font-bold">will not</u> receive rewards and bearz will be in cooldown.</p>
+                            <div className="flex flex-row items-center space-x-8">
+                              <button
+                                  className="text-sm hover:underline"
+                                  onClick={() => {
+                                    onClose();
+                                    setSelected({});
+                                    onRefresh();
+                                  }}
+                              >
+                                Nevermind
+                              </button>
+                              <button
+                                  className="text-sm hover:underline"
+                                  onClick={async () => {
+                                    onClose();
+
+                                    const success = await actions.onEndQuest({
+                                      tokenIds: selectedValues.map((item) =>
+                                          BigInt(item.metadata.tokenId),
+                                      ),
+                                    });
+
+                                    if (success) {
+                                      setSelected({});
+                                      onRefresh();
+                                    }
+                                  }}
+                              >
+                                Yes, force end!
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      },
+                    });
+                  }}
+                  disabled={!canForceStopQuestSelected || isProcessing}
+                >
+                  Force End Quest
                 </button>
               )}
               {canStakeSelected && (
@@ -1292,6 +1513,7 @@ const Experience = ({ isSimulated = false }) => {
                     },
                   )}
                   onClick={() => setIsTransferring(true)}
+                  disabled={!canStakeSelected || isProcessing}
                 >
                   Transfer
                 </button>
@@ -1317,24 +1539,21 @@ const Experience = ({ isSimulated = false }) => {
       {isSelectingQuest && (
         <QuestSelector
           address={address}
+          tokenIds={selectedTokenIds}
           activeQuests={activeQuests}
           quests={quests}
           onClose={() => {
             setIsSelectingQuest(null);
+            setSelected({});
           }}
-          onSubmit={async (questId) => {
-            const tokenIds = selectedValues.map((item) =>
-              BigInt(item.metadata.tokenId),
-            );
-
-            // Check eligibility for each token
+          onSubmit={async (tokenIds, questId) => {
             const success = await actions?.onQuest({
               tokenIds,
               questId,
             });
 
             if (success) {
-              await actions?.onRefresh();
+              onRefresh();
               setIsSelectingQuest(null);
             }
           }}
@@ -1343,9 +1562,7 @@ const Experience = ({ isSimulated = false }) => {
       {isTransferring && (
         <Transferring
           address={address}
-          tokenIds={selectedValues?.map((item) =>
-            BigInt(item.metadata.tokenId),
-          )}
+          tokenIds={selectedTokenIds}
           onClose={() => {
             setIsTransferring(false);
           }}
@@ -1358,7 +1575,7 @@ const Experience = ({ isSimulated = false }) => {
             });
 
             if (success) {
-              await actions?.onRefresh();
+              onRefresh();
               setIsTransferring(false);
             }
           }}
