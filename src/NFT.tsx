@@ -1259,7 +1259,7 @@ const ImageRenderer = ({
             isShowingPixel ? "gif" : "png"
           }`
         }
-        className="h-full w-full absolute top-0 left-0"
+        className="h-full w-full absolute top-0 left-0 object-cover"
         style={{ zIndex: 0 }}
         alt="Background image"
       />
