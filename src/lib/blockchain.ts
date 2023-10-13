@@ -52,9 +52,9 @@ const getMetadataByTokenId = async (tokenId) => {
 
   return {
     ...JSON.parse(
-      atob(
-        (base64Encoding as string).replace("data:application/json;base64,", ""),
-      ),
+        decodeURIComponent(escape(atob(
+          (base64Encoding as string).replace("data:application/json;base64,", ""),
+      ))),
     ),
     ownerOf,
   };
