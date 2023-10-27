@@ -18,6 +18,7 @@ const CratesHistory = React.lazy(() => import("./CratesHistory"));
 const Bearz = React.lazy(() => import("./Bearz"));
 const Armory = React.lazy(() => import("./Armory"));
 const Consumables = React.lazy(() => import("./Consumables"));
+const VendingMachine = React.lazy(() => import("./VendingMachine"));
 const Rewards = React.lazy(() => import("./Rewards"));
 const Connect = React.lazy(() => import("./Connect"));
 
@@ -46,6 +47,9 @@ const App = () => {
       <Routes>
         <Route path="bearz" element={<Bearz />} />
         <Route path="armory" element={<Armory />} />
+        <Route path="vending-machine" element={<VendingMachine />}>
+          <Route path=":txHash" element={<VendingMachine />} />
+        </Route>
         <Route path="consumables" element={<Consumables />} />
         <Route path="rewards" element={<Rewards />} />
         <Route path="crates/history" element={<CratesHistory />} />

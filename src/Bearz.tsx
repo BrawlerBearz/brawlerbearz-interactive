@@ -772,13 +772,19 @@ const QuestSelector = ({ activeQuests, tokenIds, onClose, onSubmit }) => {
                     <span className="flex flex-row items-center space-x-2">
                       <WarnIcon className="flex flex-shrink-0 text-2xl" />
                       <span className="text-warn">
-                        On cooldown: {invalidTokens?.length > 0 ? invalidTokens?.join(", ") : 'N/A'}
+                        On cooldown:{" "}
+                        {invalidTokens?.length > 0
+                          ? invalidTokens?.join(", ")
+                          : "N/A"}
                       </span>
                     </span>
                     <span className="flex flex-row items-center space-x-2">
                       <CheckIcon className="flex flex-shrink-0 text-2xl text-accent" />
                       <span className="text-accent">
-                        Valid: {validTokens?.length > 0 ? validTokens?.join(", ") : 'N/A'}
+                        Valid:{" "}
+                        {validTokens?.length > 0
+                          ? validTokens?.join(", ")
+                          : "N/A"}
                       </span>
                     </span>
                   </div>
@@ -1459,35 +1465,41 @@ const Experience = ({ isSimulated = false }) => {
                       customUI: ({ onClose }) => {
                         return (
                           <div className="flex flex-col w-full h-full items-center justify-center text-white p-2 md:p-4 max-w-2xl space-y-4">
-                            <h1 className="text-xl text-center text-error underline">Are you sure?</h1>
-                            <p className="opacity-80 text-center">This will force end your bearz quest. You <u className="font-bold">will not</u> receive rewards and bearz will be in cooldown.</p>
+                            <h1 className="text-xl text-center text-error underline">
+                              Are you sure?
+                            </h1>
+                            <p className="opacity-80 text-center">
+                              This will force end your bearz quest. You{" "}
+                              <u className="font-bold">will not</u> receive
+                              rewards and bearz will be in cooldown.
+                            </p>
                             <div className="flex flex-row items-center space-x-8">
                               <button
-                                  className="text-sm hover:underline"
-                                  onClick={() => {
-                                    onClose();
-                                    setSelected({});
-                                    onRefresh();
-                                  }}
+                                className="text-sm hover:underline"
+                                onClick={() => {
+                                  onClose();
+                                  setSelected({});
+                                  onRefresh();
+                                }}
                               >
                                 Nevermind
                               </button>
                               <button
-                                  className="text-sm hover:underline"
-                                  onClick={async () => {
-                                    onClose();
+                                className="text-sm hover:underline"
+                                onClick={async () => {
+                                  onClose();
 
-                                    const success = await actions.onEndQuest({
-                                      tokenIds: selectedValues.map((item) =>
-                                          BigInt(item.metadata.tokenId),
-                                      ),
-                                    });
+                                  const success = await actions.onEndQuest({
+                                    tokenIds: selectedValues.map((item) =>
+                                      BigInt(item.metadata.tokenId),
+                                    ),
+                                  });
 
-                                    if (success) {
-                                      setSelected({});
-                                      onRefresh();
-                                    }
-                                  }}
+                                  if (success) {
+                                    setSelected({});
+                                    onRefresh();
+                                  }
+                                }}
                               >
                                 Yes, force end!
                               </button>

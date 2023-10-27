@@ -335,7 +335,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
       openingContext,
       isBuying,
       buyingContext,
-      canBuy: !isPaused
+      canBuy: !isPaused,
     },
     actions: {
       onRefresh: onRefresh.bind(null, account?.address),

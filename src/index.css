@@ -95,7 +95,7 @@ html {
 
 .react-confirm-alert {
   z-index: 9999999 !important;
- }
+}
 
 .react-confirm-alert-overlay {
   position: fixed;
@@ -105,4 +105,34 @@ html {
   bottom: 0;
   z-index: 9999999 !important;
   background: #08111b !important;
+}
+
+.vending-machine-base {
+  animation: shake 2s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+@keyframes shake {
+  10%,
+  90% {
+    transform: translate3d(0, -1px, 0);
+  }
+
+  20%,
+  80% {
+    transform: translate3d(0, 2px, 0);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translate3d(0, -4px, 0);
+  }
+
+  40%,
+  60% {
+    transform: translate3d(0, 4px, 0);
+  }
 }
