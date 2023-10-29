@@ -1,11 +1,9 @@
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
-import {toast } from "react-toastify";
+import { toast } from "react-toastify";
 import classnames from "classnames";
 import { useAccount, useWaitForTransaction } from "wagmi";
-import {
-  MdArrowBack as BackIcon,
-} from "react-icons/md";
+import { MdArrowBack as BackIcon } from "react-icons/md";
 import { decodeEventLog } from "viem";
 import Header from "./components/Header";
 import logoImage from "./interactive/logo.gif";
@@ -19,13 +17,14 @@ import vendPend from "./interactive/vending-machine/elements/vend_pend.gif";
 import vendBar from "./interactive/vending-machine/elements/bar.png";
 import burningTicket from "./interactive/vending-machine/elements/burning_ticket.gif";
 import staticTicket from "./interactive/vending-machine/elements/static_ticket.png";
+import cardback from "./interactive/crates/elements/cardback.png";
 import { bearzVendingMachineABI } from "./lib/contracts";
 import Loading from "./components/Loading";
 import SandboxWrapper from "./components/SandboxWrapper";
 import PleaseConnectWallet from "./components/PleaseConnectWallet";
 import { BEARZ_SHOP_IMAGE_URI } from "./lib/blockchain";
 import useVendingMachine from "./hooks/useVendingMachine";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const DROPPED_STATUS = {
   WAITING: "WAITING",
@@ -40,36 +39,32 @@ const WaitingForVend = ({ onClose, sounds }) => {
 
     return () => {
       sounds.stopHum();
-    }
+    };
   }, []);
   return (
-      <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
-        <div className="relative flex flex-col text-center text-white py-4 items-center justify-center space-y-4">
-          <div className="absolute top-[-25px]">
-            <img
-                src={burningTicket}
-                className="h-[80px]"
-                alt="burning card"
-            />
-            <p className="text-accent text-sm hidden">Burning ticket(s)...</p>
-          </div>
-          <img src={vendPend} alt="Vend pend" />
-          <button
-              onClick={onClose}
-              className="relative flex items-center justify-center w-[250px] cursor-pointer"
-          >
-            <img
-                className="object-cover h-full w-full"
-                src={buttonBackground}
-                alt="button"
-            />
-            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-          Close
-        </span>
-          </button>
+    <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
+      <div className="relative flex flex-col text-center text-white py-4 items-center justify-center space-y-4">
+        <div className="absolute top-[-25px]">
+          <img src={burningTicket} className="h-[80px]" alt="burning card" />
+          <p className="text-accent text-sm hidden">Burning ticket(s)...</p>
         </div>
+        <img src={vendPend} alt="Vend pend" />
+        <button
+          onClick={onClose}
+          className="relative flex items-center justify-center w-[250px] cursor-pointer"
+        >
+          <img
+            className="object-cover h-full w-full"
+            src={buttonBackground}
+            alt="button"
+          />
+          <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+            Close
+          </span>
+        </button>
       </div>
-  )
+    </div>
+  );
 };
 
 const SummaryView = ({ onClose, sounds, status }) => {
@@ -81,42 +76,45 @@ const SummaryView = ({ onClose, sounds, status }) => {
     }, 100);
 
     setTimeout(() => {
-     setShowItem(true);
-     sounds.winner();
+      setShowItem(true);
+      sounds.winner();
     }, 7200);
 
     return () => {
       sounds.stopProcess();
-    }
+    };
   }, []);
 
   return (
-      <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
-        <div className="flex flex-col text-center text-white py-4 items-center justify-center space-y-4">
-          {showItem && status?.context?.tokenId ? (
-              <div className="flex flex-col py-4 space-y-4 items-center justify-center">
-                <h2 className="text-2xl md:text-4xl text-accent">Success!</h2>
-                <img src={status?.context?.details?.imageSrc} className="w-[200px]" />
-              </div>
-          ) : (
-              <img src={vendComplete} alt="Vend complete" />
-          )}
-          <button
-              onClick={onClose}
-              className="relative flex items-center justify-center w-[250px] cursor-pointer"
-          >
+    <div className="font-primary flex flex-col items-center justify-center absolute top-0 left-0 h-full w-full z-[1]">
+      <div className="flex flex-col text-center text-white py-4 items-center justify-center space-y-4">
+        {showItem && status?.context?.tokenId ? (
+          <div className="flex flex-col py-4 space-y-4 items-center justify-center">
+            <h2 className="text-2xl md:text-4xl text-accent">Success!</h2>
             <img
-                className="object-cover h-full w-full"
-                src={buttonBackground}
-                alt="button"
+              src={status?.context?.details?.imageSrc}
+              className="w-[200px]"
             />
-            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
-          Close
-        </span>
-          </button>
-        </div>
+          </div>
+        ) : (
+          <img src={vendComplete} alt="Vend complete" />
+        )}
+        <button
+          onClick={onClose}
+          className="relative flex items-center justify-center w-[250px] cursor-pointer"
+        >
+          <img
+            className="object-cover h-full w-full"
+            src={buttonBackground}
+            alt="button"
+          />
+          <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+            Close
+          </span>
+        </button>
       </div>
-  )
+    </div>
+  );
 };
 
 const VendView = ({ vendLookup, txHash, onClose, sounds }) => {
@@ -137,7 +135,6 @@ const VendView = ({ vendLookup, txHash, onClose, sounds }) => {
     if (!isLoading) {
       (async function () {
         try {
-
           const topic = decodeEventLog({
             abi: bearzVendingMachineABI,
             data: data?.logs?.[2]?.data,
@@ -150,11 +147,12 @@ const VendView = ({ vendLookup, txHash, onClose, sounds }) => {
               event: DROPPED_STATUS.REVEALED_ALL,
               context: {
                 ...(topic?.args ?? {}),
-                details: vendLookup?.find(item => String(item.vendId) === String(topic?.args?.vendId))
+                details: vendLookup?.find(
+                  (item) => String(item.vendId) === String(topic?.args?.vendId),
+                ),
               },
             });
           }, 3000);
-
         } catch (e) {
           console.log(e);
           toast.error(
@@ -187,30 +185,36 @@ const VendView = ({ vendLookup, txHash, onClose, sounds }) => {
   );
 };
 
-const VendingMachineSelector = ({ data, sounds, onVend, onClose, isVending }) => {
+const VendingMachineSelector = ({
+  data,
+  sounds,
+  onVend,
+  onClose,
+  isVending,
+}) => {
   const [carouselIndex, setCarouselIndex] = useState(0);
 
   const moveLeft = () => {
     sounds.slide();
-    setCarouselIndex(prev => {
+    setCarouselIndex((prev) => {
       let next = prev - 1;
-      if(next < 0){
+      if (next < 0) {
         next = data?.length - 1;
       }
       return next;
-    })
-  }
+    });
+  };
 
   const moveRight = () => {
     sounds.slide();
-    setCarouselIndex(prev => {
+    setCarouselIndex((prev) => {
       let next = prev + 1;
-      if(next > data?.length - 1){
+      if (next > data?.length - 1) {
         next = 0;
       }
       return next;
-    })
-  }
+    });
+  };
 
   const currentItem = data?.[carouselIndex] || data?.[0];
 
@@ -221,7 +225,7 @@ const VendingMachineSelector = ({ data, sounds, onVend, onClose, isVending }) =>
 
     return () => {
       sounds.stopHum();
-    }
+    };
   }, []);
 
   return (
@@ -242,57 +246,104 @@ const VendingMachineSelector = ({ data, sounds, onVend, onClose, isVending }) =>
               className="flex absolute aspect-square items-center justify-center left-0 top-0 h-[320px] w-[320px] md:w-[420px] md:h-[420px] scale-[2] z-[-1]"
               alt="Empty vend"
             />
-            <div className="flex bg-white bg-opacity-20 text-white hover:text-accent hover:bg-accent hover:bg-opacity-50 animate-pulse hover:animate-none absolute h-[48px] w-[53px] md:h-[67px] md:w-[67px] items-center justify-center left-[220px] top-[43px] md:left-[290px] md:top-[55px] overflow-hidden z-[5]"
-                 role="button"
-                 onClick={async () => {
-                   if(typeof currentItem.vendId === 'number'){
-                     sounds.start()
-                     await onVend(currentItem.vendId);
-                   }
-                 }}>
+            <div
+              className="flex bg-white bg-opacity-20 text-white hover:text-accent hover:bg-accent hover:bg-opacity-50 animate-pulse hover:animate-none absolute h-[48px] w-[53px] md:h-[67px] md:w-[67px] items-center justify-center left-[220px] top-[43px] md:left-[290px] md:top-[55px] overflow-hidden z-[5]"
+              role="button"
+              onClick={async () => {
+                if (typeof currentItem.vendId === "number") {
+                  sounds.start();
+                  await onVend(currentItem.vendId);
+                }
+              }}
+            >
               <span className="text-white text-sm uppercase">
-                {isVending ? 'Vending...' : 'Buy'}
+                {isVending ? "Vending..." : "Buy"}
               </span>
             </div>
-            <div className="flex bg-white bg-opacity-20 animate-pulse absolute h-[35px] w-[113px] md:h-[50px] md:w-[155px] items-center justify-center left-[50px] top-[325px] md:left-[60px] md:top-[425px] overflow-hidden z-[5]"
-            role="button"
-                 onClick={() => {
-              sounds.flap()
-            }} />
+            <div
+              className="flex bg-white bg-opacity-20 animate-pulse absolute h-[35px] w-[113px] md:h-[50px] md:w-[155px] items-center justify-center left-[50px] top-[325px] md:left-[60px] md:top-[425px] overflow-hidden z-[5]"
+              role="button"
+              onClick={() => {
+                sounds.flap();
+              }}
+            />
             <div className="flex absolute h-[300px] w-[235px] md:h-[385px] md:w-[300px] items-center justify-center left-[-8px] top-[-50px] md:top-[-60px] overflow-hidden bg-transparent py-3 px-7 z-[2]">
-              <div key={currentItem?.vendId} data-id={currentItem?.vendId} className="relative bg-transparent h-full w-full items-center justify-center">
-                {currentItem?.isERC721 ? !currentItem?.imageSrc ? (
-                    <div className="flex flex-col w-full h-full items-center justify-center px-2 md:px-6 py-3">
-                      <h3 className="relative bottom-[20px] text-2xl font-bold uppercase text-error">SOLD!</h3>
+              <div
+                key={currentItem?.vendId}
+                data-id={currentItem?.vendId}
+                className="relative bg-transparent h-full w-full items-center justify-center"
+              >
+                {currentItem?.isERC721 ? (
+                  !currentItem?.imageSrc ? (
+                    <div className="relative flex flex-col w-full h-full items-center justify-center px-2 md:px-6 py-3">
+                      <h3 className="absolute flex h-full w-full items-center justify-center bottom-[20px] text-xl font-bold uppercase text-error z-[5] rotate-[-30deg]">
+                        SOLD OUT
+                      </h3>
+                      <img
+                        src={cardback}
+                        className="absolute top-[20px] h-[200px] md:h-[280px] z-[4] opacity-20"
+                        alt="empty"
+                      />
                     </div>
-                ) : (
+                  ) : (
                     <div className="flex flex-col w-full h-full items-center px-2 md:px-6 py-3">
-                      <img src={currentItem?.imageSrc} className="h-[200px] md:h-[280px] z-[4] object-cover shadow-pixelWhite shadow-xs" alt={currentItem.vendId} />
+                      <img
+                        src={currentItem?.imageSrc}
+                        className="h-[200px] md:h-[280px] z-[4] object-cover shadow-pixelWhite shadow-xs"
+                        alt={currentItem.vendId}
+                      />
                     </div>
+                  )
+                ) : currentItem.quantity > 0 ? (
+                  <div className="flex flex-col w-full h-full items-center p-3">
+                    <img
+                      src={currentItem?.imageSrc}
+                      className="top-[20px] h-[200px] md:h-[280px] z-[4]"
+                      alt={currentItem.vendId}
+                    />
+                  </div>
                 ) : (
-                    <div className="flex flex-col w-full h-full items-center p-3">
-                      <img src={currentItem?.imageSrc} className="h-[200px] md:h-[280px] z-[4]" alt={currentItem.vendId} />
-                    </div>
+                  <div className="relative flex flex-col w-full h-full items-center justify-center px-2 md:px-6 py-3">
+                    <h3 className="absolute flex h-full w-full items-center justify-center bottom-[20px] text-xl font-bold uppercase text-error z-[5] rotate-[-30deg]">
+                      SOLD OUT
+                    </h3>
+                    <img
+                      src={currentItem?.imageSrc}
+                      className="absolute top-[20px] h-[200px] md:h-[280px] z-[4] opacity-20"
+                      alt="empty"
+                    />
+                  </div>
                 )}
                 <div className="flex items-center justify-center absolute bottom-[10px] md:bottom-[20px] w-full z-[6]">
                   <div className="relative flex flex-col items-center justify-center w-full h-full">
-                  <img src={vendBar} className="absolute w-full h-[55px] md:h-[75px] z-[1] object-cover" alt="bar bg" />
-                  <div className="flex flex-col items-center justify-center w-full h-full z-[2]">
-                    <div className="flex flex-row items-center justify-center w-full h-full space-x-2">
-                      <img src={staticTicket} className="h-[47px] w-[60px]" alt="static ticket" />
-                      <span className="text-base md:text-2xl text-[#2a1d27] font-bold">x</span>
-                      <span className="text-base md:text-2xl text-[#2a1d27] font-bold">{currentItem.inCount}</span>
+                    <img
+                      src={vendBar}
+                      className="absolute w-full h-[55px] md:h-[75px] z-[1] object-cover"
+                      alt="bar bg"
+                    />
+                    <div className="flex flex-col items-center justify-center w-full h-full z-[2]">
+                      <div className="flex flex-row items-center justify-center w-full h-full space-x-2">
+                        <img
+                          src={staticTicket}
+                          className="h-[47px] w-[60px]"
+                          alt="static ticket"
+                        />
+                        <span className="text-base md:text-2xl text-[#2a1d27] font-bold">
+                          x
+                        </span>
+                        <span className="text-base md:text-2xl text-[#2a1d27] font-bold">
+                          {currentItem.inCount}
+                        </span>
+                      </div>
+                      <span className="relative bottom-[5px] text-[8px] md:text-xs  text-[#2a1d27]">
+                        {currentItem.quantity} remaining
+                      </span>
                     </div>
-                    <span className="relative bottom-[5px] text-[8px] md:text-xs  text-[#2a1d27]">{currentItem.quantity} remaining</span>
-                  </div>
-
                   </div>
                 </div>
 
                 <div className="absolute left-[8px] top-[36%] z-[5]">
-                  <button
-                    onClick={moveLeft}
-                  >
+                  <button onClick={moveLeft}>
                     <img
                       src={leftArrow}
                       className="w-[8px] h-[16px] scale-[1.5]"
@@ -300,9 +351,7 @@ const VendingMachineSelector = ({ data, sounds, onVend, onClose, isVending }) =>
                   </button>
                 </div>
                 <div className="absolute right-[8px] top-[36%] z-[5]">
-                  <button
-                    onClick={moveRight}
-                  >
+                  <button onClick={moveRight}>
                     <img
                       src={rightArrow}
                       className="w-[8px] h-[16px] scale-[1.5]"
@@ -352,7 +401,7 @@ const VendingMachineView = ({ isSimulated }) => {
                 isVending={data?.isVending}
                 sounds={sounds}
                 onVend={(vendId) => {
-                  actions?.onVend({ vendId })
+                  actions?.onVend({ vendId });
                 }}
                 onClose={() => {
                   setViewMachine(false);
@@ -442,14 +491,14 @@ const VendingMachineView = ({ isSimulated }) => {
                     <span>x{Number(data?.balances) || 0}</span>
                   </div>
                   {!data?.balances && (
-                      <Link
-                          to={`https://bearzaar.brawlerbearz.club/collections/0xbd24a76f4135f930f5c49f6c30e0e30a61b97537/networks/mainnet/tokens/325`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="underline text-white text-sm text-center"
-                      >
-                        Buy tickets at the Bearzaar
-                      </Link>
+                    <Link
+                      to={`https://bearzaar.brawlerbearz.club/collections/0xbd24a76f4135f930f5c49f6c30e0e30a61b97537/networks/mainnet/tokens/325`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline text-white text-sm text-center"
+                    >
+                      Buy tickets at the Bearzaar
+                    </Link>
                   )}
                 </div>
               </div>

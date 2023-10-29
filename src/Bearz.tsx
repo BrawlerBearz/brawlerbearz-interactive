@@ -91,13 +91,22 @@ const canUnstake = (i) =>
 const canStopTraining = (i) => i?.activity?.training?.isTraining;
 
 const canForceEnd = (i) => {
-  return i?.activity?.questing?.isQuesting && !isAfter(new Date(), new Date(fromUnixTime(i?.activity?.questing?.quest?.endsAt)));
+  return (
+    i?.activity?.questing?.isQuesting &&
+    !isAfter(
+      new Date(),
+      new Date(fromUnixTime(i?.activity?.questing?.quest?.endsAt)),
+    )
+  );
 };
 
 const canEndAnyQuest = (i) => {
   return (
     i?.activity?.questing?.isQuesting &&
-    isAfter(new Date(), new Date(fromUnixTime(i?.activity?.questing?.quest?.endsAt)))
+    isAfter(
+      new Date(),
+      new Date(fromUnixTime(i?.activity?.questing?.quest?.endsAt)),
+    )
   );
 };
 

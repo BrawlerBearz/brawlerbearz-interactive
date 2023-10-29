@@ -46,7 +46,7 @@ module.exports = {
         pixelAccent:
           "-3px 0 0 0 #77cf49, 3px 0 0 0 #77cf49, 0 -3px 0 0 #77cf49, 0 3px 0 0 #77cf49",
         pixelWhite:
-            "-3px 0 0 0 #cdc9c5, 3px 0 0 0 #cdc9c5, 0 -3px 0 0 #cdc9c5, 0 3px 0 0 #cdc9c5",
+          "-3px 0 0 0 #cdc9c5, 3px 0 0 0 #cdc9c5, 0 -3px 0 0 #cdc9c5, 0 3px 0 0 #cdc9c5",
       },
     },
   },

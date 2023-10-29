@@ -170,44 +170,38 @@ const useVendingMachine = ({ isSimulated, overrideAddress }) => {
     },
   );
 
-  const [hum, { stop: stopHum, sound: humSound }] = useSound(
-      humEffect,
-      {
-        volume: 0.1,
-        interrupt: true,
-      },
-  );
+  const [hum, { stop: stopHum, sound: humSound }] = useSound(humEffect, {
+    volume: 0.1,
+    interrupt: true,
+  });
 
   const [click, { stop: stopClick, sound: clickSound }] = useSound(
-      clickEffect,
-      {
-        volume: 0.5,
-        interrupt: true,
-      },
+    clickEffect,
+    {
+      volume: 0.5,
+      interrupt: true,
+    },
   );
 
-  const [flap, { stop: stopFlap, sound: flapSound }] = useSound(
-      flapEffect,
-      {
-        volume: 0.3,
-        interrupt: true,
-      },
-  );
+  const [flap, { stop: stopFlap, sound: flapSound }] = useSound(flapEffect, {
+    volume: 0.3,
+    interrupt: true,
+  });
 
   const [process, { stop: stopProcess, sound: processSound }] = useSound(
-      processEffect,
-      {
-        volume: 0.6,
-        interrupt: true,
-      },
+    processEffect,
+    {
+      volume: 0.6,
+      interrupt: true,
+    },
   );
 
   const [winner, { stop: stopWinner, sound: winnerSound }] = useSound(
-      winnerEffect,
-      {
-        volume: 0.8,
-        interrupt: true,
-      },
+    winnerEffect,
+    {
+      volume: 0.8,
+      interrupt: true,
+    },
   );
 
   const [isLoadingBiconomy, setIsLoadingBiconomy] = useState(true);

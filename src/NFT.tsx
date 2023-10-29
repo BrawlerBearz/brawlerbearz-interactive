@@ -847,7 +847,10 @@ const ActionMenu = ({
                   {consumables.map((item) => {
                     const isActive = item?.value === "ACTIVE";
                     return (
-                      <div key={item.trait_type} className="flex flex-row items-center space-x-2">
+                      <div
+                        key={item.trait_type}
+                        className="flex flex-row items-center space-x-2"
+                      >
                         <span className="text-sm text-accent">
                           {item?.trait_type}
                         </span>
