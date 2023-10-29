@@ -260,7 +260,7 @@ const VendingMachineSelector = ({ data, sounds, onVend, onClose, isVending }) =>
               sounds.flap()
             }} />
             <div className="flex absolute h-[300px] w-[235px] md:h-[385px] md:w-[300px] items-center justify-center left-[-8px] top-[-50px] md:top-[-60px] overflow-hidden bg-transparent py-3 px-7 z-[2]">
-              <div key={currentItem?.vendId} className="relative bg-transparent h-full w-full items-center justify-center">
+              <div key={currentItem?.vendId} data-id={currentItem?.vendId} className="relative bg-transparent h-full w-full items-center justify-center">
                 {currentItem?.isERC721 ? !currentItem?.imageSrc ? (
                     <div className="flex flex-col w-full h-full items-center justify-center px-2 md:px-6 py-3">
                       <h3 className="relative bottom-[20px] text-2xl font-bold uppercase text-error">SOLD!</h3>
