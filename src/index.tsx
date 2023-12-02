@@ -10,9 +10,10 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
 
-const version = "v1.5.0";
+const version = "v1.6.0";
 
 const NFT = React.lazy(() => import("./NFT"));
+const BattlePass = React.lazy(() => import("./BattlePass"));
 const Crates = React.lazy(() => import("./Crates"));
 const CratesHistory = React.lazy(() => import("./CratesHistory"));
 const Bearz = React.lazy(() => import("./Bearz"));
@@ -52,6 +53,7 @@ const App = () => {
         </Route>
         <Route path="consumables" element={<Consumables />} />
         <Route path="rewards" element={<Rewards />} />
+        <Route path="battlepass" element={<BattlePass />} />
         <Route path="crates/history" element={<CratesHistory />} />
         <Route path="crates" element={<Crates />}>
           <Route path=":txHash" element={<Crates />} />

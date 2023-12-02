@@ -1,3 +1,5 @@
+import { mainnet, polygon } from "viem/chains";
+
 export const bearzFactionContractAddress =
   "0x5e2454f33c3da3aa30eabc502255f66a6d72adc8";
 
@@ -6625,3 +6627,1089 @@ export const bearzConsumableABI = [
     type: "function",
   },
 ];
+
+export const bearzBattlePass = {
+  season4: {
+    [mainnet.id]: {
+      address: "0x61E3CA631C121C6Fe98E203311f593867C61208a",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_checkpointManager",
+              type: "address",
+            },
+            { internalType: "address", name: "_fxRoot", type: "address" },
+            {
+              internalType: "address",
+              name: "_vendorContractAddress",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "ApprovalCallerNotOwnerNorApproved",
+          type: "error",
+        },
+        { inputs: [], name: "ApprovalQueryForNonexistentToken", type: "error" },
+        { inputs: [], name: "BalanceQueryForZeroAddress", type: "error" },
+        { inputs: [], name: "CannotApproveAll", type: "error" },
+        { inputs: [], name: "InvalidQueryRange", type: "error" },
+        { inputs: [], name: "MintERC2309QuantityExceedsLimit", type: "error" },
+        { inputs: [], name: "MintToZeroAddress", type: "error" },
+        { inputs: [], name: "MintZeroQuantity", type: "error" },
+        { inputs: [], name: "Nontransferable", type: "error" },
+        { inputs: [], name: "OwnerQueryForNonexistentToken", type: "error" },
+        {
+          inputs: [],
+          name: "OwnershipNotInitializedForExtraData",
+          type: "error",
+        },
+        {
+          inputs: [],
+          name: "TransferCallerNotOwnerNorApproved",
+          type: "error",
+        },
+        { inputs: [], name: "TransferFromIncorrectOwner", type: "error" },
+        {
+          inputs: [],
+          name: "TransferToNonERC721ReceiverImplementer",
+          type: "error",
+        },
+        { inputs: [], name: "TransferToZeroAddress", type: "error" },
+        { inputs: [], name: "URIQueryForNonexistentToken", type: "error" },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "approved",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "tokenId",
+              type: "uint256",
+            },
+          ],
+          name: "Approval",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "owner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "operator",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "approved",
+              type: "bool",
+            },
+          ],
+          name: "ApprovalForAll",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "fromTokenId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "toTokenId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+          ],
+          name: "ConsecutiveTransfer",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "previousOwner",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "newOwner",
+              type: "address",
+            },
+          ],
+          name: "OwnershipTransferred",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "from",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "to",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "tokenId",
+              type: "uint256",
+            },
+          ],
+          name: "Transfer",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "MINTED",
+          outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "SEND_MESSAGE_EVENT_SIG",
+          outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "to", type: "address" },
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "approve",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "address", name: "owner", type: "address" }],
+          name: "balanceOf",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "burn",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "checkpointManager",
+          outputs: [
+            {
+              internalType: "contract ICheckpointManager",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_amount", type: "uint256" },
+          ],
+          name: "entryPassMint",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "entryPrice",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "expiresAt",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "explicitOwnershipOf",
+          outputs: [
+            {
+              components: [
+                { internalType: "address", name: "addr", type: "address" },
+                {
+                  internalType: "uint64",
+                  name: "startTimestamp",
+                  type: "uint64",
+                },
+                { internalType: "bool", name: "burned", type: "bool" },
+                { internalType: "uint24", name: "extraData", type: "uint24" },
+              ],
+              internalType: "struct IERC721A.TokenOwnership",
+              name: "",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256[]", name: "tokenIds", type: "uint256[]" },
+          ],
+          name: "explicitOwnershipsOf",
+          outputs: [
+            {
+              components: [
+                { internalType: "address", name: "addr", type: "address" },
+                {
+                  internalType: "uint64",
+                  name: "startTimestamp",
+                  type: "uint64",
+                },
+                { internalType: "bool", name: "burned", type: "bool" },
+                { internalType: "uint24", name: "extraData", type: "uint24" },
+              ],
+              internalType: "struct IERC721A.TokenOwnership[]",
+              name: "",
+              type: "tuple[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "fxChildTunnel",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "fxRoot",
+          outputs: [
+            {
+              internalType: "contract IFxStateSender",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "getApproved",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "owner", type: "address" },
+            { internalType: "address", name: "operator", type: "address" },
+          ],
+          name: "isApprovedForAll",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "isLive",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "liveAt",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "name",
+          outputs: [{ internalType: "string", name: "", type: "string" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "ownerOf",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_amount", type: "uint256" },
+          ],
+          name: "proPassMint",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "proPrice",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          name: "processedExits",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "bytes", name: "inputData", type: "bytes" }],
+          name: "receiveMessage",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "renounceOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "from", type: "address" },
+            { internalType: "address", name: "to", type: "address" },
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "safeTransferFrom",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "from", type: "address" },
+            { internalType: "address", name: "to", type: "address" },
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+            { internalType: "bytes", name: "_data", type: "bytes" },
+          ],
+          name: "safeTransferFrom",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "", type: "address" },
+            { internalType: "bool", name: "", type: "bool" },
+          ],
+          name: "setApprovalForAll",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "string", name: "_baseURI", type: "string" },
+          ],
+          name: "setBaseURI",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_entryPrice", type: "uint256" },
+          ],
+          name: "setEntryPrice",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_fxChildTunnel",
+              type: "address",
+            },
+          ],
+          name: "setFxChildTunnel",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_liveAt", type: "uint256" },
+            { internalType: "uint256", name: "_expiresAt", type: "uint256" },
+          ],
+          name: "setMintWindow",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_proPrice", type: "uint256" },
+          ],
+          name: "setProPrice",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "_treasury", type: "address" },
+          ],
+          name: "setTreasury",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_vendorContractAddress",
+              type: "address",
+            },
+          ],
+          name: "setVendorContractAddress",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "bytes4", name: "interfaceId", type: "bytes4" },
+          ],
+          name: "supportsInterface",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "symbol",
+          outputs: [{ internalType: "string", name: "", type: "string" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_tokenId", type: "uint256" },
+          ],
+          name: "tokenURI",
+          outputs: [{ internalType: "string", name: "", type: "string" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "address", name: "owner", type: "address" }],
+          name: "tokensOfOwner",
+          outputs: [{ internalType: "uint256[]", name: "", type: "uint256[]" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "owner", type: "address" },
+            { internalType: "uint256", name: "start", type: "uint256" },
+            { internalType: "uint256", name: "stop", type: "uint256" },
+          ],
+          name: "tokensOfOwnerIn",
+          outputs: [{ internalType: "uint256[]", name: "", type: "uint256[]" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "totalSupply",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "from", type: "address" },
+            { internalType: "address", name: "to", type: "address" },
+            { internalType: "uint256", name: "tokenId", type: "uint256" },
+          ],
+          name: "transferFrom",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "newOwner", type: "address" },
+          ],
+          name: "transferOwnership",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "treasury",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_amount", type: "uint256" },
+          ],
+          name: "treasuryMint",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "vendorContract",
+          outputs: [
+            {
+              internalType: "contract IBrawlerBearzDynamicItems",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "withdraw",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+    },
+    [polygon.id]: {
+      address: "0xf116D8AB066Eea680714e4Aca9E20Ae84b27Feb2",
+      abi: [
+        {
+          inputs: [
+            { internalType: "address", name: "_fxChild", type: "address" },
+            {
+              internalType: "address",
+              name: "_trustedForwarder",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "bytes",
+              name: "message",
+              type: "bytes",
+            },
+          ],
+          name: "MessageSent",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "address",
+              name: "userAddress",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address payable",
+              name: "relayerAddress",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "bytes",
+              name: "functionSignature",
+              type: "bytes",
+            },
+          ],
+          name: "MetaTransactionExecuted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "RewardClaimed",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "role",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "previousAdminRole",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "newAdminRole",
+              type: "bytes32",
+            },
+          ],
+          name: "RoleAdminChanged",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "role",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+          ],
+          name: "RoleGranted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "bytes32",
+              name: "role",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "account",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "sender",
+              type: "address",
+            },
+          ],
+          name: "RoleRevoked",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "BATTLE_PASS_MANAGER",
+          outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "DEFAULT_ADMIN_ROLE",
+          outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "ERC712_VERSION",
+          outputs: [{ internalType: "string", name: "", type: "string" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "MINTED",
+          outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "OWNER_ROLE",
+          outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "", type: "uint256" },
+            { internalType: "address", name: "sender", type: "address" },
+            { internalType: "bytes", name: "message", type: "bytes" },
+          ],
+          name: "_processMessageTest",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "_address", type: "address" },
+          ],
+          name: "balanceOf",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_tokenId", type: "uint256" },
+            { internalType: "uint256", name: "_amount", type: "uint256" },
+          ],
+          name: "decreaseBattlePassEntries",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "userAddress", type: "address" },
+            { internalType: "bytes", name: "functionSignature", type: "bytes" },
+            { internalType: "bytes32", name: "sigR", type: "bytes32" },
+            { internalType: "bytes32", name: "sigS", type: "bytes32" },
+            { internalType: "uint8", name: "sigV", type: "uint8" },
+          ],
+          name: "executeMetaTransaction",
+          outputs: [{ internalType: "bytes", name: "", type: "bytes" }],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "fxChild",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "fxRootTunnel",
+          outputs: [{ internalType: "address", name: "", type: "address" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_tokenId", type: "uint256" },
+          ],
+          name: "getBattlePass",
+          outputs: [
+            {
+              components: [
+                { internalType: "uint256", name: "typeOf", type: "uint256" },
+                { internalType: "uint256", name: "createdAt", type: "uint256" },
+                {
+                  internalType: "uint256",
+                  name: "tournamentEntries",
+                  type: "uint256",
+                },
+              ],
+              internalType:
+                "struct IBrawlerBearzBattlePassSeason4Child.BattlePass",
+              name: "",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getChainId",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getDomainSeperator",
+          outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "address", name: "user", type: "address" }],
+          name: "getNonce",
+          outputs: [
+            { internalType: "uint256", name: "nonce", type: "uint256" },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "_address", type: "address" },
+          ],
+          name: "getPassOwnerTokens",
+          outputs: [{ internalType: "uint256[]", name: "", type: "uint256[]" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "bytes32", name: "role", type: "bytes32" }],
+          name: "getRoleAdmin",
+          outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "bytes32", name: "role", type: "bytes32" },
+            { internalType: "address", name: "account", type: "address" },
+          ],
+          name: "grantRole",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "bytes32", name: "role", type: "bytes32" },
+            { internalType: "address", name: "account", type: "address" },
+          ],
+          name: "hasRole",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "forwarder", type: "address" },
+          ],
+          name: "isTrustedForwarder",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "_tokenId", type: "uint256" },
+            {
+              components: [
+                { internalType: "uint256", name: "typeOf", type: "uint256" },
+                { internalType: "uint256", name: "createdAt", type: "uint256" },
+                {
+                  internalType: "uint256",
+                  name: "tournamentEntries",
+                  type: "uint256",
+                },
+              ],
+              internalType:
+                "struct IBrawlerBearzBattlePassSeason4Child.BattlePass",
+              name: "_pass",
+              type: "tuple",
+            },
+          ],
+          name: "manualBattlePassOverride",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "_address", type: "address" },
+            { internalType: "uint256[]", name: "_tokenIds", type: "uint256[]" },
+          ],
+          name: "manuallySetOwnedPasses",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "", type: "address" },
+            { internalType: "uint256", name: "", type: "uint256" },
+          ],
+          name: "ownedPasses",
+          outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+          name: "passes",
+          outputs: [
+            { internalType: "uint256", name: "typeOf", type: "uint256" },
+            { internalType: "uint256", name: "createdAt", type: "uint256" },
+            {
+              internalType: "uint256",
+              name: "tournamentEntries",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "uint256", name: "stateId", type: "uint256" },
+            {
+              internalType: "address",
+              name: "rootMessageSender",
+              type: "address",
+            },
+            { internalType: "bytes", name: "data", type: "bytes" },
+          ],
+          name: "processMessageFromRoot",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "bytes32", name: "role", type: "bytes32" },
+            { internalType: "address", name: "account", type: "address" },
+          ],
+          name: "renounceRole",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "bytes32", name: "role", type: "bytes32" },
+            { internalType: "address", name: "account", type: "address" },
+          ],
+          name: "revokeRole",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "address", name: "_fxRootTunnel", type: "address" },
+          ],
+          name: "setFxRootTunnel",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            { internalType: "bytes4", name: "interfaceId", type: "bytes4" },
+          ],
+          name: "supportsInterface",
+          outputs: [{ internalType: "bool", name: "", type: "bool" }],
+          stateMutability: "view",
+          type: "function",
+        },
+      ],
+    },
+  },
+};

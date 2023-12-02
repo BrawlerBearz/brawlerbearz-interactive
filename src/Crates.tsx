@@ -16,8 +16,10 @@ import Header from "./components/Header";
 import { ALCHEMY_KEY } from "./lib/constants";
 import logoImage from "./interactive/logo.gif";
 import buttonBackground from "./interactive/button.png";
-import opening_part1 from "./interactive/crates/v2/opening_part1_slower.gif";
-import opening_part1a from "./interactive/crates/v2/opening_part1a.gif";
+import opening_part1 from "./interactive/crates/290/drop.gif";
+import opening_part1a from "./interactive/crates/290/opening.gif";
+import drop364 from "./interactive/crates/364/drop.gif";
+import opening364 from "./interactive/crates/364/opening.gif";
 import cardback from "./interactive/crates/elements/cardback.png";
 import ultra from "./interactive/crates/elements/ultra.png";
 import legendary from "./interactive/crates/elements/legendary.png";
@@ -39,6 +41,17 @@ import PleaseConnectWallet from "./components/PleaseConnectWallet";
 import { BEARZ_SHOP_IMAGE_URI } from "./lib/blockchain";
 import useSupplyCrates from "./hooks/useSupplyCrates";
 
+const crateImages = {
+  "290": {
+    drop: opening_part1,
+    opening: opening_part1a,
+  },
+  "364": {
+    drop: drop364,
+    opening: opening364,
+  },
+};
+
 const placeholderTypes = {
   CONSUMABLE: consumable,
   COMMON: common,
@@ -49,7 +62,7 @@ const placeholderTypes = {
 };
 
 const crateRarities = {
-  290: {
+  "290": {
     "22": 0.0006662225183211193,
     "300": 0.046635576282478344,
     "301": 0.005329780146568954,
@@ -77,6 +90,32 @@ const crateRarities = {
     "323": 0.04930046635576282,
     "324": 0.051299133910726186,
     "325": 0.04930046635576282,
+  },
+  "364": {
+    "300": 0.04514,
+    "325": 0.05921,
+    "365": 0.00256,
+    "366": 0.0075,
+    "367": 0.01055,
+    "368": 0.01273,
+    "369": 0.01293,
+    "370": 0.01443,
+    "371": 0.02904,
+    "372": 0.03507,
+    "373": 0.03742,
+    "374": 0.04267,
+    "375": 0.04416,
+    "376": 0.04898,
+    "377": 0.06001,
+    "378": 0.05809,
+    "379": 0.0601,
+    "380": 0.06001,
+    "381": 0.05997,
+    "382": 0.06115,
+    "383": 0.05895,
+    "384": 0.0603,
+    "385": 0.06003,
+    "386": 0.059,
   },
 };
 
@@ -150,7 +189,9 @@ const ReadyAndOpen = ({ sounds, status, setStatus }) => {
       <img
         key={status.event === DROPPED_STATUS.READY ? "READY" : "NOT_READY"}
         src={
-          status.event === DROPPED_STATUS.READY ? opening_part1 : opening_part1a
+          status.event === DROPPED_STATUS.READY
+            ? crateImages[String(status?.context?.tokenId)].drop
+            : crateImages[String(status?.context?.tokenId)].opening
         }
         className="absolute top-0 left-0 w-full h-[calc(100%-200px)] object-contain z-[1] scale-[150%] md:scale-100"
         alt="ready animation"
@@ -200,6 +241,8 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
 
   const { context } = status || {};
 
+  // console.log(context?.crateItems);
+
   const [shuffledCrateItems, setShuffled] = useState(
     shuffle(context?.crateItems),
   );
@@ -229,22 +272,25 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
 
     const selectedTokenId = context?.droppedItems?.[spinIndex]?.tokenId;
     const order = shuffledCrateItems.map((item) => item.tokenId);
+
     const position =
       order.indexOf(selectedTokenId) -
       Math.floor(shuffledCrateItems.length / 2);
 
-    const rows = 12; // Pass by sets
+    const rows = 18; // Pass by sets
     const card = ITEM_WIDTH; // 8px spacing + base item width
     const spinByDistance = rows * order.length * card;
 
     let landingPosition = spinByDistance + position * card;
 
-    const offset =
-      Math.floor(Math.random() * (ITEM_WIDTH * 0.8)) - ITEM_WIDTH / 2;
+    const offset = Math.abs(
+      Math.floor(Math.random() * ITEM_WIDTH - ITEM_WIDTH / 2),
+    );
+
     landingPosition += offset;
 
     const object = {
-      x: Math.floor(Math.random() * 50) / 100,
+      x: Math.floor(Math.random() * 40) / 100,
       y: Math.floor(Math.random() * 20) / 100,
     };
 
@@ -382,7 +428,7 @@ const Reels = ({ status, sounds, setStatus, onClose }) => {
                 }px, 0px, 0px)`,
               }}
             >
-              {new Array(20).fill(0).map((item, index) => {
+              {new Array(30).fill(0).map((item, index) => {
                 return shuffledCrateItems.map((item, crateIndex) => (
                   <div
                     key={`${index}_${crateIndex}`}
@@ -613,7 +659,8 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
             ),
           });
 
-          const crateItemIds = crates?.[crateTokenId]?.config?.itemIds || [];
+          const crateItemIds =
+            crates?.[String(crateTokenId)]?.config?.itemIds || [];
 
           const [crateMetadata, droppedMetadata] = await Promise.all([
             ethClient.readContract({
@@ -630,14 +677,14 @@ const DroppedView = ({ crates, txHash, onClose, sounds }) => {
             }),
           ]);
 
-          const rarities = crateRarities[crateTokenId] || {};
+          const rarities = crateRarities[String(crateTokenId)] || {};
           const deterministicLodash = seedLodash(randomness);
 
           setTimeout(() => {
             setStatus({
               event: DROPPED_STATUS.READY,
               context: {
-                ...(crates?.[crateTokenId] ?? {}),
+                ...(crates?.[String(crateTokenId)] ?? {}),
                 crateItems: crateItemIds.map((tokenId, index) => {
                   const metadata = crateMetadata[index];
                   return {
@@ -767,7 +814,9 @@ const CratesView = ({ isSimulated }) => {
                   <div className="flex flex-wrap w-full h-full gap-6 overflow-x-auto">
                     <div className="flex flex-col w-full h-full items-center justify-center space-y-2">
                       <p className="text-center text-sm text-accent">
-                        Price: 0.02ETH
+                        {viewCrateId === String(364)
+                          ? "Buy battle pass"
+                          : " Price: 0.02ETH"}
                       </p>
                       <img
                         className="h-[250px]"
@@ -821,7 +870,9 @@ const CratesView = ({ isSimulated }) => {
                           </div>
                         ) : (
                           <div className="flex flex-row items-center justify-center space-x-2 mt-3">
-                            <p className="text-warn">Sale over</p>
+                            <p className="text-warn">
+                              {viewCrateId === String(364) ? "" : " Sale over"}
+                            </p>
                           </div>
                         )}
                         {data?.buyingContext && (
@@ -930,7 +981,7 @@ const CratesView = ({ isSimulated }) => {
                     </button>
                   </div>
                 )}
-                <div className="flex flex-col flex-wrap gap-4">
+                <div className="flex flex-row flex-wrap gap-10">
                   {Object.keys(data?.crates || {}).map((tokenId) => {
                     const crate = data?.crates[tokenId];
                     return (
@@ -941,7 +992,7 @@ const CratesView = ({ isSimulated }) => {
                         <div className="relative flex w-full h-full">
                           <img
                             src={`${process.env.PUBLIC_URL}/cards/${tokenId}.png`}
-                            className="w-full z-[2]"
+                            className="w-full z-[2] max-h-[335px]"
                           />
                           <div className="absolute flex items-center justify-center border-white border-[3px] top-[-22px] right-[-22px] h-[45px] w-[45px] bg-[#887d8d] shadow-xl rounded-full text-white text-xs z-[2]">
                             <span>x{String(crate?.balance || 0)}</span>

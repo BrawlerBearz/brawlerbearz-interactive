@@ -37,7 +37,7 @@ import { getNetwork, switchNetwork } from "@wagmi/core";
 
 let biconomy: any;
 
-const CRATE_TOKEN_IDS = [290];
+const CRATE_TOKEN_IDS = [290, 364];
 
 const useSimulatedAccount = (simulatedAddress) => {
   return {
@@ -269,7 +269,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
           apiKey: "DZgKduUcK.58f69cf0-6070-482c-85a6-17c5e2f24d83",
           debug: false,
           contractAddresses: [bearzSupplyCratesContractAddress],
-          strictMode: true,
+          strictMode: false,
         });
 
         biconomy
