@@ -277,16 +277,18 @@ const BattlePassView = ({ isSimulated }) => {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col space-y-4 items-center justify-center mx-auto overflow-x-hidden">
-                    <Link
-                      to={`https://bearzaar.brawlerbearz.club/collections/0x25706cdb81f24a4dE5D2583cbbF708eB15F1Be52/networks/mainnet/tokens/${viewConsumableId}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline text-white text-sm text-center"
-                    >
-                      Buy with credit card at the Bearzaar
-                    </Link>
-                  </div>
+                  {String(viewConsumableId) === '1' && (
+                      <div className="flex flex-col space-y-4 items-center justify-center mx-auto overflow-x-hidden">
+                        <Link
+                            to={`https://bearzaar.brawlerbearz.club/collections/0x25706cdb81f24a4dE5D2583cbbF708eB15F1Be52`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline text-white text-sm text-center"
+                        >
+                          Buy with credit card at the Bearzaar
+                        </Link>
+                      </div>
+                  )}
                 </div>
               </div>
             </div>
