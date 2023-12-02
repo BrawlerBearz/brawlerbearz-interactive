@@ -295,7 +295,7 @@ const BattlePassView = ({ isSimulated }) => {
             <div className="flex flex-row items-center space-x-4">
               <h1 className="text-2xl">Battle Passes</h1>
             </div>
-            <p className="max-w-2xl text-accent">The arena will be opening soon for Season 4. Check back to prep for the underground and get ready to equip
+            <p className="max-w-2xl text-white opacity-80">The arena will be opening soon for Season 4. Check back to prep for the underground and get ready to equip
             and battle your bearz in Blizzard Blitz!</p>
             <div className="flex flex-row flex-wrap gap-10">
               {Object.keys(data?.battlePasses || {}).map((tokenId) => {
