@@ -279,7 +279,7 @@ const BattlePassView = ({ isSimulated }) => {
                   </div>
                   <div className="flex flex-col space-y-4 items-center justify-center mx-auto overflow-x-hidden">
                     <Link
-                      to={`https://bearzaar.brawlerbearz.club/collections/0x61E3CA631C121C6Fe98E203311f593867C61208a/networks/mainnet/tokens/${viewConsumableId}`}
+                      to={`https://bearzaar.brawlerbearz.club/collections/0x25706cdb81f24a4dE5D2583cbbF708eB15F1Be52/networks/mainnet/tokens/${viewConsumableId}`}
                       target="_blank"
                       rel="noreferrer"
                       className="underline text-white text-sm text-center"
