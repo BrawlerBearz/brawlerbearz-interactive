@@ -206,7 +206,13 @@ const BattlePassView = ({ isSimulated }) => {
                             ),
                           )
                         }
-                        renderer={({ days, hours, minutes, seconds, completed }) => {
+                        renderer={({
+                          days,
+                          hours,
+                          minutes,
+                          seconds,
+                          completed,
+                        }) => {
                           if (completed) {
                             return (
                               <div className="flex flex-row items-center justify-center space-x-2 mt-3">
@@ -277,17 +283,17 @@ const BattlePassView = ({ isSimulated }) => {
                       )}
                     </div>
                   </div>
-                  {String(viewConsumableId) === '1' && (
-                      <div className="flex flex-col space-y-4 items-center justify-center mx-auto overflow-x-hidden">
-                        <Link
-                            to={`https://bearzaar.brawlerbearz.club/collections/0x25706cdb81f24a4dE5D2583cbbF708eB15F1Be52`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="underline text-white text-sm text-center"
-                        >
-                          Buy with credit card at the Bearzaar
-                        </Link>
-                      </div>
+                  {String(viewConsumableId) === "1" && (
+                    <div className="flex flex-col space-y-4 items-center justify-center mx-auto overflow-x-hidden">
+                      <Link
+                        to={`https://bearzaar.brawlerbearz.club/collections/0x25706cdb81f24a4dE5D2583cbbF708eB15F1Be52`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-white text-sm text-center"
+                      >
+                        Buy with credit card at the Bearzaar
+                      </Link>
+                    </div>
                   )}
                 </div>
               </div>
@@ -297,8 +303,11 @@ const BattlePassView = ({ isSimulated }) => {
             <div className="flex flex-row items-center space-x-4">
               <h1 className="text-2xl">Battle Passes</h1>
             </div>
-            <p className="max-w-2xl text-white opacity-80">The arena will be opening soon for Season 4. Check back to prep for the underground and get ready to equip
-            and battle your bearz in Blizzard Blitz!</p>
+            <p className="max-w-2xl text-white opacity-80">
+              The arena will be opening soon for Season 4. Check back to prep
+              for the underground and get ready to equip and battle your bearz
+              in Blizzard Blitz!
+            </p>
             <div className="flex flex-row flex-wrap gap-10">
               {Object.keys(data?.battlePasses || {}).map((tokenId) => {
                 const battlePass = data?.battlePasses[tokenId];

@@ -34,7 +34,7 @@ const useBearzActions = ({ account, signer }) => {
   const { initializeBiconomy } = useBiconomy({
     account,
     contractAddresses: [bearzStakeChildContractAddress],
-    strictMode: true,
+    strictMode: false,
     debug: false,
     chainId: polygon.id,
   });

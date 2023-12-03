@@ -269,7 +269,7 @@ const useSupplyCrates = ({ isSimulated, overrideAddress }) => {
           apiKey: "DZgKduUcK.58f69cf0-6070-482c-85a6-17c5e2f24d83",
           debug: false,
           contractAddresses: [bearzSupplyCratesContractAddress],
-          strictMode: true,
+          strictMode: false,
         });
 
         biconomy
