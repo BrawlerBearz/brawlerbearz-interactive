@@ -44,8 +44,6 @@ const useSetupDiscord = () => {
 
   let discordSdk;
 
-  const location = useLocation();
-
   useEffect(() => {
     const handleCurrentUserUpdate = (
       currentUserEvent: EventPayloadData<"CURRENT_USER_UPDATE">
@@ -54,7 +52,7 @@ const useSetupDiscord = () => {
     };
 
     (async function () {
-      discordSdk = await initializeSDK({ params: location.search });
+      discordSdk = await initializeSDK({ params: window.location.search });
 
       await discordSdk.ready();
 
@@ -70,7 +68,7 @@ const useSetupDiscord = () => {
         discordSdk.unsubscribe("CURRENT_USER_UPDATE", handleCurrentUserUpdate);
       }
     };
-  }, [location.search]);
+  }, [window.location.search]);
 
   return {
     currentUser,
