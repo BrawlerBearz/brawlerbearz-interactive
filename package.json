@@ -70,6 +70,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "bufferutil": "^4.0.7",
     "eslint-plugin-prettier": "5.0.0",
     "net": "^1.0.2",
