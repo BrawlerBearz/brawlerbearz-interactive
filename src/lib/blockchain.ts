@@ -57,11 +57,11 @@ const getMetadataByTokenId = async (tokenId) => {
           atob(
             (base64Encoding as string).replace(
               "data:application/json;base64,",
-              "",
-            ),
-          ),
-        ),
-      ),
+              ""
+            )
+          )
+        )
+      )
     ),
     ownerOf,
   };
@@ -116,7 +116,7 @@ const extractValues = (base, item, keyChange = itemKeyToStatKey) => {
       }
       return acc;
     },
-    {},
+    {}
   );
   return isEmpty(extracted) ? null : extracted;
 };
@@ -135,7 +135,7 @@ const aggregateBoosts = (boosts) =>
       end: 0,
       lck: 0,
       int: 0,
-    },
+    }
   );
 
 const getEquippedItems = (baseURI, equipped, itemLookup) => {
@@ -173,7 +173,7 @@ const getEquippedItems = (baseURI, equipped, itemLookup) => {
 
 export const getStatsByTokenId = async (
   tokenId,
-  overrideEquipped = {} as any,
+  overrideEquipped = {} as any
 ) => {
   try {
     const [metadata, stateBatch] = await Promise.all([
@@ -195,11 +195,11 @@ export const getStatsByTokenId = async (
     const baseLevel = Number(getAttributeValue(metadata?.attributes, "Level"));
 
     const levelIndex = metadata.attributes.findIndex(
-      (attr) => attr.trait_type === "Level",
+      (attr) => attr.trait_type === "Level"
     );
 
     const xpIndex = metadata.attributes.findIndex(
-      (attr) => attr.trait_type === "XP",
+      (attr) => attr.trait_type === "XP"
     );
 
     let totalXP = Number(metadata.attributes[xpIndex]?.value);
@@ -225,49 +225,49 @@ export const getStatsByTokenId = async (
 
     if (overrideEquipped?.dynamicWeaponId > 0) {
       const index = metadata.equipped.findIndex(
-        (attr) => attr.trait_type === "Weapon Id",
+        (attr) => attr.trait_type === "Weapon Id"
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicWeaponId;
     }
 
     if (overrideEquipped?.dynamicArmorId > 0) {
       const index = metadata.equipped.findIndex(
-        (attr) => attr.trait_type === "Armor Id",
+        (attr) => attr.trait_type === "Armor Id"
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicArmorId;
     }
 
     if (overrideEquipped?.dynamicFaceArmorId > 0) {
       const index = metadata.equipped.findIndex(
-        (attr) => attr.trait_type === "Face Armor Id",
+        (attr) => attr.trait_type === "Face Armor Id"
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicFaceArmorId;
     }
 
     if (overrideEquipped?.dynamicEyewearId > 0) {
       const index = metadata.equipped.findIndex(
-        (attr) => attr.trait_type === "Eyewear Id",
+        (attr) => attr.trait_type === "Eyewear Id"
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicEyewearId;
     }
 
     if (overrideEquipped?.dynamicMiscId > 0) {
       const index = metadata.equipped.findIndex(
-        (attr) => attr.trait_type === "Misc Id",
+        (attr) => attr.trait_type === "Misc Id"
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicMiscId;
     }
 
     if (overrideEquipped?.dynamicBackgroundId > 0) {
       const index = metadata.equipped.findIndex(
-        (attr) => attr.trait_type === "Background Id",
+        (attr) => attr.trait_type === "Background Id"
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicBackgroundId;
     }
 
     if (overrideEquipped?.dynamicHeadId > 0) {
       const index = metadata.equipped.findIndex(
-        (attr) => attr.trait_type === "Head Id",
+        (attr) => attr.trait_type === "Head Id"
       );
       metadata.equipped[index].value = overrideEquipped?.dynamicHeadId;
     }
@@ -286,7 +286,7 @@ export const getStatsByTokenId = async (
     const currentEndurance = Number(attributeLookup?.["Endurance"]?.value);
     const currentLuck = Number(attributeLookup?.["Luck"]?.value);
     const currentIntelligence = Number(
-      attributeLookup?.["Intelligence"]?.value,
+      attributeLookup?.["Intelligence"]?.value
     );
 
     const baseline = {
@@ -461,7 +461,7 @@ export const getStatsByTokenId = async (
       items: getEquippedItems(
         BEARZ_SHOP_IMAGE_URI,
         metadata?.equipped,
-        itemLookup,
+        itemLookup
       ),
       faction:
         factionId !== "0"
