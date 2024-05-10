@@ -7,7 +7,7 @@ import { useSimpleAccountOwner } from "./lib/useSimpleAccountOwner";
 import PleaseConnectWallet from "./components/PleaseConnectWallet";
 import classnames from "classnames";
 import type { EventPayloadData } from "@discord/embedded-app-sdk";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import discordSdk from "./lib/discord/discordSdk";
 import initializeSDK from "./lib/discord/discordSdk";
 
@@ -38,41 +38,56 @@ const useNFTWrapped = ({ isSimulated }) => {
   };
 };
 
-const Experience = ({ isSimulated = false }) => {
-  const { address, isConnected, balance, refreshBalance } = useNFTWrapped({
-    isSimulated,
-  });
-
-  const location = useLocation();
-
+const useSetupDiscord = () => {
   const [currentUser, setCurrentUser] =
     useState<EventPayloadData<"CURRENT_USER_UPDATE"> | null>(null);
 
   let discordSdk;
 
-  const handleCurrentUserUpdate = (
-    currentUserEvent: EventPayloadData<"CURRENT_USER_UPDATE">
-  ) => {
-    setCurrentUser(currentUserEvent);
-  };
-
-  const setup = async (params) => {
-    discordSdk = await initializeSDK({ params });
-
-    const { channelId } = discordSdk;
-
-    if (!channelId) return;
-
-    discordSdk.subscribe("CURRENT_USER_UPDATE", handleCurrentUserUpdate);
-
-    return () => {
-      discordSdk.unsubscribe("CURRENT_USER_UPDATE", handleCurrentUserUpdate);
-    };
-  };
+  const location = useLocation();
 
   useEffect(() => {
-    setup(location.search);
+    const handleCurrentUserUpdate = (
+      currentUserEvent: EventPayloadData<"CURRENT_USER_UPDATE">
+    ) => {
+      setCurrentUser(currentUserEvent);
+    };
+
+    (async function () {
+      discordSdk = await initializeSDK({ params: location.search });
+
+      await discordSdk.ready();
+
+      const { channelId } = discordSdk;
+
+      if (!channelId) return;
+
+      discordSdk.subscribe("CURRENT_USER_UPDATE", handleCurrentUserUpdate);
+    })();
+
+    return () => {
+      if (discordSdk) {
+        discordSdk.unsubscribe("CURRENT_USER_UPDATE", handleCurrentUserUpdate);
+      }
+    };
   }, [location.search]);
+
+  return {
+    currentUser,
+    setCurrentUser,
+  };
+};
+
+const Experience = ({ isSimulated = false }) => {
+  const { address, isConnected, balance, refreshBalance } = useNFTWrapped({
+    isSimulated,
+  });
+
+  const { currentUser } = useSetupDiscord();
+
+  console.log({
+    currentUser,
+  });
 
   return (
     <>
