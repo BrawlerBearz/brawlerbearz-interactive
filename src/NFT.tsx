@@ -136,7 +136,7 @@ const SubView = ({ children, childClassName, title, subtitle, onBack }) => (
     <div
       className={classnames(
         "flex w-full h-full tablet:overflow-auto px-2 tablet:px-4",
-        childClassName,
+        childClassName
       )}
     >
       {children}
@@ -153,7 +153,7 @@ const Popup = ({ children, isOpen, onClose }) => {
           {
             "bg-opacity-0 pointer-events-none": !isOpen,
             "bg-opacity-80": isOpen,
-          },
+          }
         )}
         onClick={onClose}
       />
@@ -163,7 +163,7 @@ const Popup = ({ children, isOpen, onClose }) => {
           {
             "-bottom-[100%]": !isOpen,
             "bottom-0": isOpen,
-          },
+          }
         )}
       >
         {isOpen ? children : null}
@@ -331,7 +331,7 @@ const QuestingView = ({ address, name, onBack }) => {
                   <div className="flex flex-shrink-0 items-center w-full flex-wrap gap-2">
                     {quests.map((quest) => {
                       const activeDate = new Date(
-                        fromUnixTime(quest?.activeUntil),
+                        fromUnixTime(quest?.activeUntil)
                       );
                       const isActive = isAfter(activeDate, new Date());
 
@@ -356,7 +356,7 @@ const QuestingView = ({ address, name, onBack }) => {
                             <span className="text-xs opacity-80">
                               {isActive ? "Ends in " : "Ended "}
                               {formatDistanceToNow(
-                                new Date(fromUnixTime(quest?.activeUntil)),
+                                new Date(fromUnixTime(quest?.activeUntil))
                               )}
                               {isActive ? "" : " ago"}
                             </span>
@@ -458,13 +458,13 @@ const ActionMenu = ({
                     "opacity-80 hover:opacity-100 text-[20px] cursor-pointer ",
                     {
                       "animate-spin": isRefreshing,
-                    },
+                    }
                   )}
                   onClick={async () => {
                     try {
                       setIsRefreshing(true);
                       await fetch(
-                        `https://bearzbot.herokuapp.com/refresh?tokenId=${tokenId}`,
+                        `https://bearzbot.herokuapp.com/refresh?tokenId=${tokenId}`
                       ).then((res) => res.json());
                     } catch (e) {
                       console.log(e);
@@ -597,7 +597,7 @@ const ActionMenu = ({
                     {formatNumber(
                       isViewingBaseStats
                         ? calculated?.baseline.str
-                        : calculated?.baseAggregate.str,
+                        : calculated?.baseAggregate.str
                     )}
                   </span>
                   {!isViewingBaseStats && calculated?.computed?.str > 0 ? (
@@ -614,7 +614,7 @@ const ActionMenu = ({
                     {formatNumber(
                       isViewingBaseStats
                         ? calculated?.baseline.end
-                        : calculated?.baseAggregate.end,
+                        : calculated?.baseAggregate.end
                     )}
                   </span>
                   {!isViewingBaseStats && calculated?.computed?.end > 0 ? (
@@ -631,7 +631,7 @@ const ActionMenu = ({
                     {formatNumber(
                       isViewingBaseStats
                         ? calculated?.baseline.int
-                        : calculated?.baseAggregate.int,
+                        : calculated?.baseAggregate.int
                     )}
                   </span>
                   {!isViewingBaseStats && calculated?.computed?.int > 0 ? (
@@ -648,7 +648,7 @@ const ActionMenu = ({
                     {formatNumber(
                       isViewingBaseStats
                         ? calculated?.baseline.lck
-                        : calculated?.baseAggregate.lck,
+                        : calculated?.baseAggregate.lck
                     )}
                   </span>
                   {!isViewingBaseStats && calculated?.computed?.lck > 0 ? (
@@ -759,8 +759,8 @@ const ActionMenu = ({
                         Training for{" "}
                         {formatDistanceToNow(
                           new Date(
-                            fromUnixTime(activity?.training?.training?.startAt),
-                          ),
+                            fromUnixTime(activity?.training?.training?.startAt)
+                          )
                         )}
                       </p>
                     ) : (
@@ -804,18 +804,18 @@ const ActionMenu = ({
                       Started:{" "}
                       {format(
                         new Date(
-                          fromUnixTime(activity?.questing?.quest?.startAt),
+                          fromUnixTime(activity?.questing?.quest?.startAt)
                         ),
-                        "yyyy-MM-dd hh:mm aaaa",
+                        "yyyy-MM-dd hh:mm aaaa"
                       )}
                     </p>
                     <p className="text-sm">
                       Ends:{" "}
                       {format(
                         new Date(
-                          fromUnixTime(activity?.questing?.quest?.endAt),
+                          fromUnixTime(activity?.questing?.quest?.endAt)
                         ),
-                        "yyyy-MM-dd hh:mm aaaa",
+                        "yyyy-MM-dd hh:mm aaaa"
                       )}
                     </p>
                   </div>
@@ -1064,14 +1064,14 @@ const selectedToItemIds = (currentImages, isShowingPixel) => {
         0, 7, 8, 19, 21, 22, 23, 40, 67, 70, 74, 77, 81, 92, 93, 101, 102, 103,
         120, 142, 152, 153, 154, 155, 166, 169, 184, 200, 210, 212, 221, 226,
         242, 252, 255, 265, 266, 267, 268, 276, 277, 286, 304, 309, 318, 335,
-        345, 349, 389, 399, 374, 378, 380, 381, 359,
+        345, 349, 389, 399, 374, 378, 380, 381, 359, 406, 410, 413,
       ],
       HEAD: [
         0, 9, 32, 41, 42, 49, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108,
         113, 115, 119, 121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149,
         157, 158, 164, 165, 191, 206, 208, 215, 216, 230, 235, 236, 237, 238,
         244, 253, 258, 260, 261, 278, 280, 283, 284, 314, 321, 322, 337, 340,
-        341, 352, 353, 392, 394, 396, 365, 379, 383, 360, 362,
+        341, 352, 353, 392, 394, 396, 365, 379, 383, 360, 362, 407, 414, 415,
       ],
       ARMOR: [
         0, 1, 4, 34, 35, 37, 38, 43, 44, 48, 52, 54, 57, 61, 63, 71, 75, 76, 84,
@@ -1080,7 +1080,8 @@ const selectedToItemIds = (currentImages, isShowingPixel) => {
         180, 186, 190, 193, 194, 196, 198, 205, 209, 214, 219, 224, 228, 229,
         232, 233, 239, 243, 245, 248, 249, 250, 251, 257, 259, 262, 263, 269,
         271, 272, 275, 305, 311, 313, 315, 330, 336, 342, 343, 351, 354, 387,
-        395, 398, 366, 368, 370, 358, 361, 363, 400, 401, 402, 403,
+        395, 398, 366, 368, 370, 358, 361, 363, 400, 401, 402, 403, 405, 408,
+        411, 412,
       ],
       FACE_ARMOR: [
         0, 15, 91, 171, 172, 187, 188, 195, 270, 287, 301, 302, 307, 338, 347,
@@ -1095,13 +1096,13 @@ const selectedToItemIds = (currentImages, isShowingPixel) => {
         0, 2, 3, 6, 16, 17, 18, 25, 26, 27, 28, 29, 30, 31, 33, 36, 45, 46, 50,
         56, 65, 86, 90, 94, 139, 159, 163, 173, 174, 175, 176, 177, 189, 192,
         204, 213, 217, 222, 223, 227, 231, 234, 246, 254, 282, 288, 289, 316,
-        317, 324, 339, 344, 355, 356, 391, 373, 376, 377, 386,
+        317, 324, 339, 344, 355, 356, 391, 373, 376, 377, 386, 409,
       ],
       MISC: [
         0, 10, 11, 12, 13, 14, 20, 24, 51, 59, 69, 78, 79, 89, 125, 137, 160,
         168, 182, 183, 201, 202, 203, 207, 220, 225, 240, 273, 274, 279, 281,
         285, 303, 306, 308, 310, 312, 319, 320, 331, 333, 334, 346, 348, 350,
-        390, 367, 372, 385,
+        390, 367, 372, 385, 404,
       ],
     };
   }
@@ -1145,7 +1146,7 @@ const selectedToItemIds = (currentImages, isShowingPixel) => {
       0, 9, 32, 41, 42, 49, 53, 55, 58, 62, 64, 73, 82, 83, 98, 99, 104, 108,
       113, 115, 119, 121, 124, 131, 132, 133, 134, 135, 140, 143, 145, 149, 157,
       158, 164, 165, 191, 206, 208, 215, 216, 230, 235, 236, 237, 238, 244, 253,
-      258, 260, 261, 278, 280, 283, 284, 314, 321, 322,
+      258, 260, 261, 278, 280, 283, 284, 314, 321, 322, 407,
     ],
     ARMOR: [
       0, 1, 4, 34, 35, 37, 38, 43, 44, 48, 52, 54, 57, 61, 63, 71, 75, 76, 84,
@@ -1153,7 +1154,7 @@ const selectedToItemIds = (currentImages, isShowingPixel) => {
       123, 127, 128, 129, 130, 141, 144, 146, 147, 148, 150, 151, 170, 178, 180,
       186, 190, 193, 194, 196, 198, 205, 209, 214, 219, 224, 228, 229, 232, 233,
       239, 243, 245, 248, 249, 250, 251, 257, 259, 262, 263, 269, 271, 272, 275,
-      305, 311, 313, 315,
+      305, 311, 313, 315, 405, 408,
     ],
     FACE_ARMOR: [0, 15, 91, 171, 172, 187, 188, 195, 270, 287, 301, 302, 307],
     EYEWEAR: [
@@ -1164,6 +1165,7 @@ const selectedToItemIds = (currentImages, isShowingPixel) => {
       0, 2, 3, 6, 16, 17, 18, 25, 26, 27, 28, 29, 30, 31, 33, 36, 45, 46, 50,
       56, 65, 86, 90, 94, 139, 159, 163, 173, 174, 175, 176, 177, 189, 192, 204,
       213, 217, 222, 223, 227, 231, 234, 246, 254, 282, 288, 289, 316, 317, 324,
+      409,
     ],
     MISC: [
       0,
@@ -1208,6 +1210,7 @@ const selectedToItemIds = (currentImages, isShowingPixel) => {
       312,
       319,
       320,
+      404,
     ],
   };
 };
@@ -1244,7 +1247,7 @@ const applyRenderingRules = (images) => {
   return orderBy(
     normalizedImages,
     (image) => layerOrder.indexOf(image.typeOf),
-    "asc",
+    "asc"
   );
 };
 
@@ -1310,7 +1313,7 @@ const ImageRenderer = ({
           {
             "-bottom-[100%]": !selected,
             "bottom-0": selected,
-          },
+          }
         )}
       >
         {selected ? (
@@ -1320,7 +1323,7 @@ const ImageRenderer = ({
                 const wontShow = isInvalidWithAnotherLayer(selected, images);
                 const hasConflict = hasConflictWithAnotherLayer(
                   selected,
-                  images,
+                  images
                 );
                 const isNone = itemId === 0;
                 const path = `${process.env.PUBLIC_URL}/${
@@ -1330,7 +1333,7 @@ const ImageRenderer = ({
                   images.findIndex(
                     (item) =>
                       item.typeOf === selected &&
-                      String(item.id) === String(itemId),
+                      String(item.id) === String(itemId)
                   ) > -1;
                 return (
                   <div
@@ -1339,7 +1342,7 @@ const ImageRenderer = ({
                       "relative flex-shrink-0 relative rounded-md overflow-hidden h-[90px] w-[90px] hover:border-accent hover:border-[3px] duration-100 ease-in-out",
                       {
                         "border-accent border-[3px]": isSelectedItem,
-                      },
+                      }
                     )}
                   >
                     {selected !== LAYERS.BACKGROUND && (
@@ -1392,7 +1395,7 @@ const ImageRenderer = ({
                     )}
                   </div>
                 );
-              },
+              }
             )}
           </div>
         ) : null}
@@ -1407,7 +1410,7 @@ const ImageRenderer = ({
                 {
                   "opacity-100 text-accent": item === selected,
                   "opacity-80 hover:opacity-80 text-white": item !== selected,
-                },
+                }
               )}
               onClick={() => {
                 onSelect(item);
@@ -1452,7 +1455,7 @@ const WardrobeHeader = ({
         "absolute top-0 flex flex-row items-center justify-between w-full min-h-[50px] z-[10001] px-3",
         {
           hidden: inPictureMode,
-        },
+        }
       )}
     >
       <div className="flex flex-row items-center space-x-2">
@@ -1650,7 +1653,7 @@ const FullExperience = ({
           if (typeOf === LAYERS.HEAD) {
             // Reapply head
             const originalHead = defaultImages.find(
-              (d) => d.typeOf === LAYERS.HEAD,
+              (d) => d.typeOf === LAYERS.HEAD
             );
             if (originalHead) {
               replacement = originalHead;
@@ -1658,7 +1661,7 @@ const FullExperience = ({
           } else if (typeOf === LAYERS.BACKGROUND) {
             // Reapply background
             const originalBackground = defaultImages.find(
-              (d) => d.typeOf === LAYERS.BACKGROUND,
+              (d) => d.typeOf === LAYERS.BACKGROUND
             );
             if (originalBackground) {
               replacement = originalBackground;
@@ -1666,7 +1669,7 @@ const FullExperience = ({
           } else if (typeOf === LAYERS.ARMOR) {
             // Reapply outfit
             const originalOutfit = defaultImages.find(
-              (d) => d.typeOf === LAYERS.ARMOR,
+              (d) => d.typeOf === LAYERS.ARMOR
             );
             if (originalOutfit) {
               replacement = originalOutfit;
@@ -1785,7 +1788,7 @@ const Experience = ({
         dna: metadata?.metadata?.dna,
         isShowingPixel,
       }),
-    [JSON.stringify(metadata?.metadata?.consumables), isShowingPixel],
+    [JSON.stringify(metadata?.metadata?.consumables), isShowingPixel]
   );
 
   const onTogglePixel = () => {
@@ -1857,7 +1860,7 @@ const NFTViewer = ({ isSandboxed, metadata, onRefresh }) => {
           appName: "Brawler Bearz: Interactive Experience",
           appDescription: "A mini-dapp for managing your brawler bear",
           chains: [mainnet, polygon],
-        }),
+        })
       )}
     >
       <ConnectKitProvider

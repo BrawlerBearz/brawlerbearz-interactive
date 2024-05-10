@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 
 const root = ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement,
+  document.getElementById("root") as HTMLElement
 );
 
 const version = "v1.6.0";
@@ -22,6 +22,7 @@ const Consumables = React.lazy(() => import("./Consumables"));
 const VendingMachine = React.lazy(() => import("./VendingMachine"));
 const Rewards = React.lazy(() => import("./Rewards"));
 const Connect = React.lazy(() => import("./Connect"));
+const Game = React.lazy(() => import("./Game"));
 
 const Loading = () => {
   return (
@@ -53,6 +54,7 @@ const App = () => {
         </Route>
         <Route path="consumables" element={<Consumables />} />
         <Route path="rewards" element={<Rewards />} />
+        <Route path="game" element={<Game />} />
         <Route path="battlepass" element={<BattlePass />} />
         <Route path="crates/history" element={<CratesHistory />} />
         <Route path="crates" element={<Crates />}>
@@ -72,5 +74,5 @@ root.render(
         <App />
       </React.Suspense>
     </HashRouter>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

@@ -127,6 +127,19 @@ const Experience = ({ isSandboxed, isSimulated = false }) => {
               Bearzaar
             </span>
           </Link>
+          <Link
+            to="/game"
+            className="relative flex items-center justify-center w-[280px] cursor-pointer text-white"
+          >
+            <img
+              className="object-cover h-full w-full"
+              src={buttonBackground}
+              alt="button"
+            />
+            <span className="flex absolute h-full w-full items-center justify-center text-base uppercase">
+              Game
+            </span>
+          </Link>
         </div>
       </div>
     </>
