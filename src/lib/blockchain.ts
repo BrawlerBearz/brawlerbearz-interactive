@@ -347,6 +347,7 @@ export const getStatsByTokenId = async (
         args: [itemLookupIds],
       });
 
+      // @ts-ignore
       itemLookup = zipObject(itemLookupIds, items);
 
       // Equipped weapon
